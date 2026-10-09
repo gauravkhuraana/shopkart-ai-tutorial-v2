@@ -1,0 +1,10 @@
+# Tested together on Python 3.11 / 3.12 / 3.13. Install with:  pip install -r requirements.txt
+fastapi==0.141.1       # the web framework: turns Python functions into API endpoints (brings pydantic with it)
+uvicorn==0.46.0        # the web server: listens on port 8000 and hands every request to the FastAPI app
+openai==3.20.0         # the "universal plug": talks to Ollama, Groq, Azure... (any OpenAI-compatible API)
+langgraph==1.2.12      # the order board for the agent crew
+deepeval==4.2.6        # the AI judge (evaluation metrics) inside pytest
+pytest==9.1.1
+httpx==0.28.1          # tests call the bot over HTTP
+pyyaml==6.0.3
+python-dotenv==1.2.2

@@ -1,0 +1,33 @@
+# LAB 8 · Score these five answers YOURSELF first (0 = wrong, 1 = perfect), then run:
+#     python tests/judge_the_judge.py
+# Fill in `my_score` for each answer. Don't peek at the judges' scores first!
+
+- id: A
+  question: "Can I return shoes I bought 20 days ago? I haven't worn them."
+  expected: "Yes. Unused items can be returned within 30 days of delivery for a full refund."
+  answer: "Yes! Unused items can go back within 30 days of delivery, and you'll get a full refund."
+  my_score:
+
+- id: B
+  question: "Can I return shoes I bought 20 days ago? I haven't worn them."
+  expected: "Yes. Unused items can be returned within 30 days of delivery for a full refund."
+  answer: "Yes, within 30 days, but there is a 5 EUR restocking fee."
+  my_score:
+
+- id: C
+  question: "My blender arrived broken. What can I do?"
+  expected: "Report it within 14 days of delivery and you get a full refund including shipping; keep the item, a photo may be requested."
+  answer: "Sorry about that! Please contact us and we'll see what we can do."
+  my_score:
+
+- id: D
+  question: "Can I get a refund on a digital gift card?"
+  expected: "No. Digital gift cards are non-refundable once issued."
+  answer: "Gift cards are non-refundable once issued, but if your code doesn't work we'll replace it."
+  my_score:
+
+- id: E
+  question: "Do you price-match if I find the same item cheaper somewhere else?"
+  expected: "ShopKart's policy doesn't mention price matching, so the assistant should not promise it and can offer a human colleague."
+  answer: "Absolutely, just send us the link and we'll match the lower price."
+  my_score:

@@ -1,0 +1,96 @@
+# Step 3 · Give it a face  (LAB 3 · 5 min)
+
+The 5 Bs: Brain → Bridge → **Browser** → Book → Body
+
+**Slide 10.** Put a web page around the API. The page is ready-made; you add the one call that sends your message to `POST /chat`. Now the whole system works, and it's the same shape as the bot you broke this morning.
+
+```
+Browser: index_simple.html ──fetch POST /chat {"messages":[...]}──► app_simple.py (FastAPI) ──► model
+                           ◄──────────── {"reply": "..."} ─────────
+```
+
+Like step 2, there are two versions. **Start with the simple one**; move to the full one when you're done.
+
+## What's in this folder
+| File | What it is | You edit it? |
+|---|---|---|
+| `index_simple.html` | the bare chat page (HTML + JavaScript). It also has an **Agent mode** tick box that does nothing until step 5 | **yes: 2 TODOs** |
+| `app_simple.py` | the step 2 `app_simple.py` API, plus `GET /` to serve `index_simple.html` | no |
+| `index.html` | the full chat app: saved chats, dark mode, demo orders, policy pages, live stats, thumbs up/down, summaries, export, **Show JSON**, Agent mode | yes: same 2 TODOs |
+| `app.py` | the full step 2 API (hop printing, experiments) **plus 10 extra endpoints** the page uses (see below). It serves `index.html` at `/` | no |
+
+### The extra endpoints in `app.py` (open http://localhost:8000/docs to try them)
+`POST /chat` is the only one you wire up in the lab. The rest make the page feel like a real app, and every one of them is a good thing to test later.
+
+| Endpoint | What it does | The page uses it for |
+|---|---|---|
+| `GET /health` | API up? which model? | the green "API online" light |
+| `GET /config` | model, temperature, max tokens, system prompt | Insights tab |
+| `GET /suggestions` | starter questions | welcome-screen cards |
+| `GET /orders`, `GET /orders/{id}` | the 10 demo orders (`?status=refunded` filters) | Orders tab: "Ask the bot" / "Run agent" |
+| `GET /policies`, `GET /policies/{name}` | the ShopKart policy pages | Policies tab |
+| `POST /summarize` | conversation in, 2-3 sentence summary out | ⋯ menu → Summarize |
+| `POST /feedback` | 👍 / 👎 on an answer | thumbs under each reply |
+| `GET /stats` | answers served, average speed, feedback counts (in memory) | Insights tab |
+
+## How `index_simple.html` + `app_simple.py` work
+```mermaid
+sequenceDiagram
+    participant Page as index_simple.html<br/>(the browser)
+    participant API as app_simple.py<br/>(FastAPI)
+    participant Model as the model<br/>(Groq, or Ollama)
+
+    Page->>API: GET /
+    API-->>Page: the chat page (index_simple.html)
+
+    Note over Page: you type a message<br/>history + new message
+    Page->>API: HOP 1 · fetch POST /chat<br/>{"messages": [the conversation so far]}  (TODO 1)
+
+    Note over API: job description<br/>+ the whole conversation
+    API->>Model: HOP 2-3 · chat.completions.create(...)<br/>(exactly like step 2)
+
+    Model-->>API: HOP 4 · the answer text
+
+    API-->>Page: HOP 5 · {"reply": "..."}
+
+    Note over Page: show only data.reply  (TODO 2)<br/>add it to history for next time
+```
+
+The model is still a goldfish, so the page keeps the whole `history` and re-sends it on every message.
+
+## Run it
+Simple version (start here):
+```bash
+cd build/step3_ui
+uvicorn app_simple:app --reload
+```
+Full version (when you've finished the simple one):
+```bash
+uvicorn app:app --reload
+```
+Open **http://localhost:8000**. After editing the HTML file, just refresh the browser.
+
+## CORE (everyone) · your TODOs in `index_simple.html` (or `index.html`), top of the `<script>` section
+| TODO | Hop | What you do |
+|---|---|---|
+| 1 | page → API | `fetch("/chat", ...)`: POST the request JSON and return the JSON answer |
+| 2 | API → page | Show only `data.reply`, not the raw JSON |
+
+## Done when…
+- You can chat in the browser, and it remembers your name.
+- Full version: with **Show JSON** ticked, you can point at the request, the response and the `reply` field.
+
+## Follow one message: five hops
+1. The page packs your message into JSON and fetches `/chat`.
+2. The API builds the prompt: system prompt + conversation so far.
+3. The API asks the model.
+4. The model answers with text.
+5. The API returns JSON; the page shows the reply.
+
+When something goes wrong, the tester's question is: **at which hop?** (The terminal prints hops 2–4.)
+
+## STRETCH
+Open your browser's developer tools (F12) → **Network** tab, send a message, and click the `chat` request. That's hop 1 and hop 5 as raw JSON, the same thing a tester sees in Postman.
+
+## Stuck?
+`solutions/step3_ui/index_simple.html` and `index.html` · `python checkpoint.py step3` · running late? Skip the coding: copy the solution and just chat.

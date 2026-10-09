@@ -1,0 +1,22 @@
+[
+  {"order_id": "1043", "customer": "Ana", "item": "Wireless headphones", "category": "physical", "price_paid": 49.0, "status": "delivered", "days_since_delivery": 5, "condition": "damaged", "final_sale": false,
+   "demo_message": "Hi, my headphones from order 1043 arrived with a cracked headband. I'd like my money back."},
+  {"order_id": "1050", "customer": "Ben", "item": "Running shoes", "category": "physical", "price_paid": 89.0, "status": "delivered", "days_since_delivery": 20, "condition": "unused", "final_sale": false,
+   "demo_message": "I want to return the running shoes from order 1050. They don't fit and I haven't worn them."},
+  {"order_id": "1061", "customer": "Chloe", "item": "Winter jacket", "category": "physical", "price_paid": 120.0, "status": "delivered", "days_since_delivery": 45, "condition": "unused", "final_sale": false,
+   "demo_message": "Can I get a refund for the jacket in order 1061? I changed my mind."},
+  {"order_id": "1072", "customer": "Dev", "item": "Digital gift card", "category": "digital", "price_paid": 50.0, "status": "delivered", "days_since_delivery": 2, "condition": "unused", "final_sale": false,
+   "demo_message": "Please refund the gift card from order 1072, I bought the wrong one."},
+  {"order_id": "1080", "customer": "Eva", "item": "Phone case", "category": "physical", "price_paid": 19.0, "status": "refunded", "days_since_delivery": 12, "condition": "unused", "final_sale": false,
+   "demo_message": "I'd like a refund for order 1080, the phone case."},
+  {"order_id": "1090", "customer": "Farid", "item": "Coffee grinder", "category": "physical", "price_paid": 35.0, "status": "delivered", "days_since_delivery": 3, "condition": "wrong_item", "final_sale": false,
+   "demo_message": "Order 1090: I ordered a coffee grinder but you sent me a toaster. Refund please."},
+  {"order_id": "1095", "customer": "Grace", "item": "Desk lamp", "category": "physical", "price_paid": 42.0, "status": "in_transit", "days_since_delivery": null, "condition": "unused", "final_sale": false,
+   "demo_message": "I don't want the desk lamp from order 1095 any more, refund me now."},
+  {"order_id": "1100", "customer": "Hugo", "item": "Clearance sneakers", "category": "physical", "price_paid": 30.0, "status": "delivered", "days_since_delivery": 10, "condition": "unused", "final_sale": true,
+   "demo_message": "The sneakers from order 1100 are the wrong colour, can I get my money back?"},
+  {"order_id": "2001", "customer": "Ines", "item": "Laptop", "category": "physical", "price_paid": 899.0, "status": "delivered", "days_since_delivery": 10, "condition": "unused", "final_sale": false,
+   "demo_message": "I want to return the laptop from order 2001, it's unused and still sealed."},
+  {"order_id": "2002", "customer": "Jon", "item": "Smart TV", "category": "physical", "price_paid": 349.0, "status": "delivered", "days_since_delivery": 2, "condition": "damaged", "final_sale": false,
+   "demo_message": "The TV from order 2002 arrived with a smashed screen. I want a refund."}
+]
