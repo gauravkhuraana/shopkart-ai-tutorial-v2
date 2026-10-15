@@ -65,7 +65,7 @@ Or use another port: `uvicorn app:app --reload --port 8001`, and set `SHOPKART_U
 - Check TODO 1: is `retrieve(...)` actually called and `pages` filled? The terminal prints `librarian brought: [...]`.
 - Check TODO 3: the chat page shows "from: returns.md …" under the answer only if the API returns `sources`.
 - Check TODO 2: does the system prompt say "answer ONLY from the policy pages"?
-- Small models sometimes still drift. That's a real finding, and exactly what the LAB 6 tests catch.
+- Small models sometimes still drift. That's a real finding, and exactly what the step 6 and 7 tests catch.
 
 ### #11 · The model doesn't call tools
 Not every model supports tool calling. Use one that does: `qwen3:4b` (default), `qwen3:8b`, `llama3.1:8b`, or the hosted option (#6).
@@ -78,10 +78,11 @@ Not every model supports tool calling. Use one that does: `qwen3:4b` (default), 
 The judge model returned something that isn't valid JSON. Small local models do this often, which is why the default judge is a bigger hosted model. Check `JUDGE_MODEL` in `.env` points at Groq/Cerebras, not your local model.
 
 ### #14 · Error 429 / "rate limit"
-Free tiers limit requests per minute.
+Free tiers limit requests or tokens per minute. The project lets DeepEval retry transient failures up to 6 times by default.
 - Wait a minute and re-run only what failed: `pytest --lf`
-- Run fewer judge tests: `pytest tests/test_chatbot.py -k metal` (no AI judge)
-- LAB 8: `python tests/judge_the_judge.py --runs 2`
+- Run fewer judge tests: the rules need no judge (`cd evaluate/step6_rules`, `pytest test_rules.py`); run one judge question at a time (`pytest test_judge.py -k price`)
+- If your provider needs longer backoff, set `DEEPEVAL_RETRY_MAX_ATTEMPTS` and `DEEPEVAL_RETRY_CAP_SECONDS` in `.env`
+- Step 9: `python judge_the_judge.py --runs 2`
 - Switch to the backup judge (Cerebras) in `.env`
 
 ### #15 · The tests are very slow

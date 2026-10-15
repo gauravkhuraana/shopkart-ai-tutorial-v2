@@ -136,29 +136,25 @@ Each step has its own folder. Each folder has a **README.md** that tells you:
 
 ---
 
-## Part 2 · TEST the bot
+## Part 2 · TEST the bot (4 steps)
 
 **First, start your step 5 bot in window 2 and leave it running:**
 ```bash
 cd build/step5_agent
 uvicorn app:app --reload
 ```
-Then do the labs in window 3, from the **main project folder**.
+Then work in window 3. Same pattern as Part 1: one folder per step, a **simple** file we walk through together, then a **full** file if you finish early. Each folder has a **README.md**.
 
-| Lab | Your mission | Easy way to remember | Instructions | File you edit |
-|---|---|---|---|---|
-| 6 | Catch the chatbot when it lies | **Is it TRUE?** Truthful · Relevant · Uses the source · Even | [labs/LAB6.md](labs/LAB6.md) | `tests/test_chatbot.py` |
-| 7 | Catch the agent when it does something dangerous | **Real Teams Make Outcomes Outstanding** (5 layers) | [labs/LAB7.md](labs/LAB7.md) | `tests/test_agents.py` |
-| 8 | Check if the AI judge itself can be trusted | **CAP**: Consistent · Agrees · Price | [labs/LAB8.md](labs/LAB8.md) | `tests/my_scores.yaml` |
+| Step | What you test | Easy way to remember | Folder | Simple file → full file | Time |
+|---|---|---|---|---|---|
+| 6 · **Rules** | words it must say / must never say | airport security: the metal detector | [`evaluate/step6_rules`](evaluate/step6_rules/README.md) | `rules_simple.py` → `test_rules.py` | 8 min |
+| 7 · **AI judge** | is the answer true? (DeepEval) | **Is it TRUE?** Truthful · Relevant · Uses the source · Even | [`evaluate/step7_judge`](evaluate/step7_judge/README.md) | `judge_simple.py` → `test_judge.py` | 13 min |
+| 8 · **Agent** | the journey, not just the landing | **Real Teams Make Outcomes Outstanding** (5 layers) | [`evaluate/step8_agent`](evaluate/step8_agent/README.md) | `agent_check_simple.py` → `test_agents.py` | 22 min |
+| 9 · **Judge on trial** | can we trust the judge? | **CAP**: Consistent · Agrees · Price | [`evaluate/step9_trial`](evaluate/step9_trial/README.md) | `trial_simple.py` → `judge_the_judge.py` | 17 min |
 
-Each lab has a **CORE** part (for everyone) and a **STRETCH** part (if you finish early).
+**See your bot scored in your browser.** Every pytest run in Part 2 writes **`evaluate/report.html`**: green/red per test, and every judge score with its reason. Open it and leave it open: it refreshes itself. No account, nothing leaves your laptop.
 
-**Break the bot on purpose**, then write a test that catches it:
-```bash
-python plant_bug.py               # show the list of bugs
-python plant_bug.py liar          # switch one bug on (no restart needed)
-python plant_bug.py off           # switch all bugs off again
-```
+Overview of Part 2: [evaluate/README.md](evaluate/README.md).
 
 ---
 
@@ -177,10 +173,15 @@ uvicorn app:app --reload            # steps 2-5: start the bot, then open http:/
 python retrieval.py "price match"   # step 4: which rule pages does it find?
 python agent.py 1043                # step 5: let the agents handle order 1043 (or: all, --graph)
 
-# Part 2 (main project folder, with the step 5 bot running)
-pytest tests -v                     # run all tests
-pytest tests -v -k "not ai_judge"   # only the quick, free tests (no AI judge)
-python tests/judge_the_judge.py     # lab 8
+# Part 2 (inside the step folder, for example: cd evaluate/step6_rules; the step 5 bot must be running)
+python rules_simple.py              # step 6: two plain rules on one answer
+python judge_simple.py              # step 7: the AI judge scores one answer
+python agent_check_simple.py        # step 8: four checks on the agent's flight recorder
+python trial_simple.py              # step 9: the judge on trial (C · A · P)
+pytest test_rules.py -v             # the full versions: test_rules / test_judge / test_agents.py
+python ../../plant_bug.py liar      # break the real bot on purpose (off = healthy again)
+pytest evaluate -v                  # from the main project folder: everything in Part 2
+                                    # then open evaluate/report.html in your browser
 ```
 
 ## Stuck?
@@ -196,9 +197,11 @@ python tests/judge_the_judge.py     # lab 8
 | Folder / file | What it is |
 |---|---|
 | `build/step1_model` … `build/step5_agent` | the 5 build steps (Part 1). Each has a README |
-| `solutions/` | the finished code for every step and every test |
-| `labs/` | instructions for Part 2 (labs 6, 7, 8) |
-| `tests/` | the tests you write in Part 2 |
+| `evaluate/step6_rules` … `evaluate/step9_trial` | the 4 test steps (Part 2). Each has a README |
+| `evaluate/golden_questions.yaml` | the answer key for steps 6 and 7 |
+| `evaluate/report.html` | your scoreboard, written by every pytest run in Part 2 |
+| `solutions/` | the finished code for every step (1-9) |
+| `extras/langsmith/` | optional: the same evaluation in LangSmith's cloud UI (needs an account) |
 | `shared/config.py` | reads your settings from `.env` (which model, which judge) |
 | `shared/data/policies/` | ShopKart's 10 rule pages (refunds, returns...) |
 | `shared/data/orders.json` | 10 example orders to test with |
@@ -217,12 +220,12 @@ python tests/judge_the_judge.py     # lab 8
 6. **Give it the book.** Find the right rule pages and tell the AI to answer only from them. *(step 4)*
 7. **Give it tools.** The AI *asks* for an action, your code *does* it. Put hard rules in code, not in the prompt. *(step 5)*
 8. **Split the work and record every step.** Planner → Implementer → Reviewer. The record makes it testable. *(step 5)*
-9. **Test from the bottom up, and plant bugs on purpose.** Rule checks first, then an AI judge, then test the judge. *(Part 2)*
+9. **Test from the bottom up, and plant bugs on purpose.** Rule checks first, then an AI judge, then the agent's journey, then test the judge. *(steps 6-9)*
 
 ## For the presenter
 - After changing any code, run `python tools/check_steps.py`. It checks that the step folders still match each other and that all code compiles.
-- Practise without a real model: `cd tools` then `uvicorn fake_llm:app --port 9999`. In `.env`, set `LLM_BASE_URL=http://localhost:9999/v1` and `LLM_MODEL=fake`.
+- Practise without a real model: `cd tools` then `uvicorn fake_llm:app --port 9999`. In `.env`, set `LLM_BASE_URL=http://localhost:9999/v1` and `LLM_MODEL=fake`. It can play the judge too: set `JUDGE_BASE_URL=http://localhost:9999/v1` and `JUDGE_MODEL=fake` to rehearse steps 7-9 offline.
 
 ## Credits & licence
 Built for AutomationSTAR 2026 by Gaurav Khurana ([gauravkhurana.com](https://gauravkhurana.com)). ShopKart, its orders and its rules are made up.
-Tools used: FastAPI, OpenAI Python SDK, LangGraph, DeepEval, Ollama, pytest.
+Tools used: FastAPI, OpenAI Python SDK, LangGraph, DeepEval, pytest, Ollama. Optional extra: LangSmith.

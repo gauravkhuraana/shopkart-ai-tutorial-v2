@@ -28,6 +28,8 @@ ROOT = Path(__file__).resolve().parent.parent          # the repo root (the fold
 DATA_DIR = Path(__file__).resolve().parent / "data"    # shared/data: policy pages + orders
 load_dotenv(ROOT / ".env")                             # read .env (silently does nothing if it's missing)
 os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")   # Part 2: DeepEval sends no usage data
+os.environ.setdefault("DEEPEVAL_RETRY_MAX_ATTEMPTS", "6")    # free judge APIs frequently need >2 attempts
+os.environ.setdefault("DEEPEVAL_RETRY_CAP_SECONDS", "10")
 
 # ---------------------------------------------------------------------------
 # The model that powers YOUR bot (Part 1 · BUILD)
@@ -53,7 +55,11 @@ SHOPKART_URL = os.getenv("SHOPKART_URL", "http://localhost:8000").rstrip("/")
 
 def llm_client() -> OpenAI:
     """The universal plug: the same OpenAI SDK talks to Ollama, Groq, Azure... Only base_url changes."""
-    return OpenAI(base_url=LLM_BASE_URL, api_key=LLM_API_KEY)
+    client = OpenAI(base_url=LLM_BASE_URL, api_key=LLM_API_KEY)
+    if os.getenv("LANGSMITH_TRACING", "").lower() == "true":
+        from langsmith.wrappers import wrap_openai
+        return wrap_openai(client)
+    return client
 
 
 def clean(text: str | None) -> str:
@@ -72,6 +78,6 @@ def judge_model():
 
 
 def local_judge_model():
-    """The same small model your bot runs on, acting as a judge (LAB 8: put the judge on trial)."""
+    """The same small model your bot runs on, acting as a judge (step 9: put the judge on trial)."""
     from deepeval.models import LocalModel
     return LocalModel(model=LLM_MODEL, base_url=LLM_BASE_URL, api_key=LLM_API_KEY)

@@ -1,4 +1,5 @@
-# Golden questions for the ShopKart chatbot (LAB 6).
+# Golden questions for the ShopKart chatbot: the answer key for step 6 (rules) and step 7 (AI judge).
+# Used by evaluate/step6_rules/test_rules.py and evaluate/step7_judge/test_judge.py.
 # Three groups: answer is IN the policy · answer is NOT in the policy · subjective / off-topic / attack.
 #
 # question         what the customer asks

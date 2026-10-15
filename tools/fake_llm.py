@@ -13,6 +13,10 @@ It is not intelligent: it follows simple scripted rules so the plumbing can be t
   - Reviewer     -> checks amount and 200 EUR limit IF it was given the facts; approves blind if not (v1).
   - Chatbot      -> answers from the first policy page, or "I don't have that information".
                     With the v1 people-pleaser handbook it also price-matches and writes poems.
+  - AI judge     -> (Part 2, DeepEval) a scripted judge: any prompt without a system message that asks for JSON.
+                    It calls an answer bad when it contains an invented fact ("we price-match", "restocking fee",
+                    "refund the difference") that the reference text doesn't support. Small random wobble on G-Eval
+                    scores, so step 9 has something to measure. Use it in .env as JUDGE_BASE_URL too.
 
 FAKE_REASONING=1  behaves like a reasoning model: rejects 'temperature' with HTTP 400 (tests main.py's adapter)
 FAKE_REASONING=2  ... and also rejects reasoning_effort "none" (like gpt-5-mini)
@@ -125,6 +129,57 @@ def chatbot(system, messages):
     return _answer(" ".join(body[:2]))
 
 
+# ---------------------------------------------------------------------------
+# The fake AI judge (Part 2): just enough of DeepEval's prompts to rehearse steps 7-9 offline
+# ---------------------------------------------------------------------------
+INVENTED = ["we price-match", "we price match", "we match", "matches any competitor",
+            "restocking fee", "refund the difference"]
+
+
+def _section(prompt, *labels):
+    for label in labels:
+        i = prompt.rfind(label)
+        if i != -1:
+            return prompt[i + len(label):].split("JSON:")[0].strip().split("\n\n")[0].strip()
+    return ""
+
+
+def _sentences(text):
+    parts = [s.strip() for s in re.split(r"(?<=[.!?])\s+", text.strip("[]'\" \n")) if s.strip()]
+    return parts or [text]
+
+
+def judge(prompt):
+    rules = prompt[prompt.rfind("IMPORTANT"):] if "IMPORTANT" in prompt else prompt[-600:]
+    judged = _section(prompt, "Actual Output:", "Claims:", "AI Output:", "Text:").lower()
+    reference = _section(prompt, "Contexts:", "Retrieval Context:", "Expected Output:", "Context:").lower()
+    bad = bool(reference) and any(w in judged for w in INVENTED) and not any(w in reference for w in INVENTED)
+    if '"statements"' in rules:
+        return {"statements": _sentences(judged)}
+    if '"truths"' in rules:
+        return {"truths": _sentences(judged)}
+    if '"claims"' in rules:
+        return {"claims": _sentences(judged)}
+    if '"steps"' in rules:
+        return {"steps": ["Compare the actual output with the expected output.",
+                          "Penalise facts that are invented or contradict the reference."]}
+    if "verdict" in rules.lower():
+        n = re.search(r"STRICTLY EQUAL TO (\d+)", prompt)
+        n = int(n.group(1)) if n else len(_sentences(judged))
+        return {"verdicts": [{"verdict": "no" if bad else "yes",
+                              "reason": "It states a fact the reference doesn't support." if bad else "Supported."}
+                             for _ in range(n)]}
+    if '"score"' in rules:
+        base = 2 if bad else 9
+        return {"score": max(0, min(10, base + random.choice([-1, 0, 0, 1]))),
+                "reason": "The answer invents a fact that is not in the answer key." if bad
+                else "Same meaning as the answer key."}
+    score = re.search(r"Score:\s*([\d.]+)", prompt)
+    low = score and float(score.group(1)) < 0.5
+    return {"reason": "(fake judge) The answer states something the facts don't support." if low
+            else "(fake judge) The answer is supported by the facts."}
+
+
 @app.post("/v1/chat/completions")
 async def completions(request: Request):
     body = await request.json()
@@ -142,6 +197,8 @@ async def completions(request: Request):
             "type": "invalid_request_error", "param": "reasoning_effort", "code": "unsupported_value"}})
     messages = body["messages"]
     system = messages[0]["content"] if messages and messages[0]["role"] == "system" else ""
+    if not system and "JSON" in messages[-1]["content"]:           # DeepEval's judge prompts (Part 2)
+        return _answer(json.dumps(judge(messages[-1]["content"])))
     if system.startswith("You are the Planner"):
         oid = (re.search(r"\b(\d{4})\b", messages[-1]["content"]) or [None, "unknown"])[1]
         return _answer(f"- order {oid}\n- customer wants a refund\n- check order and policy")

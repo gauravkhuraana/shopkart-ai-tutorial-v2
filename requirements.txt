@@ -3,6 +3,7 @@ fastapi==0.141.1       # the web framework: turns Python functions into API endp
 uvicorn==0.46.0        # the web server: listens on port 8000 and hands every request to the FastAPI app
 openai==3.20.0         # the "universal plug": talks to Ollama, Groq, Azure... (any OpenAI-compatible API)
 langgraph==1.2.12      # the order board for the agent crew
+langsmith==0.14.2      # optional UI for traces, datasets and evaluation experiments
 deepeval==4.2.6        # the AI judge (evaluation metrics) inside pytest
 pytest==9.1.1
 httpx==0.28.1          # tests call the bot over HTTP

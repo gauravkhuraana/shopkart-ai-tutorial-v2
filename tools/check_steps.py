@@ -5,6 +5,7 @@ Presenter tool · Check that the step folders still fit together. Run it after A
 
 WHY
     Every build/stepN folder carries a copy of the finished code from the step before.
+    Every evaluate/stepN folder (Part 2) must match its solutions/stepN, apart from its TODOs.
     Fix a bug in one place and forget the others, and attendees hit it on stage. This catches that.
 
 WHAT IT CHECKS
@@ -48,8 +49,25 @@ for i, step in enumerate(STEPS):
             problems.append(f"solutions/{step}/{sol.name} still contains a TODO")
     print(f"{step:<14} edit: {', '.join(todo_files) or '-'}")
 
-for py in list(ROOT.glob("build/*/*.py")) + list(ROOT.glob("solutions/**/*.py")) + list(ROOT.glob("*.py")) \
-        + list(ROOT.glob("shared/*.py")) + list(ROOT.glob("tests/*.py")):
+EVAL_STEPS = ["step6_rules", "step7_judge", "step8_agent", "step9_trial"]
+for step in EVAL_STEPS:
+    folder, solution = ROOT / "evaluate" / step, ROOT / "solutions" / step
+    todo_files = []
+    for f in sorted(folder.glob("*.py")):
+        sol = solution / f.name
+        if not sol.exists():
+            problems.append(f"{step}: {f.name} has no solution in solutions/{step}")
+        elif has_todo(f):
+            todo_files.append(f"{f.name} ({f.read_text(encoding='utf-8').count('# TODO ')} TODOs)")
+        elif f.read_bytes() != sol.read_bytes():
+            problems.append(f"{step}: {f.name} has no TODO but differs from solutions/{step}/{f.name}")
+    for sol in solution.glob("*.py"):
+        if "TODO " in sol.read_text(encoding="utf-8"):
+            problems.append(f"solutions/{step}/{sol.name} still contains a TODO")
+    print(f"{step:<14} edit: {', '.join(todo_files) or '-'}")
+
+for py in list(ROOT.glob("build/*/*.py")) + list(ROOT.glob("evaluate/*.py")) + list(ROOT.glob("evaluate/*/*.py")) + list(ROOT.glob("solutions/**/*.py")) + list(ROOT.glob("*.py")) \
+        + list(ROOT.glob("shared/*.py")):
     try:
         py_compile.compile(str(py), doraise=True)
     except py_compile.PyCompileError as err:

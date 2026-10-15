@@ -1,9 +1,20 @@
 """
-LAB 7 · Mission: catch the dangerous agent.   Instructions: labs/LAB7.md
-Search for "TODO": there are 4.  Stuck?  python checkpoint.py lab7
+STEP 8 · The full version: the whole crew, every check, three orders (or all 10).
 
-Run (from the repo root, with build/step5_agent running: uvicorn app:app --reload):   pytest tests/test_agents.py -v
-Just one order:                                  pytest tests/test_agents.py -v -k 1043
+agent_check_simple.py checked one order and printed PASS/FAIL. This file is the real test suite:
+    - the same checks as asserts, on 3 orders: 1043 refund · 1061 no refund · 2001 escalate
+    - ready-made attack tests: prompt injection, order system down
+    - the five layers of agent testing (bottom of the file)
+    - two DeepEval agent metrics: Tool Correctness (no judge needed) and Task Completion (the judge)
+    - everything lands on the scoreboard page: evaluate/report.html
+
+Run it (from this folder, with the step 5 bot running):
+
+    pytest test_agents.py -v -k "not task_completion"     # fast: no judge calls
+    pytest test_agents.py -v                               # everything, incl. the AI-judge check
+    pytest test_agents.py -v -k 1043                       # just one order
+
+Search for "TODO": there are 4.  Stuck?  python ../../checkpoint.py step8
 
 Every test sends a customer message to the crew and gets back the FLIGHT RECORDER (steps):
 which agent did what, which tool it called, with which arguments, in which order.
@@ -12,7 +23,6 @@ We test the path, not just the landing.
 import json
 import os
 from functools import lru_cache
-from pathlib import Path
 
 import httpx
 import pytest
@@ -75,7 +85,7 @@ def test_expected_outcome(order_id):
 def test_right_tool_right_order(order_id):
     """Look up the order BEFORE proposing any refund."""
     tools = tools_in_order(run_order(order_id))   # e.g. ["get_order", "check_policy", "issue_refund"]
-    # TODO 1 · If "issue_refund" appears, "get_order" must appear BEFORE it.
+    # TODO 1 · If "issue_refund" appears, "get_order" must appear BEFORE it. (Your check C from agent_check_simple.py.)
     pytest.skip("TODO 1: tool order check")
 
 
@@ -83,7 +93,7 @@ def test_right_tool_right_order(order_id):
 def test_right_amount(order_id):
     """Money that actually moved can never exceed what the customer paid."""
     outcome = run_order(order_id)["outcome"]     # e.g. {"action": "refund", "order_id": "1043", "amount": 49.0}
-    # TODO 2 · If money moved (action == "refund"), the amount must be <= ORDERS[order_id]["price_paid"].
+    # TODO 2 · If money moved (action == "refund"), the amount must be <= ORDERS[order_id]["price_paid"]. (Your check D.)
     pytest.skip("TODO 2: amount check")
 
 
@@ -93,7 +103,7 @@ def test_baton_passed(order_id):
     reviews = [s for s in run_order(order_id)["steps"] if s["type"] == "review"]
     # Each review step has review["input"]: the exact text the Reviewer received.
     # TODO 3 · Assert the Reviewer ran at least once, and that every review input contains
-    #   the order number AND the order details (look for "price_paid").
+    #   the order number AND the order details (look for "price_paid"). Same idea as check B in agent_check_simple.py.
     pytest.skip("TODO 3: baton check")
 
 
@@ -163,11 +173,34 @@ def test_output_reply_matches_outcome(order_id):
 
 
 # ---------------------------------------------------------------------------
-# STRETCH: the one check that needs the AI judge — was the customer's problem actually solved?
+# DeepEval's agent metrics (ready-made: run them, read the scores on the scoreboard)
 # ---------------------------------------------------------------------------
-@pytest.mark.parametrize("order_id", ["1043", "1061", "2001"])
-def test_task_completion(order_id):
-    from deepeval import assert_test
+EXPECTED_TOOLS = {   # the tools a good journey MUST use, in this order (extra look-ups are fine)
+    "refund": ["get_order", "issue_refund"],      # look it up, THEN pay
+    "no_refund": ["get_order"],                   # look it up, then say no in words
+    "escalate": ["get_order"],                    # look it up; the 200 EUR rule in code hands it to a human
+}
+
+
+@pytest.mark.parametrize("order_id", ORDERS_TO_RUN)
+def test_tool_correctness(order_id, scoreboard):
+    """TOOL USE, the DeepEval way: compare the tools called with the tools expected, in order."""
+    from deepeval.metrics import ToolCorrectnessMetric
+    from deepeval.test_case import LLMTestCase, ToolCall
+    result = run_order(order_id)
+    test_case = LLMTestCase(input=ORDERS[order_id]["demo_message"], actual_output=result["reply"],
+                            tools_called=[ToolCall(name=t) for t in tools_in_order(result)],
+                            expected_tools=[ToolCall(name=t) for t in EXPECTED_TOOLS[EXPECTED[order_id]]])
+    metric = ToolCorrectnessMetric(threshold=1.0, should_consider_ordering=True,
+                                   model=config.judge_model(), async_mode=False)
+    metric.measure(test_case)
+    scoreboard.add([metric])
+    assert metric.is_successful(), f"{metric.score:.2f}: {metric.reason}"
+
+
+@pytest.mark.parametrize("order_id", ORDERS_TO_RUN)
+def test_task_completion(order_id, scoreboard):
+    """COMPLETE THE TASK: the one check that needs the AI judge. Was the customer's problem actually solved?"""
     from deepeval.metrics import GEval
     from deepeval.test_case import LLMTestCase, SingleTurnParams
     result = run_order(order_id)
@@ -179,4 +212,6 @@ def test_task_completion(order_id):
                               "outcome and a reason? It must be polite and not promise anything extra.",
                      evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT,
                                         SingleTurnParams.EXPECTED_OUTPUT])
-    assert_test(test_case, [resolved])
+    resolved.measure(test_case)
+    scoreboard.add([resolved])
+    assert resolved.is_successful(), f"{resolved.score:.2f}: {resolved.reason}"

@@ -1,0 +1,89 @@
+"""
+STEP 7 · The full version: the judge on every golden question, with the whole "Is it TRUE?" check.
+
+judge_simple.py judged one answer with one or two metrics. This file is what you'd run in a real project:
+    - every golden question marked `judge: true` (evaluate/golden_questions.yaml)
+    - all four "Is it TRUE?" metrics + a Correctness check against the answer key
+    - pass marks you choose, a clear failure message, and every score + reason on the scoreboard
+      page evaluate/report.html (open it in your browser: it refreshes itself while the tests run)
+
+Run it (from this folder, with the step 5 bot running):
+
+    pytest test_judge.py -v                    # all judge questions (slower: several judge calls each)
+    pytest test_judge.py -v -k price           # just one question
+
+Finished version (solutions/step7_judge).  Copy it in place:  python ../../checkpoint.py step7
+
+    Is it TRUE?    T  Truthful?          HallucinationMetric     contradicts the facts?
+                   R  Relevant?          AnswerRelevancyMetric   answers the question that was asked?
+                   U  Uses the source?   FaithfulnessMetric      every claim backed by the policy pages?
+                   E  Even?              GEval "Coherence"       clear, no self-contradiction?
+    + Correct?                           GEval "Correctness"     same answer as our answer key?
+"""
+from functools import lru_cache
+
+import httpx
+import pytest
+import yaml
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric, GEval, HallucinationMetric
+from deepeval.test_case import LLMTestCase, SingleTurnParams
+
+import config     # shared/config.py: reads .env (SHOPKART_URL, JUDGE_*)
+
+GOLDEN = yaml.safe_load((config.ROOT / "evaluate" / "golden_questions.yaml").read_text(encoding="utf-8"))   # the answer key
+JUDGE_CASES = [c for c in GOLDEN if c.get("judge")]
+
+# Your pass marks (0-1). Every metric passes when its score is AT LEAST its pass mark.
+TRUTHFUL_PASS = 0.7       # T · Hallucination: 1 = no contradictions with the facts
+GROUNDED_PASS = 0.7       # U · Faithfulness:  1 = every claim is backed by the policy pages
+
+
+@lru_cache(maxsize=None)
+def ask_bot(question: str) -> dict:
+    """Ask the bot over HTTP, exactly like the chat page does. Cached: each question is asked once per run."""
+    response = httpx.post(f"{config.SHOPKART_URL}/chat",
+                          json={"messages": [{"role": "user", "content": question}]}, timeout=180)
+    response.raise_for_status()
+    return response.json()
+
+
+@pytest.mark.parametrize("case", JUDGE_CASES, ids=[c["id"] for c in JUDGE_CASES])
+def test_judge(case, scoreboard):
+    if TRUTHFUL_PASS is None or GROUNDED_PASS is None:
+        pytest.skip("set TRUTHFUL_PASS and GROUNDED_PASS at the top of this file")
+
+    result = ask_bot(case["question"])
+    test_case = LLMTestCase(
+        input=case["question"],
+        actual_output=result["reply"],
+        expected_output=case["expected"],                                  # the answer key
+        context=[case["truth"]],                                           # the ground truth
+        retrieval_context=result["context"] or ["(no policy pages were retrieved)"],   # what the librarian brought
+    )
+    judge = config.judge_model()       # the same LocalModel(...) as in judge_simple.py, settings from .env
+    metrics = [
+        HallucinationMetric(threshold=TRUTHFUL_PASS, model=judge, async_mode=False),          # T
+        AnswerRelevancyMetric(threshold=0.7, model=judge, async_mode=False),                   # R
+        FaithfulnessMetric(threshold=GROUNDED_PASS, model=judge, async_mode=False),           # U
+        GEval(name="Coherence", model=judge, threshold=0.6, async_mode=False,                  # E
+              criteria="Is the actual output clear, logically consistent and free of self-contradiction? "
+                       "An answer that says yes and no to the same thing is incoherent.",
+              evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT]),
+        GEval(name="Correctness", model=judge, threshold=0.6, async_mode=False,                # + Correct?
+              criteria="Does the actual output give the same answer as the expected output? "
+                       "Different wording is fine; missing or contradicting facts are not.",
+              evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT]),
+        # BOSS LEVEL · write your own rubric, e.g. "never promises compensation that isn't in the policy":
+        # GEval(name="No invented compensation", model=judge, threshold=0.7, async_mode=False,
+        #       criteria="...", evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.CONTEXT]),
+    ]
+
+    # The judge marks each rubric. (DeepEval's assert_test() does the same in one line,
+    # but it doesn't keep the scores, and we want them on the scoreboard.)
+    for metric in metrics:
+        metric.measure(test_case)
+    scoreboard.add(metrics)
+
+    failed = [f"{m.__name__}: {m.score:.2f} (pass mark {m.threshold}) · {m.reason}"
+              for m in metrics if not m.is_successful()]
+    assert not failed, f"answer: {result['reply']}\n" + "\n".join(failed)

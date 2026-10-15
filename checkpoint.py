@@ -1,5 +1,5 @@
 """
-Fell behind? Jump to a working step:   python checkpoint.py stepN | lab6 | lab7
+Fell behind? Jump to a working step:   python checkpoint.py step1 ... step9
 Copies the finished file(s) in place, checks them, and tells you what to run next.
 Your own file is kept next to it as <name>.mine
 """
@@ -35,36 +35,48 @@ CHECKPOINTS = {
         "cd build/step5_agent",
         "python agent_simple.py 1043       # should end with action 'refund' (or agent.py for the full crew)",
         "uvicorn app:app --reload          # the full version: keep it running, Part 2 tests this bot",
-        "Then go on to LAB 6: labs/LAB6.md",
+        "Then go on to Part 2, step 6: evaluate/step6_rules/README.md",
     ]),
-    "lab6": ("solutions/tests", "tests", "the finished test_chatbot.py", [
-        "Keep the step 5 bot running, then from the repo root:",
-        "pytest tests/test_chatbot.py -v",
-        "Then go on to LAB 7: labs/LAB7.md",
+    # Part 2 · EVALUATE (keep the step 5 bot running: cd build/step5_agent, uvicorn app:app --reload)
+    "step6": ("solutions/step6_rules", "evaluate/step6_rules", "the finished rules_simple.py and test_rules.py", [
+        "cd evaluate/step6_rules",
+        "python rules_simple.py            # PASS, then try EXPERIMENT 1 (the liar)",
+        "pytest test_rules.py -v           # all 10 golden questions",
+        "Then go on to step 7: evaluate/step7_judge/README.md",
     ]),
-    "lab7": ("solutions/tests", "tests", "the finished test_agents.py", [
-        "Keep the step 5 bot running, then from the repo root:",
-        "pytest tests/test_agents.py -v",
-        "Then go on to LAB 8: labs/LAB8.md",
+    "step7": ("solutions/step7_judge", "evaluate/step7_judge", "the finished judge_simple.py and test_judge.py", [
+        "cd evaluate/step7_judge",
+        "python judge_simple.py            # two scores + the judge's reasons",
+        "pytest test_judge.py -v -k price  # one question, then open evaluate/report.html",
+        "Then go on to step 8: evaluate/step8_agent/README.md",
+    ]),
+    "step8": ("solutions/step8_agent", "evaluate/step8_agent", "the finished agent_check_simple.py and test_agents.py", [
+        "cd evaluate/step8_agent",
+        "python agent_check_simple.py      # four checks on the flight recorder",
+        "pytest test_agents.py -v -k \"not task_completion\"",
+        "Then go on to step 9: evaluate/step9_trial/README.md",
+    ]),
+    "step9": ("solutions/step9_trial", "evaluate/step9_trial", "the finished trial_simple.py and judge_the_judge.py", [
+        "cd evaluate/step9_trial",
+        "python trial_simple.py            # the judge on trial: C · A · P",
+        "python judge_the_judge.py --runs 2",
     ]),
 }
-TEST_FILES = {"lab6": "test_chatbot.py", "lab7": "test_agents.py"}
 
 
 def print_menu():
     print("\nShopKart tutorial - checkpoint\n")
-    print("Fell behind? Jump to a working step. Pick one of these 7 checkpoints:\n")
+    print(f"Fell behind? Jump to a working step. Pick one of these {len(CHECKPOINTS)} checkpoints:\n")
     for name, (_, target, gets, _) in CHECKPOINTS.items():
-        print(f"    python checkpoint.py {name:<6}  # {target + '/':<20} gets {gets}")
+        print(f"    python checkpoint.py {name:<6}  # {target + '/':<22} gets {gets}")
     print("\nYour own file is kept next to the finished one as <name>.mine")
-    print("Or simply move on: every build/stepN folder already contains the finished code of the step before it.")
+    print("Or simply move on: every build/stepN folder already contains the finished code of the step before it,")
+    print("and every evaluate/stepN folder works on its own (it tests your step 5 bot).")
     print("\nNothing was copied.\n")
 
 
 def files_for(choice):
     src_dir, dst_dir = ROOT / CHECKPOINTS[choice][0], ROOT / CHECKPOINTS[choice][1]
-    if choice in TEST_FILES:
-        return [(src_dir / TEST_FILES[choice], dst_dir / TEST_FILES[choice])]
     return [(src, dst_dir / src.name) for src in sorted(src_dir.iterdir()) if src.is_file()]
 
 

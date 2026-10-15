@@ -19,15 +19,15 @@ from pathlib import Path
 STATE_FILE = Path(__file__).resolve().parent.parent / ".planted_bug"   # repo root/.planted_bug
 
 BUGS = {
-    "liar": "LAB 6 · a bad page in the knowledge base says ShopKart price-matches (it doesn't)",
-    "no_pages": "LAB 6 · the librarian brings nothing: retrieval is broken",
-    "skip_lookup": "LAB 7 · the agent refunds BEFORE it looks up the order (right money, wrong journey)",
-    "overpay": "LAB 7 · the payment step refunds double the approved amount",
-    "blind_reviewer": "LAB 7 · the Reviewer approves without seeing the order facts",
-    # Bonus · the five layers (LAB 7 stretch)
-    "no_breaker": "LAB 7 bonus · ORCHESTRATION: the circuit breaker is gone, a rejected proposal loops forever",
-    "shared_memory": "LAB 7 bonus · MEMORY: the crew remembers the PREVIOUS customer's order facts",
-    "false_promise": "LAB 7 bonus · OUTPUT QUALITY: the reply promises a refund that never happened",
+    "liar": "step 6-7 · a bad page in the knowledge base says ShopKart price-matches (it doesn't)",
+    "no_pages": "step 6 · the librarian brings nothing: retrieval is broken",
+    "skip_lookup": "step 8 · the agent refunds BEFORE it looks up the order (right money, wrong journey)",
+    "overpay": "step 8 · the payment step refunds double the approved amount",
+    "blind_reviewer": "step 8 · the Reviewer approves without seeing the order facts",
+    # Bonus · the five layers (step 8 stretch)
+    "no_breaker": "step 8 bonus · ORCHESTRATION: the circuit breaker is gone, a rejected proposal loops forever",
+    "shared_memory": "step 8 bonus · MEMORY: the crew remembers the PREVIOUS customer's order facts",
+    "false_promise": "step 8 bonus · OUTPUT QUALITY: the reply promises a refund that never happened",
 }
 
 # The poisoned page used by the "liar" bug
@@ -52,7 +52,7 @@ def active(name: str) -> bool:
 
 
 def tamper_pages(pages: list[dict], question: str = "") -> list[dict]:
-    """Called by app.py right after the librarian. Does nothing unless a LAB 6 bug is switched on."""
+    """Called by app.py right after the librarian. Does nothing unless a step 6-7 bug is switched on."""
     if active("no_pages"):
         print("       !! planted bug 'no_pages': the librarian brings nothing")
         return []

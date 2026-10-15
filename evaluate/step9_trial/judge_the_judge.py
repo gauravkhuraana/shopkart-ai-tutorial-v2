@@ -1,13 +1,15 @@
 """
-LAB 8 · Put the judge on trial.
+STEP 9 · The full version: put BOTH judges on trial, on five answers, against YOUR scores.
 
-    python tests/judge_the_judge.py            # 3 runs per judge (default)
-    python tests/judge_the_judge.py --runs 2   # fewer calls if you hit rate limits
+trial_simple.py put one judge on trial with one answer. This file does the whole CAP at once:
+
+    python judge_the_judge.py            # 3 runs per judge (default)
+    python judge_the_judge.py --runs 2   # fewer calls if you hit rate limits
 
 Scores the same 5 answers several times with two judges:
   - LOCAL  = the small model your bot runs on
   - HOSTED = the bigger judge model from .env (JUDGE_*)
-Then compares both with YOUR scores from tests/my_scores.yaml.
+Then compares both with YOUR scores from my_scores.yaml (in this folder).
 Questions to answer: Which judge wobbles more? Which one agrees with you? Where do they disagree?
 """
 import argparse
@@ -17,12 +19,12 @@ from pathlib import Path
 
 import yaml
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "shared"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))
 import config  # noqa: E402
 from deepeval.metrics import GEval  # noqa: E402
 from deepeval.test_case import LLMTestCase, SingleTurnParams  # noqa: E402
 
-# The rubric. LAB 8 stretch: make it more specific and see if the wobble shrinks.
+# The rubric. Stretch: make it more specific and see if the wobble shrinks.
 RUBRIC = ("Does the actual output give the same answer as the expected output? "
           "Different wording is fine; missing facts, extra invented facts, or contradictions are not.")
 
@@ -75,7 +77,7 @@ def main():
         if gaps[name]:
             print(f"{name:>6} judge: average distance from YOUR scores = {sum(gaps[name]) / len(gaps[name]):.2f}  (lower = agrees more)")
         else:
-            print(f"{name:>6} judge: fill in my_score in tests/my_scores.yaml to measure agreement")
+            print(f"{name:>6} judge: fill in my_score in my_scores.yaml to measure agreement")
 
 
 if __name__ == "__main__":

@@ -2,14 +2,14 @@
 Plant a known bug in the running ShopKart bot (build/step5_agent), then write the test that catches it.
 
     python plant_bug.py                 # list the bugs and show which one is active
-    python plant_bug.py liar            # LAB 6 · Mission: catch the liar
-    python plant_bug.py no_pages        # LAB 6 · Mission: catch the forgetful librarian
-    python plant_bug.py skip_lookup     # LAB 7 · Mission: catch the dangerous agent
-    python plant_bug.py overpay         # LAB 7 · Mission: catch the overpayment
-    python plant_bug.py blind_reviewer  # LAB 7 · Mission: catch the blind reviewer
-    python plant_bug.py no_breaker      # LAB 7 bonus · Orchestration: the circuit breaker is gone
-    python plant_bug.py shared_memory   # LAB 7 bonus · Memory: the previous customer's facts leak in
-    python plant_bug.py false_promise   # LAB 7 bonus · Output quality: the reply promises a refund that never happened
+    python plant_bug.py liar            # step 6-7 · the liar
+    python plant_bug.py no_pages        # step 6   · the forgetful librarian
+    python plant_bug.py skip_lookup     # step 8   · right money, wrong journey
+    python plant_bug.py overpay         # step 8   · the overpayment
+    python plant_bug.py blind_reviewer  # step 8   · the blind reviewer
+    python plant_bug.py no_breaker      # step 8 bonus · Orchestration: the circuit breaker is gone
+    python plant_bug.py shared_memory   # step 8 bonus · Memory: the previous customer's facts leak in
+    python plant_bug.py false_promise   # step 8 bonus · Output quality: the reply promises a refund that never happened
     python plant_bug.py off             # back to a healthy bot
 
 The bot reads the switch on every request: no restart needed.

@@ -1,5 +1,5 @@
-# LAB 8 · Score these five answers YOURSELF first (0 = wrong, 1 = perfect), then run:
-#     python tests/judge_the_judge.py
+# STEP 9 · Score these five answers YOURSELF first (0 = wrong, 1 = perfect), then run (from this folder):
+#     python judge_the_judge.py
 # Fill in `my_score` for each answer. Don't peek at the judges' scores first!
 
 - id: A
