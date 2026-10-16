@@ -4,6 +4,8 @@ Hands-on tutorial · AutomationSTAR 2026 · Gaurav Khurana · #SharingIsCaring
 
 **If you get stuck anywhere, contact [Gaurav Khurana on LinkedIn](https://www.linkedin.com/in/gauravkhuraana/).**
 
+Can't message on LinkedIn? Email: **gaurav [dot] khuraana [at] gmail [dot] com** (replace `[dot]` with `.` and `[at]` with `@`, then remove the spaces).
+
 **What you will do today**
 1. **Build** a small AI helper for a pretend online shop called **ShopKart**. It answers refund questions. You build it in 5 small steps.
 2. **Test** it. First with simple rule checks, then with a second AI that acts as the "judge".

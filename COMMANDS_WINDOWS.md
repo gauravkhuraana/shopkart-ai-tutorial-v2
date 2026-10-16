@@ -2,6 +2,8 @@
 
 **If you get stuck anywhere, contact [Gaurav Khurana on LinkedIn](https://www.linkedin.com/in/gauravkhuraana/).**
 
+Can't message on LinkedIn? Email: **gaurav [dot] khuraana [at] gmail [dot] com** (replace `[dot]` with `.` and `[at]` with `@`, then remove the spaces).
+
 One page, steps 1 to 9, in order. **Copy a block, paste it, read the one-line explanation.**
 Mac user? Use [COMMANDS_MAC.md](COMMANDS_MAC.md). Stuck? [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 

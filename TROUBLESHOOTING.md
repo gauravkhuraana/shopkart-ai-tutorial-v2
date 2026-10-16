@@ -2,6 +2,8 @@
 
 **If you get stuck anywhere, contact [Gaurav Khurana on LinkedIn](https://www.linkedin.com/in/gauravkhuraana/).**
 
+Can't message on LinkedIn? Email: **gaurav [dot] khuraana [at] gmail [dot] com** (replace `[dot]` with `.` and `[at]` with `@`, then remove the spaces).
+
 From the project folder with `.venv` active, the setup check prints a FAQ number for every red line:
 ```bash
 python check_setup.py

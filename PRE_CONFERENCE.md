@@ -2,6 +2,8 @@
 
 **If you get stuck anywhere, contact [Gaurav Khurana on LinkedIn](https://www.linkedin.com/in/gauravkhuraana/).**
 
+Can't message on LinkedIn? Email: **gaurav [dot] khuraana [at] gmail [dot] com** (replace `[dot]` with `.` and `[at]` with `@`, then remove the spaces).
+
 **Do this at home, any evening in the week before.** It takes about 20 to 30 minutes, most of it waiting for a download.
 On the day you then only need a working laptop.
 
