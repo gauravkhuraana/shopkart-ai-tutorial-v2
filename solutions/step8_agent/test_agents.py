@@ -29,8 +29,11 @@ import pytest
 
 import config
 
-ORDERS = {o["order_id"]: o for o in json.loads(
-    (config.DATA_DIR / "orders.json").read_text(encoding="utf-8"))}
+# All seeded orders, keyed by order id (the order data the tests compare against).
+orders_file = config.DATA_DIR / "orders.json"
+ORDERS = {}
+for order in json.loads(orders_file.read_text(encoding="utf-8")):
+    ORDERS[order["order_id"]] = order
 
 # The answer key: what SHOULD happen to each seeded order (each one hits one policy rule)
 EXPECTED = {
@@ -48,14 +51,22 @@ EXPECTED = {
 
 
 # CORE run = 3 orders (one refund, one no-refund, one escalation): fast enough on any laptop.
-# Want all 10?   Windows: set ALL_ORDERS=1   ·   Mac/Linux: export ALL_ORDERS=1   then run pytest again.
-ORDERS_TO_RUN = list(EXPECTED) if os.getenv("ALL_ORDERS") == "1" else ["1043", "1061", "2001"]
+# Want all 10?   Windows (PowerShell): $env:ALL_ORDERS=1   ·   Mac/Linux: export ALL_ORDERS=1   then run pytest again.
+ALL_ORDERS = os.getenv("ALL_ORDERS") == "1"
+if ALL_ORDERS:
+    ORDERS_TO_RUN = list(EXPECTED)
+else:
+    ORDERS_TO_RUN = ["1043", "1061", "2001"]
 
 
 @lru_cache(maxsize=None)
 def run_crew(message: str, chaos: str | None = None) -> dict:
-    response = httpx.post(f"{config.SHOPKART_URL}/agent",
-                          json={"message": message, "chaos": chaos}, timeout=300)
+    """Send one customer message to the bot's /agent endpoint. Cached, so repeated checks cost one run."""
+    response = httpx.post(
+        f"{config.SHOPKART_URL}/agent",
+        json={"message": message, "chaos": chaos},
+        timeout=300,
+    )
     response.raise_for_status()
     return response.json()
 
@@ -66,7 +77,11 @@ def run_order(order_id: str) -> dict:
 
 def tools_in_order(result: dict) -> list[str]:
     """Flatten the flight recorder into the list of tools asked for, in order (reads + the proposal)."""
-    return [s["name"] for s in result["steps"] if s["type"] in ("tool_call", "proposal")]
+    tools = []
+    for step in result["steps"]:
+        if step["type"] in ("tool_call", "proposal"):
+            tools.append(step["name"])
+    return tools
 
 
 # ---------------------------------------------------------------------------
@@ -158,14 +173,22 @@ def test_orchestration_circuit_breaker():
     assert len(reviews) == 3, f"expected exactly 3 reviews (MAX_ROUNDS), got {len(reviews)}"
 
 
-PROMISES = ["refund has been issued", "i've refunded", "i have refunded", "we've refunded", "your refund is on its way"]
+PROMISES = [
+    "refund has been issued",
+    "i've refunded",
+    "i have refunded",
+    "we've refunded",
+    "your refund is on its way",
+]
 
 
 @pytest.mark.parametrize("order_id", ORDERS_TO_RUN)
 def test_output_reply_matches_outcome(order_id):
     """OUTPUT QUALITY: the words must match what actually happened. (Planted bug: false_promise)"""
     result = run_order(order_id)
-    reply, outcome = result["reply"].lower(), result["outcome"]
+    reply = result["reply"].lower()
+    outcome = result["outcome"]
+
     if outcome["action"] == "refund":
         assert f"{outcome['amount']:.2f}" in reply, f"reply doesn't state the refunded amount: {result['reply']}"
     else:
@@ -188,12 +211,22 @@ def test_tool_correctness(order_id, scoreboard):
     """TOOL USE, the DeepEval way: compare the tools called with the tools expected, in order."""
     from deepeval.metrics import ToolCorrectnessMetric
     from deepeval.test_case import LLMTestCase, ToolCall
+
     result = run_order(order_id)
-    test_case = LLMTestCase(input=ORDERS[order_id]["demo_message"], actual_output=result["reply"],
-                            tools_called=[ToolCall(name=t) for t in tools_in_order(result)],
-                            expected_tools=[ToolCall(name=t) for t in EXPECTED_TOOLS[EXPECTED[order_id]]])
-    metric = ToolCorrectnessMetric(threshold=1.0, should_consider_ordering=True,
-                                   model=config.judge_model(), async_mode=False)
+    expected_names = EXPECTED_TOOLS[EXPECTED[order_id]]
+
+    test_case = LLMTestCase(
+        input=ORDERS[order_id]["demo_message"],
+        actual_output=result["reply"],
+        tools_called=[ToolCall(name=t) for t in tools_in_order(result)],
+        expected_tools=[ToolCall(name=t) for t in expected_names],
+    )
+    metric = ToolCorrectnessMetric(
+        threshold=1.0,
+        should_consider_ordering=True,
+        model=config.judge_model(),
+        async_mode=False,
+    )
     metric.measure(test_case)
     scoreboard.add([metric])
     assert metric.is_successful(), f"{metric.score:.2f}: {metric.reason}"
@@ -204,15 +237,26 @@ def test_task_completion(order_id, scoreboard):
     """COMPLETE THE TASK: the one check that needs the AI judge. Was the customer's problem actually solved?"""
     from deepeval.metrics import GEval
     from deepeval.test_case import LLMTestCase, SingleTurnParams
+
     result = run_order(order_id)
-    test_case = LLMTestCase(input=ORDERS[order_id]["demo_message"],
-                            actual_output=result["reply"],
-                            expected_output=f"Correct outcome: {EXPECTED[order_id]}")
-    resolved = GEval(name="Problem resolved", model=config.judge_model(), threshold=0.6, async_mode=False,
-                     criteria="Does the reply clearly tell the customer what happens next, with the correct "
-                              "outcome and a reason? It must be polite and not promise anything extra.",
-                     evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT,
-                                        SingleTurnParams.EXPECTED_OUTPUT])
+    test_case = LLMTestCase(
+        input=ORDERS[order_id]["demo_message"],
+        actual_output=result["reply"],
+        expected_output=f"Correct outcome: {EXPECTED[order_id]}",
+    )
+    resolved = GEval(
+        name="Problem resolved",
+        model=config.judge_model(),
+        threshold=0.6,
+        async_mode=False,
+        criteria="Does the reply clearly tell the customer what happens next, with the correct "
+                 "outcome and a reason? It must be polite and not promise anything extra.",
+        evaluation_params=[
+            SingleTurnParams.INPUT,
+            SingleTurnParams.ACTUAL_OUTPUT,
+            SingleTurnParams.EXPECTED_OUTPUT,
+        ],
+    )
     resolved.measure(test_case)
     scoreboard.add([resolved])
     assert resolved.is_successful(), f"{resolved.score:.2f}: {resolved.reason}"

@@ -2,6 +2,169 @@
 
 Part 2: Rules → AI judge → **Agent** → Judge on trial
 
+## ▶ Copy-paste: run this step
+**Needs:** virtual environment active · **the step 5 bot running (window 2)** · internet for the bot's model. The judge is only used by `test_task_completion` (skip it with `-k "not task_completion"`).
+
+**Windows (PowerShell)**
+WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running)
+
+the folder that contains check_setup.py
+
+```powershell
+cd path\to\shopkart-ai-tutorial-v2
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```powershell
+cd build\step5_agent
+```
+
+```powershell
+uvicorn app:app --reload
+```
+
+WINDOW 3: a NEW terminal, for your tests
+
+```powershell
+cd path\to\shopkart-ai-tutorial-v2
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```powershell
+cd evaluate\step8_agent
+```
+
+core: the flight recorder + checks
+
+```powershell
+python agent_check_simple.py
+```
+
+stretch: fast, no judge calls
+
+```powershell
+pytest test_agents.py -v -k "not task_completion"
+```
+
+stretch: everything (uses the judge)
+
+```powershell
+pytest test_agents.py -v
+```
+
+Optional: all 10 orders instead of 3
+
+```powershell
+$env:ALL_ORDERS=1
+```
+
+```powershell
+pytest test_agents.py -v -k "not task_completion"
+```
+
+Break the real crew on purpose, then ALWAYS switch it off again
+
+or: overpay, blind_reviewer
+
+```powershell
+python ..\..\plant_bug.py skip_lookup
+```
+
+```powershell
+python agent_check_simple.py
+```
+
+```powershell
+python ..\..\plant_bug.py off
+```
+
+**Mac / Linux**
+WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running)
+
+the folder that contains check_setup.py
+
+```bash
+cd path/to/shopkart-ai-tutorial-v2
+```
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+cd build/step5_agent
+```
+
+```bash
+uvicorn app:app --reload
+```
+
+WINDOW 3: a NEW terminal, for your tests
+
+```bash
+cd path/to/shopkart-ai-tutorial-v2
+```
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+cd evaluate/step8_agent
+```
+
+core: the flight recorder + checks
+
+```bash
+python agent_check_simple.py
+```
+
+stretch: fast, no judge calls
+
+```bash
+pytest test_agents.py -v -k "not task_completion"
+```
+
+stretch: everything (uses the judge)
+
+```bash
+pytest test_agents.py -v
+```
+
+Optional: all 10 orders instead of 3
+
+```bash
+export ALL_ORDERS=1
+```
+
+```bash
+pytest test_agents.py -v -k "not task_completion"
+```
+
+Break the real crew on purpose, then ALWAYS switch it off again
+
+or: overpay, blind_reviewer
+
+```bash
+python ../../plant_bug.py skip_lookup
+```
+
+```bash
+python agent_check_simple.py
+```
+
+```bash
+python ../../plant_bug.py off
+```
+
+All commands in one place: [COMMANDS_WINDOWS.md](../../COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](../../COMMANDS_MAC.md)
+
 **Slides 18–19.** A chatbot only talks. An agent *acts*: it looks up orders and moves money. So a correct final answer isn't enough. A plane can land safely while the flight recorder shows it skipped the checklist; nobody calls that a pass. Our crew keeps a **flight recorder**: `steps`, every agent, every tool, every argument, in order. A tool call is just data, and **data is something we can assert on**. No judge needed for most of it.
 
 Use the simplest tool that can answer each question:
@@ -63,8 +226,12 @@ Same shape as every metric: build it, `metric.measure(test_case)`, read the scor
 ## CORE (everyone) · `agent_check_simple.py`
 ```bash
 cd evaluate/step8_agent
+```
+
+```bash
 python agent_check_simple.py
 ```
+
 1. It already runs: the reply, the outcome, the flight recorder and checks A and B. JSON is printed with indentation so every field is easy to inspect.
 2. **TODO 1:** uncomment one line to add check C: `get_order` must come before `issue_refund`.
 3. **TODO 2:** uncomment one line to add check D: the amount moved must be at most `PRICE_PAID`.
@@ -72,11 +239,21 @@ python agent_check_simple.py
 
    ```bash
    python ../../plant_bug.py skip_lookup
-   python agent_check_simple.py
+   ```
 
+   ```bash
+   python agent_check_simple.py
+   ```
+
+   ```bash
    python ../../plant_bug.py overpay
-   python agent_check_simple.py
+   ```
 
+   ```bash
+   python agent_check_simple.py
+   ```
+
+   ```bash
    python ../../plant_bug.py off
    ```
 
@@ -87,22 +264,50 @@ python agent_check_simple.py
 
 This is controlled **fault injection**, not a fake API response. The model still plans and calls tools normally; the bug switch changes one real agent step so the workshop gets a predictable failure. A strong model may not make either mistake on demand, and waiting for a random failure would make the demo unreliable.
 
-**Done when** `skip_lookup` makes C red, `overpay` makes D red, and `python ../../plant_bug.py off` restores all-green checks.
+**Done when** `skip_lookup` makes C red, `overpay` makes D red, and restoring the healthy bot makes all checks green again:
+
+```bash
+python ../../plant_bug.py off
+```
+
 
 ## STRETCH (if you finish early) · `test_agents.py`
+fast: no judge calls
+
 ```bash
-pytest test_agents.py -v -k "not task_completion"     # fast: no judge calls
+pytest test_agents.py -v -k "not task_completion"
 ```
+
 1. Four TODOs, all skipped at first: **1** tool order and **2** amount (your checks C and D, now as asserts on 3 orders), **3** the baton, **4** anything above 200 EUR must escalate.
 2. Read the ready-made tests as they pass: **not fooled** (prompt injection: "my manager approved €500"), **survives chaos** (the order system is down).
 3. Two **DeepEval agent metrics**, ready-made:
    - `test_tool_correctness`: DeepEval's `ToolCorrectnessMetric` compares the tools called with the tools expected, in order.
-   - `test_task_completion`: the judge decides whether the customer's problem was actually solved (`GEval`). Run everything with `pytest test_agents.py -v`.
+   - `test_task_completion`: the judge decides whether the customer's problem was actually solved (`GEval`). Run everything:
+
+     ```bash
+     pytest test_agents.py -v
+     ```
+
 4. Break the real crew, one bug at a time, and watch exactly the right test go red (then open `evaluate/report.html`):
+   right money, wrong journey   → tool order + tool correctness
+
    ```bash
-   python ../../plant_bug.py skip_lookup      # right money, wrong journey   → tool order + tool correctness
-   python ../../plant_bug.py overpay          # double refund                → amount
-   python ../../plant_bug.py blind_reviewer   # Reviewer approves blind      → baton
+   python ../../plant_bug.py skip_lookup
+   ```
+
+   double refund                → amount
+
+   ```bash
+   python ../../plant_bug.py overpay
+   ```
+
+   Reviewer approves blind      → baton
+
+   ```bash
+   python ../../plant_bug.py blind_reviewer
+   ```
+
+   ```bash
    python ../../plant_bug.py off
    ```
 
@@ -117,11 +322,33 @@ pytest test_agents.py -v -k "not task_completion"     # fast: no judge calls
 | **O**rchestration | Does a "no" loop stop after 3 rounds? | `test_orchestration_circuit_breaker` | `no_breaker` |
 | **O**utput quality | Do the words match what really happened? | `test_output_reply_matches_outcome` | `false_promise` |
 
-All 10 orders instead of 3: `set ALL_ORDERS=1` (Windows) or `export ALL_ORDERS=1` (Mac/Linux), then run pytest again.
+To test all 10 orders instead of 3, set the variable for your platform, then run pytest again.
+
+**Windows PowerShell**
+
+```powershell
+$env:ALL_ORDERS=1
+```
+
+**Mac/Linux**
+
+```bash
+export ALL_ORDERS=1
+```
+
 
 **Boss level:** run the suite in GitHub Actions on every push, with one planted bug, and make the pipeline go red.
 
 ## Stuck?
-- Finished files: `solutions/step8_agent/`, or from the repo root: `python checkpoint.py step8`
+- Finished files: `solutions/step8_agent/`, or from the repo root:
+
+  ```bash
+  python checkpoint.py step8
+  ```
+
 - Agent loops → TROUBLESHOOTING.md #12 · step log empty → #16 · tests red for no reason → #19
-- `test_orchestration_circuit_breaker` red with no bug planted? Your step 5 circuit breaker (TODO in `agent.py`) isn't finished: `python checkpoint.py step5`.
+- `test_orchestration_circuit_breaker` red with no bug planted? Your step 5 circuit breaker (TODO in `agent.py`) isn't finished:
+
+  ```bash
+  python checkpoint.py step5
+  ```

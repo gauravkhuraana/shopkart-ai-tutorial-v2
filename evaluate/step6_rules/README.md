@@ -2,6 +2,105 @@
 
 Part 2: **Rules** → AI judge → Agent → Judge on trial
 
+## ▶ Copy-paste: run this step
+**Needs:** virtual environment active · **the step 5 bot running (window 2)** · internet for the bot's model (Groq). No judge needed in this step.
+
+**Windows (PowerShell)**
+WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running)
+
+the folder that contains check_setup.py
+
+```powershell
+cd path\to\shopkart-ai-tutorial-v2
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```powershell
+cd build\step5_agent
+```
+
+```powershell
+uvicorn app:app --reload
+```
+
+WINDOW 3: a NEW terminal, for your tests
+
+```powershell
+cd path\to\shopkart-ai-tutorial-v2
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```powershell
+cd evaluate\step6_rules
+```
+
+core
+
+```powershell
+python rules_simple.py
+```
+
+stretch: all 10 golden questions
+
+```powershell
+python -m pytest test_rules.py -v
+```
+
+**Mac / Linux**
+WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running)
+
+the folder that contains check_setup.py
+
+```bash
+cd path/to/shopkart-ai-tutorial-v2
+```
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+cd build/step5_agent
+```
+
+```bash
+uvicorn app:app --reload
+```
+
+WINDOW 3: a NEW terminal, for your tests
+
+```bash
+cd path/to/shopkart-ai-tutorial-v2
+```
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+cd evaluate/step6_rules
+```
+
+core
+
+```bash
+python rules_simple.py
+```
+
+stretch: all 10 golden questions
+
+```bash
+python -m pytest test_rules.py -v
+```
+
+All commands in one place: [COMMANDS_WINDOWS.md](../../COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](../../COMMANDS_MAC.md)
+
 **Slides 15–16.** You can't `assertEquals` an answer that changes every time. But some things must **always** or **never** be in it, whatever the wording: "30 days" in the return answer, never "we price-match". That's a plain rule: no AI, free, instant. Airport security: the **metal detector**. It runs on every question, every time.
 
 ```
@@ -34,8 +133,12 @@ sequenceDiagram
 ## CORE (everyone) · `rules_simple.py`
 ```bash
 cd evaluate/step6_rules
+```
+
+```bash
 python rules_simple.py
 ```
+
 1. It already runs: it prints the question, the bot's answer and a verdict. Rule B isn't there yet.
 2. **TODO 1:** write Rule B: for every phrase in `MUST_NEVER_SAY` found in the answer, add a line to `problems`. Copy the shape of Rule A.
 3. Now catch a liar, one experiment at a time: find the line marked `EXPERIMENT n`, remove its `#` (Ctrl+/), save, run, then put the `#` back.
@@ -52,18 +155,41 @@ The same two rules, on all 10 golden questions, the way a test team runs them:
 ```bash
 python -m pytest test_rules.py -v
 ```
+
 1. Everything is **skipped**: that's TODO 1. Turn your two rules into `assert`s, using `case["must_include_any"]` and `case["must_not_include"]`. Put the answer in the assert message, so a red test explains itself.
 2. Run it again, then open **`evaluate/report.html`** in your browser: your scoreboard.
 3. Break the real bot, and watch which questions go red:
+   a bad page sneaks into the knowledge base: price-match goes red
+
    ```bash
-   python ../../plant_bug.py liar       # a bad page sneaks into the knowledge base: price-match goes red
-   python ../../plant_bug.py no_pages   # the librarian brings nothing: which ones go red? Why do the "not in policy" ones stay green?
+   python ../../plant_bug.py liar
+   ```
+
+   the librarian brings nothing: which ones go red? Why do the "not in policy" ones stay green?
+
+   ```bash
+   python ../../plant_bug.py no_pages
+   ```
+
+   ```bash
    python ../../plant_bug.py off
    ```
+
 4. Add 3 questions from this morning's phone hacking to `../golden_questions.yaml`.
 
 **Notice:** some failures a rule can't see. "Is this answer *true*?" needs judgement. That's step 7.
 
 ## Stuck?
-- Finished files: `solutions/step6_rules/`, or from the repo root: `python checkpoint.py step6`
-- Bot not reachable → is `uvicorn app:app --reload` running in `build/step5_agent`? (TROUBLESHOOTING.md #3, #18) · tests red for no reason → #19
+- Finished files: `solutions/step6_rules/`, or from the repo root:
+
+  ```bash
+  python checkpoint.py step6
+  ```
+
+- Bot not reachable → is
+
+  ```bash
+  uvicorn app:app --reload
+  ```
+
+  running in `build/step5_agent`? (TROUBLESHOOTING.md #3, #18) · tests red for no reason → #19

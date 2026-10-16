@@ -89,9 +89,14 @@ def must_include_any(inputs: dict, outputs: dict, reference_outputs: dict) -> di
     required = [phrase.lower() for phrase in reference_outputs["must_include_any"]]
     found = [phrase for phrase in required if phrase in answer]
     passed = not required or bool(found)
-    comment = "No required phrases for this case." if not required else (
-        f"Found required phrase(s): {found}" if found else f"Missing all required phrases: {required}"
-    )
+
+    if not required:
+        comment = "No required phrases for this case."
+    elif found:
+        comment = f"Found required phrase(s): {found}"
+    else:
+        comment = f"Missing all required phrases: {required}"
+
     return {"key": "must_include_any", "score": int(passed), "comment": comment}
 
 

@@ -186,7 +186,8 @@ def take_action(name, args, steps):
         amount = float(args["amount"])
         result = issue_refund(order_id, amount)
         outcome = {"action": "refund", "order_id": order_id, "amount": amount}
-        reply = "Done! I've refunded EUR " + format(amount, ".2f") + " for order " + order_id + ". It will reach your original payment method in 5-7 business days."
+        reply = ("Done! I've refunded EUR " + format(amount, ".2f") + " for order " + order_id + ". "
+                 "It will reach your original payment method in 5-7 business days.")
     else:
         result = escalate_to_human(order_id, args.get("reason", ""))
         outcome = {"action": "escalate", "order_id": order_id, "amount": 0}

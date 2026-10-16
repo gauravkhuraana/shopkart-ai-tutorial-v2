@@ -25,10 +25,27 @@ Restart `uvicorn` after changing `.env`.
 
 ## 2. See a LangGraph trace
 
-Run the Step 5 bot:
+Run the Step 5 bot. First activate the venv from the project folder.
+
+**Windows (PowerShell)**
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+**Mac / Linux**
+
+```bash
+source .venv/bin/activate
+```
+
+The remaining commands below use Windows paths; on Mac use `/` instead of `\`. In the activated terminal:
 
 ```powershell
 cd build\step5_agent
+```
+
+```powershell
 uvicorn app:app --reload
 ```
 
@@ -36,6 +53,9 @@ Use Agent mode in <http://localhost:8000>, or from another terminal run:
 
 ```powershell
 cd build\step5_agent
+```
+
+```powershell
 python agent.py 1043
 ```
 
@@ -74,8 +94,17 @@ python extras\langsmith\langsmith_eval.py --dataset-only
 
 ```powershell
 python plant_bug.py liar
+```
+
+```powershell
 python extras\langsmith\langsmith_eval.py --with-ai-judge
+```
+
+```powershell
 python plant_bug.py off
+```
+
+```powershell
 python extras\langsmith\langsmith_eval.py --with-ai-judge
 ```
 
@@ -85,8 +114,26 @@ Compare the two experiments in LangSmith. The price-match case should show worse
 
 | Workflow | Best for |
 |---|---|
-| `pytest evaluate\step6_rules evaluate\step7_judge` | Fast local regression checks and CI |
-| `pytest evaluate\step8_agent` | Exact agent journey and safety assertions |
-| `python extras\langsmith\langsmith_eval.py` | Browsing datasets, traces, scores and experiment comparisons in a UI |
+| **Command 1** | Fast local regression checks and CI |
+| **Command 2** | Exact agent journey and safety assertions |
+| **Command 3** | Browsing datasets, traces, scores and experiment comparisons in a UI |
+
+**Command 1**
+
+```powershell
+pytest evaluate\step6_rules evaluate\step7_judge
+```
+
+**Command 2**
+
+```powershell
+pytest evaluate\step8_agent
+```
+
+**Command 3**
+
+```powershell
+python extras\langsmith\langsmith_eval.py
+```
 
 Keep pytest as the pass/fail gate. Use LangSmith to investigate why a run behaved differently and to compare experiments.

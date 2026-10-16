@@ -18,5 +18,16 @@ step 5   ... + Tools: the crew                     agent.py       Planner → Im
 - has a **STRETCH** section for fast finishers;
 - has a `README.md`: what you build, how to run it, how you know you're done.
 
-Run every command **inside the step folder** (e.g. `cd build/step2_api`).
-Finished code: `../solutions/` · copy it in place: `python checkpoint.py stepN` from the repo root.
+Run each step's commands **inside its folder**, with your virtual environment active. For example, from the project folder:
+
+```bash
+cd build/step2_api
+```
+
+**Every new terminal needs the venv activated again**: each step README starts with individually copyable commands for Windows and Mac. Everything in one place: [COMMANDS_WINDOWS.md](../COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](../COMMANDS_MAC.md).
+Steps 2-5 start a server (`uvicorn`) that keeps its terminal busy: stop it with `Ctrl+C` before starting the next step's server, because only one thing can use port 8000.
+Finished code: `../solutions/`. From the repo root, copy a finished step in place (replace `step3` with `step1` through `step9`):
+
+```bash
+python checkpoint.py step3
+```

@@ -2,97 +2,160 @@
 
 Hands-on tutorial · AutomationSTAR 2026 · Gaurav Khurana · #SharingIsCaring
 
+**If you get stuck anywhere, contact [Gaurav Khurana on LinkedIn](https://www.linkedin.com/in/gauravkhuraana/).**
+
 **What you will do today**
 1. **Build** a small AI helper for a pretend online shop called **ShopKart**. It answers refund questions. You build it in 5 small steps.
 2. **Test** it. First with simple rule checks, then with a second AI that acts as the "judge".
 
-Everything is free and runs on your own laptop.
+Everything is free and runs on your own laptop (or in your browser).
+
+**Quick links:** [PRE_CONFERENCE.md](PRE_CONFERENCE.md) (get ready, 8 days before) · [COMMANDS_WINDOWS.md](COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](COMMANDS_MAC.md) (every command, steps 1 to 9) · [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
 ---
 
 ## Before the tutorial: set up your laptop (about 20 minutes)
 
-Please do this **at home**, before the day. The download is big (about 2.5 GB).
+Please do this **at home**, before the day. The Python libraries are about 150 MB. Local attendees must also download the Ollama model (about 2.5 GB) so we can demo it if the session allows.
 
-### Step 1 · Install three programs
+**Two ways to get ready** (full step-by-step in [PRE_CONFERENCE.md](PRE_CONFERENCE.md)):
+- **Path A · your own laptop** (below): install and test Python, install VS Code and Ollama, then use the setup script to install the execution libraries.
+- **Path B · in the browser** with GitHub Codespaces: nothing to install, for locked-down laptops. See [PRE_CONFERENCE.md](PRE_CONFERENCE.md).
+
+### Step 1 · Install Python and VS Code; get Git if needed
 
 | Program | Where to get it | Note |
 |---|---|---|
 | **Python** 3.11, 3.12 or 3.13 | https://www.python.org/downloads/ | Windows: tick **"Add python.exe to PATH"** during install |
-| **Ollama** (optional: runs the AI model on your laptop, offline) | https://ollama.com/download | Not needed if you use Groq (the default) |
+| **VS Code** | https://code.visualstudio.com/download | Install the **Python** extension published by **Microsoft** |
 | **Git** | https://git-scm.com/downloads | Or skip Git and download this project as a ZIP |
 
-Check Python: open a terminal and type `python --version` (Mac/Linux: `python3 --version`).
+**Test Python immediately after installing it**, before downloading the project. Open a **new terminal** so it picks up PATH changes.
 
-> **What is a terminal?** A window where you type commands.
-> Windows: press Start, type **PowerShell**, press Enter. Mac: press Cmd+Space, type **Terminal**, press Enter.
-
-### Step 2 · (Optional) Start Ollama and download the model
-
-By default the bot runs on **Groq's free cloud**, so you can skip this step. Do it only if you want the model on your own laptop (it then works without internet).
-
-**a) Open a NEW terminal window just for Ollama** and type:
-```bash
-ollama serve
-```
-**Leave this window open** all the time you use the tutorial. Ollama works in this window. If you close it, Ollama stops.
-
-> It says `address already in use`? Good news: Ollama is already running (the Ollama app does this by itself on Windows and Mac). Close this window and go on.
-
-**b) Check that Ollama is running.** Open this page in your web browser: **http://localhost:11434**
-It should say: **"Ollama is running"**.
-
-**c) Download the model.** Open **another** terminal window and type (one time only, about 2.5 GB):
-```bash
-ollama pull qwen3:4b
-```
-
-### Step 3 · Get the code and install the packages
-
-In a terminal, type these lines one by one:
-
-**Windows (PowerShell)**
+**Windows**
 ```powershell
-git clone <repo-url>
-cd shopkart-ai-tutorial
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
+python --version
+```
+
+```powershell
+python -c "print('Python is working')"
 ```
 
 **Mac / Linux**
 ```bash
-git clone <repo-url>
-cd shopkart-ai-tutorial
-python3 -m venv .venv
+python3 --version
+```
+
+```bash
+python3 -c "print('Python is working')"
+```
+
+Expect Python **3.11, 3.12 or 3.13**, then **Python is working**. These tests run with base Python before a venv exists. If either fails, fix [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) before continuing.
+
+> **What is a terminal?** A window where you type commands.
+> Windows: press Start, type **PowerShell**, press Enter. Mac: press Cmd+Space, type **Terminal**, press Enter.
+
+### Step 2 · Install and test Ollama (required on local laptops)
+
+Install [Ollama](https://ollama.com/download), launch its app, and open a new terminal. Prepare it at home for a possible local-model demo. **Groq remains the default** for the bot and judge; installing Ollama does not change `.env`. Browser-only or restricted-laptop attendees can use the Codespaces/Groq fallback in [PRE_CONFERENCE.md](PRE_CONFERENCE.md).
+
+**a) Check installation.** Expect an Ollama version number:
+```text
+ollama --version
+```
+
+**b) Check that Ollama is running.** Open **http://localhost:11434** in your web browser. It should say **Ollama is running**. If the app is not serving requests, run this in a dedicated terminal:
+```bash
+ollama serve
+```
+
+**Leave this window open** all the time you use the tutorial. Ollama works in this window. If you close it, Ollama stops.
+
+> It says `address already in use`? Good news: Ollama is already running (the Ollama app does this by itself on Windows and Mac). Close this window and go on.
+
+**c) Download the model.** Use another terminal (one time only, about 2.5 GB):
+```bash
+ollama pull qwen3:4b
+```
+
+**d) Verify the download.** Expect **qwen3:4b** in the list:
+```text
+ollama list
+```
+**e) Test inference.** Expect a non-empty greeting; the wording can vary:
+```text
+ollama run qwen3:4b "Reply with one short greeting."
+```
+Ollama commands do not need the Python venv. If installation or inference fails, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md) or contact Gaurav about the fallback.
+
+### Step 3 · Get the code and install execution libraries
+
+Clone the project with the commands for your platform below, or download and unzip it from GitHub's **Code → Download ZIP** menu. After getting the code, open that project folder in VS Code with **File → Open Folder**, then choose **Terminal → New Terminal** before running the setup command. If you used a ZIP, skip the Git and directory-change commands.
+
+The setup script installs libraries from `requirements.txt`: **FastAPI**, **Uvicorn**, **OpenAI SDK**, **LangGraph**, **DeepEval**, **pytest**, and supporting libraries. It does **not** install Python or VS Code. It creates `.venv` and `.env`, and runs its initial check using the venv's Python. Missing Groq-key failures are expected until step 4. It is safe to run again.
+
+**Windows (PowerShell): get the code**
+```powershell
+git clone https://github.com/gauravkhuraana/shopkart-ai-tutorial-v2.git
+```
+
+```powershell
+cd shopkart-ai-tutorial-v2
+```
+
+**In VS Code's terminal, inside the project folder:**
+
+```powershell
+python setup_env.py
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+**Mac / Linux: get the code**
+```bash
+git clone https://github.com/gauravkhuraana/shopkart-ai-tutorial-v2.git
+```
+
+```bash
+cd shopkart-ai-tutorial-v2
+```
+
+**In VS Code's terminal, inside the project folder:**
+
+```bash
+python3 setup_env.py
+```
+
+```bash
 source .venv/bin/activate
-pip install -r requirements.txt
 ```
 
 You now see `(.venv)` at the start of the line. That means it worked.
 **Every time you open a new terminal for this tutorial**, go to the project folder and run the `activate` line again.
 
 > Windows says "running scripts is disabled"? See FAQ #4 in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+> Prefer to do it by hand? Use the separate manual-setup commands in [COMMANDS_WINDOWS.md](COMMANDS_WINDOWS.md#set-up-one-time) or [COMMANDS_MAC.md](COMMANDS_MAC.md#set-up-one-time).
 
 ### Step 4 · Create your settings file and get a free Groq key
 
-**a)** Copy the example settings file:
-```bash
-copy .env.example .env        # Windows
-cp .env.example .env          # Mac/Linux
-```
+**a)** The setup script already created `.env`. If it is missing, duplicate `.env.example` as `.env` in VS Code's Explorer.
 
 **b)** Get a free Groq key (no credit card needed): https://console.groq.com/keys
 
-**c)** Open the file `.env` in any text editor. Put your key in **both** lines that say `gsk_your_key_here`: `LLM_API_KEY` (the bot) and `JUDGE_API_KEY` (the judge). Save the file.
+**c)** In your already-open VS Code project, click `.env` in **Explorer**. Put your key in **both** lines that say `gsk_your_key_here`: `LLM_API_KEY` (the bot) and `JUDGE_API_KEY` (the judge). Save the file.
 
 > The model name is in `.env` too: `LLM_MODEL`. Want the bot on your laptop instead? Use **Option B** (Ollama) in `.env` (see FAQ #6).
 
 ### Step 5 · Check that everything works
 
+Run this from the project folder with **`(.venv)` active** (activate it again in every new terminal before Python scripts or tests). In VS Code, use **Python: Select Interpreter** and select `.venv` too.
+
 ```bash
 python check_setup.py
 ```
+
 - Every line says **OK**? You are ready.
 - A line says **FAIL**? It shows a FAQ number. Look up that number in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
@@ -102,9 +165,9 @@ python check_setup.py
 
 | Window | What runs there | When |
 |---|---|---|
-| **1 · Ollama** | `ollama serve` (or the Ollama app) | only if you use Ollama instead of Groq |
-| **2 · Bot** | your bot: `uvicorn app:app --reload` | steps 2 to 5, and all of Part 2 |
-| **3 · Work** | your own commands: `python ask.py`, `pytest`... | always |
+| **1 · Ollama** | Ollama app or dedicated server terminal | local-model demo; keep it ready, but Groq stays the default |
+| **2 · Bot** | the current step's Uvicorn server | steps 2 to 5, and all of Part 2 |
+| **3 · Work** | Python scripts and pytest commands from the current step | always |
 
 Remember: in windows 2 and 3, run the `activate` line first (see Step 3 above).
 
@@ -130,6 +193,7 @@ Each step has its own folder. Each folder has a **README.md** that tells you:
   ```bash
   python checkpoint.py step3
   ```
+
   Your own file is kept as `<name>.mine`. It also tells you what to run next.
 - All finished code is in [`solutions/`](solutions/README.md).
 - All settings are in one file: `.env`.
@@ -141,8 +205,12 @@ Each step has its own folder. Each folder has a **README.md** that tells you:
 **First, start your step 5 bot in window 2 and leave it running:**
 ```bash
 cd build/step5_agent
+```
+
+```bash
 uvicorn app:app --reload
 ```
+
 Then work in window 3. Same pattern as Part 1: one folder per step, a **simple** file we walk through together, then a **full** file if you finish early. Each folder has a **README.md**.
 
 | Step | What you test | Easy way to remember | Folder | Simple file → full file | Time |
@@ -158,36 +226,105 @@ Overview of Part 2: [evaluate/README.md](evaluate/README.md).
 
 ---
 
-## Cheat sheet: all commands
+## All steps at a glance
+
+Copy-paste commands for every step, for your system: **[COMMANDS_WINDOWS.md](COMMANDS_WINDOWS.md)** · **[COMMANDS_MAC.md](COMMANDS_MAC.md)**. Each step folder's README starts with individually copyable commands.
+Every row starts from the project folder with `(.venv)` active. Windows paths use `\`, Mac paths use `/`.
+
+| Step | Folder | Individually copyable commands | Bot running first? |
+|---|---|---|---|
+| 1 · Brain | `build/step1_model` | [Run step 1](build/step1_model/README.md) | no |
+| 2 · Bridge | `build/step2_api` | [Run step 2](build/step2_api/README.md) | it **is** the server |
+| 3 · Browser | `build/step3_ui` | [Run step 3](build/step3_ui/README.md) | it **is** the server |
+| 4 · Book | `build/step4_ground` | [Run step 4](build/step4_ground/README.md) | it **is** the server |
+| 5 · Body | `build/step5_agent` | [Run step 5](build/step5_agent/README.md), then leave the full bot running | it **is** the server |
+| 6 · Rules | `evaluate/step6_rules` | [Run step 6](evaluate/step6_rules/README.md) | **yes** |
+| 7 · AI judge | `evaluate/step7_judge` | [Run step 7](evaluate/step7_judge/README.md) | **yes** |
+| 8 · Agent | `evaluate/step8_agent` | [Run step 8](evaluate/step8_agent/README.md) | **yes** |
+| 9 · Judge on trial | `evaluate/step9_trial` | [Run step 9](evaluate/step9_trial/README.md) | no |
+
+From a step folder, return to the project folder:
 
 ```bash
-# Setup (main project folder)
-python check_setup.py               # is my laptop ready?
-python checkpoint.py step3          # fell behind? get the finished step
-
-# Part 1 (inside the step folder, for example: cd build/step1_model)
-python ask_simple.py                # step 1: ask one question, get one answer
-python ask.py                       # step 1: the same, with 6 small experiments to try (see its README)
-uvicorn app_simple:app --reload     # step 2: the simplest API, then open http://localhost:8000/docs
-uvicorn app:app --reload            # steps 2-5: start the bot, then open http://localhost:8000
-python retrieval.py "price match"   # step 4: which rule pages does it find?
-python agent.py 1043                # step 5: let the agents handle order 1043 (or: all, --graph)
-
-# Part 2 (inside the step folder, for example: cd evaluate/step6_rules; the step 5 bot must be running)
-python rules_simple.py              # step 6: two plain rules on one answer
-python judge_simple.py              # step 7: the AI judge scores one answer
-python agent_check_simple.py        # step 8: four checks on the agent's flight recorder
-python trial_simple.py              # step 9: the judge on trial (C · A · P)
-pytest test_rules.py -v             # the full versions: test_rules / test_judge / test_agents.py
-python ../../plant_bug.py liar      # break the real bot on purpose (off = healthy again)
-pytest evaluate -v                  # from the main project folder: everything in Part 2
-                                    # then open evaluate/report.html in your browser
+cd ../..
 ```
+
+
+## Cheat sheet: the other commands
+
+These are **independent shortcuts**, not a sequence to run top to bottom. Except for initial setup, activate `.venv` first.
+
+**Initial setup, from the project folder (Windows):** creates `.venv`, installs execution libraries and creates `.env`.
+
+```powershell
+python setup_env.py
+```
+
+**Initial setup, from the project folder (Mac/Linux):**
+
+```bash
+python3 setup_env.py
+```
+
+**Readiness check, from the project folder with `.venv` active:**
+
+```bash
+python check_setup.py
+```
+
+**Fell behind?** Get the finished step from the project folder:
+
+```bash
+python checkpoint.py step3
+```
+
+**Step 1**, inside `build/step1_model`: the model call with six experiments.
+
+```bash
+python ask.py
+```
+
+**Step 4**, inside `build/step4_ground`: which policy pages does the librarian find?
+
+```bash
+python retrieval.py "price match"
+```
+
+**Step 5**, inside `build/step5_agent`: let the crew handle order 1043 (other arguments include `all` and `--graph`).
+
+```bash
+python agent.py 1043
+```
+
+**Part 2**, inside an evaluation step folder, with the step 5 bot running: break the bot on purpose.
+
+```bash
+python ../../plant_bug.py liar
+```
+
+Always restore the healthy bot afterwards, from that same step folder:
+
+```bash
+python ../../plant_bug.py off
+```
+
+**Run all of Part 2**, from the project folder with the step 5 bot running:
+
+```bash
+pytest evaluate -v
+```
+
+Then open `evaluate/report.html` in your browser.
 
 ## Stuck?
 
 1. Look in [TROUBLESHOOTING.md](TROUBLESHOOTING.md). Most problems are there.
-2. Use `python checkpoint.py stepN` to jump ahead.
+2. Jump to a finished step from the project folder (replace `step3` with `step1` through `step9`):
+
+   ```bash
+   python checkpoint.py step3
+   ```
+
 3. Ask your neighbour. Nobody gets left behind.
 
 ---
@@ -208,7 +345,11 @@ pytest evaluate -v                  # from the main project folder: everything i
 | `plant_bug.py` | switch bugs on and off for Part 2 |
 | `checkpoint.py` | copy in the finished code if you fall behind |
 | `check_setup.py` | checks if your laptop is ready |
-| `tools/` | tools for the presenter |
+| `setup_env.py` | one-command setup: virtual environment, packages, `.env` |
+| `PRE_CONFERENCE.md` | how to get ready before the day (own laptop, or in the browser) |
+| `COMMANDS_WINDOWS.md` · `COMMANDS_MAC.md` | every command for steps 1 to 9, copy-paste ready |
+| `.devcontainer/` | settings for running the tutorial in GitHub Codespaces (browser) |
+| `tools/` | tools for the presenter (`PRESENTER_CHECKLIST.md` inside) |
 
 ## Want to build it again later? The 9 ideas
 
@@ -223,8 +364,26 @@ pytest evaluate -v                  # from the main project folder: everything i
 9. **Test from the bottom up, and plant bugs on purpose.** Rule checks first, then an AI judge, then the agent's journey, then test the judge. *(steps 6-9)*
 
 ## For the presenter
-- After changing any code, run `python tools/check_steps.py`. It checks that the step folders still match each other and that all code compiles.
-- Practise without a real model: `cd tools` then `uvicorn fake_llm:app --port 9999`. In `.env`, set `LLM_BASE_URL=http://localhost:9999/v1` and `LLM_MODEL=fake`. It can play the judge too: set `JUDGE_BASE_URL=http://localhost:9999/v1` and `JUDGE_MODEL=fake` to rehearse steps 7-9 offline.
+- Sending this to attendees (what to send, when, and how to test both setup paths): [tools/PRESENTER_CHECKLIST.md](tools/PRESENTER_CHECKLIST.md).
+- After changing any code, check that the step folders still match each other and that all code compiles:
+
+  ```bash
+  python tools/check_steps.py
+  ```
+
+- Practise without a real model. From the project folder:
+
+  ```bash
+  cd tools
+  ```
+
+  Start the fake model server and leave it running:
+
+  ```bash
+  uvicorn fake_llm:app --port 9999
+  ```
+
+  In `.env`, set `LLM_BASE_URL=http://localhost:9999/v1` and `LLM_MODEL=fake`. It can play the judge too: set `JUDGE_BASE_URL=http://localhost:9999/v1` and `JUDGE_MODEL=fake` to rehearse steps 7-9 offline.
 
 ## Credits & licence
 Built for AutomationSTAR 2026 by Gaurav Khurana ([gauravkhurana.com](https://gauravkhurana.com)). ShopKart, its orders and its rules are made up.

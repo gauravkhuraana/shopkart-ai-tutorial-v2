@@ -30,10 +30,20 @@ RUBRIC = ("Does the actual output give the same answer as the expected output? "
 
 
 def score(judge, item) -> float:
-    metric = GEval(name="Correctness", model=judge, criteria=RUBRIC, async_mode=False,
-                   evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT])
-    metric.measure(LLMTestCase(input=item["question"], actual_output=item["answer"],
-                               expected_output=item["expected"]))
+    """Ask one judge to grade one answer. Returns its Correctness score (0 to 1)."""
+    metric = GEval(
+        name="Correctness",
+        model=judge,
+        criteria=RUBRIC,
+        async_mode=False,
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
+    )
+    test_case = LLMTestCase(
+        input=item["question"],
+        actual_output=item["answer"],
+        expected_output=item["expected"],
+    )
+    metric.measure(test_case)
     return metric.score
 
 
@@ -44,8 +54,9 @@ def main():
 
     items = yaml.safe_load((Path(__file__).parent / "my_scores.yaml").read_text(encoding="utf-8"))
     judges = {"local": config.local_judge_model(), "hosted": config.judge_model()}
-    results = {name: {} for name in judges}
+    results = {name: {} for name in judges}    # results[judge name][answer id] = the scores of every run
 
+    # Every judge scores every answer several times, to see how much it wobbles.
     for name, judge in judges.items():
         for item in items:
             runs = []
@@ -58,9 +69,10 @@ def main():
             print(f"{name:>6} judge · answer {item['id']}: {['%.2f' % r for r in runs]}")
             time.sleep(0.5)
 
+    # The table: for each answer, every judge's runs and spread, then YOUR score.
     print(f"\n{'':9}{'LOCAL judge':<26}{'HOSTED judge':<26}YOU")
     print(f"{'answer':9}{'runs':<18}{'range':>5}   {'runs':<18}{'range':>5}")
-    gaps = {name: [] for name in judges}
+    gaps = {name: [] for name in judges}    # distance between a judge's average and YOUR score
     for item in items:
         row = f"  {item['id']:<7}"
         for name in judges:
@@ -68,14 +80,18 @@ def main():
             spread = (max(runs) - min(runs)) if runs else float("nan")
             row += f"{' '.join('%.2f' % r for r in runs):<18}{spread:>5.2f}   "
             if runs and item.get("my_score") is not None:
-                gaps[name].append(abs(sum(runs) / len(runs) - float(item["my_score"])))
-        row += f"{item.get('my_score', '-') if item.get('my_score') is not None else '-'}"
+                average = sum(runs) / len(runs)
+                gaps[name].append(abs(average - float(item["my_score"])))
+
+        my_score = item.get("my_score")
+        row += f"{my_score if my_score is not None else '-'}"
         print(row)
 
     print()
     for name in judges:
         if gaps[name]:
-            print(f"{name:>6} judge: average distance from YOUR scores = {sum(gaps[name]) / len(gaps[name]):.2f}  (lower = agrees more)")
+            average_gap = sum(gaps[name]) / len(gaps[name])
+            print(f"{name:>6} judge: average distance from YOUR scores = {average_gap:.2f}  (lower = agrees more)")
         else:
             print(f"{name:>6} judge: fill in my_score in my_scores.yaml to measure agreement")
 

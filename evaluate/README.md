@@ -12,20 +12,76 @@ step 9   Judge on trial   the judge is AI too: put a CAP on it         trial_sim
 **Airport security, bottom-up:** the metal detector (step 6: plain rules, free, on every question) → the officer (step 7: the AI judge, only where judgement is needed) → the supervisor (step 9: a human checks the judge).
 
 ## Before you start: keep the step 5 bot running
-In a separate terminal (window 2):
-```bash
-cd build/step5_agent
+Steps 6, 7 and 8 test your step 5 bot over HTTP, so it must be running. **Window 2**, leave it open:
+
+**Windows (PowerShell)**
+the folder that contains check_setup.py
+
+```powershell
+cd path\to\shopkart-ai-tutorial-v2
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```powershell
+cd build\step5_agent
+```
+
+```powershell
 uvicorn app:app --reload
 ```
-Every test talks to it over HTTP, exactly like the chat page. Laptop can't run it? Put the hosted bot's address in `.env` as `SHOPKART_URL` (TROUBLESHOOTING.md #18).
+
+**Mac / Linux**
+the folder that contains check_setup.py
+
+```bash
+cd path/to/shopkart-ai-tutorial-v2
+```
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+cd build/step5_agent
+```
+
+```bash
+uvicorn app:app --reload
+```
+
+Then do your work in **window 3** (a new terminal: activate the venv again, then `cd` into the step folder). Step 9 does not need the bot.
+Every test talks to the bot over HTTP, exactly like the chat page. Laptop can't run it? Put the hosted bot's address in `.env` as `SHOPKART_URL` (TROUBLESHOOTING.md #18).
+
+| Step | Bot running? | Judge (internet)? | Copy-paste commands |
+|---|---|---|---|
+| 6 · Rules | yes | no | [step6_rules](step6_rules/README.md) |
+| 7 · AI judge | yes | yes | [step7_judge](step7_judge/README.md) |
+| 8 · Agent | yes | only `test_task_completion` | [step8_agent](step8_agent/README.md) |
+| 9 · Judge on trial | no | yes | [step9_trial](step9_trial/README.md) |
+
+Everything in one place: [COMMANDS_WINDOWS.md](../COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](../COMMANDS_MAC.md)
 
 ## Every folder
 - `…_simple.py`: a plain Python script in 2–3 numbered parts. We walk through it together, you run it, and it **prints** what happened. It has 1–2 `TODO`s (the **CORE**) and a few `EXPERIMENT` lines: remove the `#` (Ctrl+/), run, see a bug get caught, put the `#` back.
 - the full file (`test_….py`): the same idea as a real pytest suite, on many questions, with pass marks and clear failure messages. That's the **STRETCH**.
 - `README.md`: what you do, how to run it, how you know you're done.
 
-Run every command **inside the step folder** (e.g. `cd evaluate/step6_rules`).
-Fell behind? From the repo root: `python checkpoint.py step6` (… `step9`). Finished code: `solutions/step6_rules` … `solutions/step9_trial`.
+Run each step's commands **inside its folder**, with `.venv` active. For example, from the project folder:
+
+```bash
+cd evaluate/step6_rules
+```
+
+Fell behind? Copy a finished step from the repo root (replace `step6` with `step7`, `step8` or `step9` as needed):
+
+```bash
+python checkpoint.py step6
+```
+
+Finished code: `solutions/step6_rules` … `solutions/step9_trial`.
 
 ## The scoreboard: see your bot scored in your browser
 Every time you run **pytest** in Part 2, it writes one page: **`evaluate/report.html`**. Open it in your browser (double-click it, or Ctrl+click the link pytest prints at the end). Leave it open: it refreshes itself while the tests run.
@@ -36,8 +92,16 @@ Every time you run **pytest** in Part 2, it writes one page: **`evaluate/report.
 
 ## Want to break the real bot? (full files only)
 The simple files fake their bugs with `EXPERIMENT` lines. The full files can test a bot that's really broken. From any step folder:
+or: no_pages, skip_lookup, overpay, blind_reviewer, shared_memory, no_breaker, false_promise
+
 ```bash
-python ../../plant_bug.py liar        # or: no_pages, skip_lookup, overpay, blind_reviewer, shared_memory, no_breaker, false_promise
-python ../../plant_bug.py off         # healthy again
+python ../../plant_bug.py liar
 ```
+
+healthy again
+
+```bash
+python ../../plant_bug.py off
+```
+
 The running bot reads the switch on every request: no restart needed.

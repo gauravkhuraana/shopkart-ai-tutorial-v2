@@ -56,7 +56,12 @@ def tamper_pages(pages: list[dict], question: str = "") -> list[dict]:
     if active("no_pages"):
         print("       !! planted bug 'no_pages': the librarian brings nothing")
         return []
-    if active("liar") and any(w in question.lower() for w in ("price", "match", "cheaper")):
-        print("       !! planted bug 'liar': a bad price-match page sneaks into the knowledge base")
-        return [FAKE_PRICE_MATCH_PAGE] + pages[:2]
+
+    if active("liar"):
+        # Only poison the answer when the customer is asking about price matching.
+        asked_about_price = any(word in question.lower() for word in ("price", "match", "cheaper"))
+        if asked_about_price:
+            print("       !! planted bug 'liar': a bad price-match page sneaks into the knowledge base")
+            return [FAKE_PRICE_MATCH_PAGE] + pages[:2]
+
     return pages

@@ -60,12 +60,17 @@ import planted_bugs  # noqa: E402   (Part 2 missions: python plant_bug.py <name>
 from retrieval import retrieve  # noqa: E402   (the step 4 librarian)
 
 client = config.llm_client()
-# The 10 seeded orders. Each one is built to hit one policy rule (damaged, too late, digital, over 200 EUR...)
-ORDERS = {o["order_id"]: o for o in json.loads((config.DATA_DIR / "orders.json").read_text(encoding="utf-8"))}
 
-MAX_ROUNDS = 3             # circuit breaker: how often the Policy Reviewer may send work back
+# The 10 seeded orders, keyed by order id.
+# Each one is built to hit one policy rule (damaged, too late, digital, over 200 EUR...)
+orders_file = config.DATA_DIR / "orders.json"
+ORDERS = {}
+for order in json.loads(orders_file.read_text(encoding="utf-8")):
+    ORDERS[order["order_id"]] = order
+
+MAX_ROUNDS = 3              # circuit breaker: how often the Policy Reviewer may send work back
 HUMAN_APPROVAL_LIMIT = 200  # execution rule: refunds above this always go to a human
-CHAOS = None               # set by the Part 2 tests (LAB 7): "order_system_down" or "reviewer_says_no"
+CHAOS = None                # set by the Part 2 tests (LAB 7): "order_system_down" or "reviewer_says_no"
 # NOTE for testers: CHAOS is ONE variable shared by every request. Two customers at the same moment
 # could see each other's chaos: a real "two-user isolation" bug, kept on purpose as a talking point.
 _PREVIOUS_FACTS: list = []  # used only by the planted bug "shared_memory"
@@ -77,15 +82,28 @@ _PREVIOUS_FACTS: list = []  # used only by the planted bug "shared_memory"
 def get_order(order_id: str) -> dict:
     if CHAOS == "order_system_down":
         raise TimeoutError("order system did not respond")
+
     order = ORDERS.get(str(order_id).strip().lstrip("#"))
     if not order:
         return {"error": f"order {order_id} not found"}
-    return {k: v for k, v in order.items() if k != "demo_message"}
+
+    # Everything except the demo message (that is only for the demo buttons).
+    visible = {}
+    for key, value in order.items():
+        if key != "demo_message":
+            visible[key] = value
+    return visible
 
 
 def check_policy(topic: str) -> str:
     pages = retrieve(topic, top_k=2)
-    return "\n\n".join(p["text"] for p in pages) or "No policy found for that topic."
+    if not pages:
+        return "No policy found for that topic."
+
+    texts = []
+    for page in pages:
+        texts.append(page["text"])
+    return "\n\n".join(texts)
 
 
 def issue_refund(order_id: str, amount: float) -> str:
@@ -101,26 +119,47 @@ def escalate_to_human(order_id: str, reason: str) -> str:
 # 2. TOOL DEFINITIONS — what the model sees. Clear names + descriptions = better requests.
 # =====================================================================
 def _tool(name, description, **params):
-    return {"type": "function", "function": {
-        "name": name, "description": description,
-        "parameters": {"type": "object", "properties": params, "required": list(params)}}}
+    """Describe one tool in the format the model API expects."""
+    return {
+        "type": "function",
+        "function": {
+            "name": name,
+            "description": description,
+            "parameters": {"type": "object", "properties": params, "required": list(params)},
+        },
+    }
+
 
 TOOLS = [
-    _tool("get_order", "Look up an order by its order number. Returns item, price paid, status, "
-                       "days since delivery, condition and whether it was a final-sale item.",
-          order_id={"type": "string", "description": "The order number, e.g. 1043"}),
-    _tool("check_policy", "Read ShopKart's refund/return policy on a topic, e.g. 'damaged items' or 'return window'.",
-          topic={"type": "string", "description": "What to look up in the policy"}),
-    _tool("issue_refund", "Refund money to the customer. Use only when the policy allows a refund.",
-          order_id={"type": "string"}, amount={"type": "number", "description": "Amount in EUR"}),
+    _tool(
+        "get_order",
+        "Look up an order by its order number. Returns item, price paid, status, "
+        "days since delivery, condition and whether it was a final-sale item.",
+        order_id={"type": "string", "description": "The order number, e.g. 1043"},
+    ),
+    _tool(
+        "check_policy",
+        "Read ShopKart's refund/return policy on a topic, e.g. 'damaged items' or 'return window'.",
+        topic={"type": "string", "description": "What to look up in the policy"},
+    ),
+    _tool(
+        "issue_refund",
+        "Refund money to the customer. Use only when the policy allows a refund.",
+        order_id={"type": "string"},
+        amount={"type": "number", "description": "Amount in EUR"},
+    ),
     # TODO 1 · Add the fourth tool to the menu, so the model can hand a case to a human.
     #   The model only knows what a tool does from its description, so say WHEN to use it:
     #     _tool("escalate_to_human", "Hand the case to a human specialist, e.g. refunds above 200 EUR, "
     #                                "systems not working, or anything outside the rules.",
     #           order_id={"type": "string"}, reason={"type": "string"}),
 ]
+
 READ_TOOLS = {"get_order": get_order, "check_policy": check_policy}      # cooked immediately
-ACTION_TOOLS = {"issue_refund": issue_refund, "escalate_to_human": escalate_to_human}  # cooked only after review
+ACTION_TOOLS = {                                                         # cooked only after review
+    "issue_refund": issue_refund,
+    "escalate_to_human": escalate_to_human,
+}
 
 
 # =====================================================================
@@ -168,56 +207,102 @@ class State(TypedDict, total=False):
 
 def request_planner(state: State) -> State:
     response = client.chat.completions.create(
-        model=config.LLM_MODEL, temperature=0,
-        messages=[{"role": "system", "content": REQUEST_PLANNER_PROMPT},
-                  {"role": "user", "content": state["message"]}])
+        model=config.LLM_MODEL,
+        temperature=0,
+        messages=[
+            {"role": "system", "content": REQUEST_PLANNER_PROMPT},
+            {"role": "user", "content": state["message"]},
+        ],
+    )
     plan = config.clean(response.choices[0].message.content)
-    return {"plan": plan, "steps": state["steps"] + [
-        {"agent": "request_planner", "type": "plan", "content": plan}
-    ]}
+
+    step = {"agent": "request_planner", "type": "plan", "content": plan}
+    return {"plan": plan, "steps": state["steps"] + [step]}
 
 
 def case_investigator(state: State) -> State:
     result = _investigate(state)
-    if planted_bugs.active("skip_lookup"):          # Part 2 (LAB 7) mission bug: ignore until then
+
+    # Part 2 (LAB 7) mission bug: ignore until then
+    if planted_bugs.active("skip_lookup"):
         result["steps"] = _proposal_first(result["steps"], start=len(state["steps"]))
     return result
 
 
 def _investigate(state: State) -> State:
-    steps, facts = list(state["steps"]), list(state.get("facts", []))
-    if planted_bugs.active("shared_memory") and not facts:   # Part 2 bonus bug: the previous customer's facts leak in
+    """One round of the Case Investigator: let the model call tools until it proposes an action."""
+    steps = list(state["steps"])
+    facts = list(state.get("facts", []))
+
+    # Part 2 bonus bug: the previous customer's facts leak in
+    if planted_bugs.active("shared_memory") and not facts:
         facts = list(_PREVIOUS_FACTS)
+
+    # The briefing: the customer's message and the plan, plus the reviewer's complaint if there was one.
     brief = f"Customer message: {state['message']}\n\nPlan:\n{state['plan']}"
-    if state.get("review") and not state["review"].get("approved"):
-        brief += f"\n\nThe Policy Reviewer sent your last proposal back: {state['review']['reason']}\nFix it."
-    messages = [{"role": "system", "content": CASE_INVESTIGATOR_PROMPT}, {"role": "user", "content": brief}]
+    review = state.get("review")
+    if review and not review.get("approved"):
+        brief += f"\n\nThe Policy Reviewer sent your last proposal back: {review['reason']}\nFix it."
+
+    messages = [
+        {"role": "system", "content": CASE_INVESTIGATOR_PROMPT},
+        {"role": "user", "content": brief},
+    ]
 
     proposal = None
     for _ in range(6):                                   # at most 6 tool calls per round
         response = client.chat.completions.create(
-            model=config.LLM_MODEL, temperature=0, messages=messages, tools=TOOLS)
+            model=config.LLM_MODEL,
+            temperature=0,
+            messages=messages,
+            tools=TOOLS,
+        )
         msg = response.choices[0].message
-        if not msg.tool_calls:                           # answered in words: no money moves
+
+        # Answered in words, without a tool: no money moves.
+        if not msg.tool_calls:
             proposal = {"name": "reply", "args": {"message": config.clean(msg.content)}}
             break
-        messages.append({"role": "assistant", "content": msg.content or "",
-                         "tool_calls": [tc.model_dump() for tc in msg.tool_calls]})
+
+        # Remember what the model asked for, so it can see the results next turn.
+        messages.append({
+            "role": "assistant",
+            "content": msg.content or "",
+            "tool_calls": [tc.model_dump() for tc in msg.tool_calls],
+        })
+
         for call in msg.tool_calls:
-            name, args = call.function.name, _parse_json(call.function.arguments)
-            if name in ACTION_TOOLS:                     # propose the action; do not execute it yet
+            name = call.function.name
+            args = _parse_json(call.function.arguments)
+
+            # An action (refund / escalate): propose it, do not execute it yet.
+            if name in ACTION_TOOLS:
                 proposal = {"name": name, "args": args}
                 break
+
             steps.append({"agent": "case_investigator", "type": "tool_call", "name": name, "args": args})
+
+            # A read tool: run it now. Report failures to the model instead of crashing.
             try:
-                result = READ_TOOLS[name](**args) if name in READ_TOOLS else f"unknown tool {name}"
-            except Exception as err:                     # report operation failures to the model; do not crash
+                if name in READ_TOOLS:
+                    result = READ_TOOLS[name](**args)
+                else:
+                    result = f"unknown tool {name}"
+            except Exception as err:
                 result = f"ERROR: {err}"
+
             steps.append({"agent": "case_investigator", "type": "tool_result", "name": name, "content": result})
             facts.append({"tool": name, "args": args, "result": result})
-            messages.append({"role": "tool", "tool_call_id": call.id, "content": json.dumps(result, default=str)})
+            messages.append({
+                "role": "tool",
+                "tool_call_id": call.id,
+                "content": json.dumps(result, default=str),
+            })
+
         if proposal:
             break
+
+    # Too many tool calls and still no decision: let a human take over.
     if proposal is None:
         proposal = {"name": "escalate_to_human", "args": {"order_id": "?", "reason": "too many steps"}}
 
@@ -229,26 +314,47 @@ def _investigate(state: State) -> State:
 
 def policy_reviewer(state: State) -> State:
     # The Policy Reviewer must receive the facts, not just the proposal.
-    facts = [] if planted_bugs.active("blind_reviewer") else state.get("facts", [])   # Part 2 (LAB 7) mission bug
-    reviewer_input = (f"Customer message: {state['message']}\n\n"
-                      f"Facts gathered:\n{json.dumps(facts, indent=1, default=str)}\n\n"
-                      f"Proposed action: {json.dumps(state['proposal'])}")
+    # (Part 2 (LAB 7) mission bug "blind_reviewer": the facts are left out.)
+    if planted_bugs.active("blind_reviewer"):
+        facts = []
+    else:
+        facts = state.get("facts", [])
+
+    reviewer_input = (
+        f"Customer message: {state['message']}\n\n"
+        f"Facts gathered:\n{json.dumps(facts, indent=1, default=str)}\n\n"
+        f"Proposed action: {json.dumps(state['proposal'])}"
+    )
+
     response = client.chat.completions.create(
-        model=config.LLM_MODEL, temperature=0, response_format={"type": "json_object"},
-        messages=[{"role": "system", "content": POLICY_REVIEWER_PROMPT},
-                  {"role": "user", "content": reviewer_input}])
+        model=config.LLM_MODEL,
+        temperature=0,
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": POLICY_REVIEWER_PROMPT},
+            {"role": "user", "content": reviewer_input},
+        ],
+    )
     verdict = _parse_json(config.clean(response.choices[0].message.content))
-    review = {"approved": bool(verdict.get("approved")), "reason": str(verdict.get("reason", "no reason given"))}
-    if CHAOS == "reviewer_says_no":                  # Part 2 chaos: a Policy Reviewer that rejects everything
+    review = {
+        "approved": bool(verdict.get("approved")),
+        "reason": str(verdict.get("reason", "no reason given")),
+    }
+
+    # Part 2 chaos: a Policy Reviewer that rejects everything
+    if CHAOS == "reviewer_says_no":
         review = {"approved": False, "reason": "chaos: the Policy Reviewer rejects everything"}
+
     step = {"agent": "policy_reviewer", "type": "review", "input": reviewer_input, **review}
     return {"review": review, "rounds": state.get("rounds", 0) + 1, "steps": state["steps"] + [step]}
 
 
 def route_after_policy_review(state: State) -> str:
     """Execute approved proposals; send rejected ones back, but never forever."""
-    if planted_bugs.active("no_breaker") and not state["review"]["approved"]:   # Part 2 bonus bug: no circuit breaker
+    # Part 2 bonus bug: no circuit breaker, a rejected proposal loops forever
+    if planted_bugs.active("no_breaker") and not state["review"]["approved"]:
         return "case_investigator"
+
     # TODO 2 · Right now EVERYTHING is executed, even what the Policy Reviewer rejected!
     #   Replace the line below with:
     #     if state["review"]["approved"]:
@@ -261,31 +367,46 @@ def route_after_policy_review(state: State) -> str:
 
 def execute_action(state: State) -> State:
     """Execute the approved proposal. Hard rules are enforced HERE, in code, not in a prompt."""
-    name, args = state["proposal"]["name"], dict(state["proposal"]["args"])
-    looked_up = [f["args"].get("order_id") for f in state.get("facts", []) if f["tool"] == "get_order"]
+    name = state["proposal"]["name"]
+    args = dict(state["proposal"]["args"])
+
+    # Which order is this about? Take it from the proposal, else from the order lookup.
+    looked_up = []
+    for fact in state.get("facts", []):
+        if fact["tool"] == "get_order":
+            looked_up.append(fact["args"].get("order_id"))
     order_id = str(args.get("order_id") or (looked_up[0] if looked_up else "?"))
+
     # TODO 3 · The 200 EUR rule, in CODE: even if the model and the Policy Reviewer both say "refund",
     #   big amounts must go to a human. Add these two lines:
     #     if name == "issue_refund" and float(args.get("amount", 0)) > HUMAN_APPROVAL_LIMIT:
     #         name, args = "escalate_to_human", {"order_id": order_id, "reason": "refund above 200 EUR (execution rule)"}
 
-    if name == "issue_refund" and planted_bugs.active("overpay"):   # Part 2 (LAB 7) mission bug: a bug in the payment step
+    # Part 2 (LAB 7) mission bug: a bug in the payment step
+    if name == "issue_refund" and planted_bugs.active("overpay"):
         args["amount"] = float(args.get("amount", 0)) * 2
+
     if name == "issue_refund":
         amount = float(args.get("amount", 0))
         result = issue_refund(order_id, amount)
         outcome = {"action": "refund", "order_id": order_id, "amount": amount}
-        reply = f"Done! I've refunded EUR {amount:.2f} for order {order_id}. It will reach your original payment method in 5-7 business days."
+        reply = (f"Done! I've refunded EUR {amount:.2f} for order {order_id}. "
+                 "It will reach your original payment method in 5-7 business days.")
+
     elif name == "escalate_to_human":
         result = escalate_to_human(order_id, args.get("reason", ""))
         outcome = {"action": "escalate", "order_id": order_id, "amount": 0}
         reply = "I've passed your case to a human specialist. You'll hear back within 2 business days."
+
     else:
         result = "no money moved"
         outcome = {"action": "no_refund", "order_id": order_id, "amount": 0}
         reply = args.get("message") or "I'm sorry, I can't refund this order."
-        if planted_bugs.active("false_promise"):    # Part 2 bonus bug: the words don't match what happened
+
+        # Part 2 bonus bug: the words don't match what happened
+        if planted_bugs.active("false_promise"):
             reply = "Good news: your refund has been issued."
+
     step = {"agent": "action_executor", "type": "action", "name": name, "args": args, "content": result}
     return {"outcome": outcome, "reply": reply, "steps": state["steps"] + [step]}
 
@@ -294,33 +415,54 @@ def give_up(state: State) -> State:
     """Circuit breaker tripped: stop looping and hand over to a human."""
     order_id = str(state["proposal"]["args"].get("order_id", "?"))
     result = escalate_to_human(order_id, "Policy Reviewer rejected the proposal 3 times")
-    step = {"agent": "action_executor", "type": "action", "name": "escalate_to_human",
-            "args": {"order_id": order_id, "reason": "circuit breaker"}, "content": result}
-    return {"outcome": {"action": "escalate", "order_id": order_id, "amount": 0},
-            "reply": "I've passed your case to a human specialist. You'll hear back within 2 business days.",
-            "steps": state["steps"] + [step]}
+
+    step = {
+        "agent": "action_executor",
+        "type": "action",
+        "name": "escalate_to_human",
+        "args": {"order_id": order_id, "reason": "circuit breaker"},
+        "content": result,
+    }
+    return {
+        "outcome": {"action": "escalate", "order_id": order_id, "amount": 0},
+        "reply": "I've passed your case to a human specialist. You'll hear back within 2 business days.",
+        "steps": state["steps"] + [step],
+    }
 
 
 def _parse_json(text) -> dict:
     """Models sometimes wrap JSON in extra text. Grab the first {...} block."""
     if isinstance(text, dict):
         return text
+
     try:
         return json.loads(text)
     except Exception:
-        match = re.search(r"\{.*\}", text or "", re.S)
-        try:
-            return json.loads(match.group(0)) if match else {}
-        except Exception:
-            return {}
+        pass
+
+    # Not clean JSON: look for a {...} block inside the text and try that.
+    match = re.search(r"\{.*\}", text or "", re.S)
+    if not match:
+        return {}
+    try:
+        return json.loads(match.group(0))
+    except Exception:
+        return {}
 
 
 def _proposal_first(steps: list, start: int) -> list:
     """PLANTED BUG 'skip_lookup' (LAB 7): the agent commits to its action BEFORE looking anything up.
     The decision and the money are exactly the same, so only a test on the journey catches it."""
-    new = steps[start:]
-    proposals = [s for s in new if s["type"] == "proposal"]
-    rest = [s for s in new if s["type"] != "proposal"]
+    new_steps = steps[start:]
+
+    proposals = []
+    rest = []
+    for step in new_steps:
+        if step["type"] == "proposal":
+            proposals.append(step)
+        else:
+            rest.append(step)
+
     return steps[:start] + proposals + rest
 
 
@@ -355,31 +497,54 @@ def run_agent(message: str, chaos: str | None = None) -> dict:
     global CHAOS
     CHAOS = chaos
     try:
-        final = crew.invoke({"message": message, "steps": [], "facts": [], "rounds": 0},
-                            {"recursion_limit": 25})
+        final = crew.invoke(
+            {"message": message, "steps": [], "facts": [], "rounds": 0},
+            {"recursion_limit": 25},
+        )
     except GraphRecursionError:                      # the crew looped until LangGraph's safety net stopped it
-        return {"reply": "Something went wrong. A human will contact you.",
-                "outcome": {"action": "loop_limit", "order_id": "?", "amount": 0}, "steps": []}
+        return {
+            "reply": "Something went wrong. A human will contact you.",
+            "outcome": {"action": "loop_limit", "order_id": "?", "amount": 0},
+            "steps": [],
+        }
     finally:
         CHAOS = None
-    return {"reply": final.get("reply", ""), "outcome": final.get("outcome", {}), "steps": final.get("steps", [])}
+
+    return {
+        "reply": final.get("reply", ""),
+        "outcome": final.get("outcome", {}),
+        "steps": final.get("steps", []),
+    }
 
 
 if __name__ == "__main__":
     arg = sys.argv[1] if len(sys.argv) > 1 else "1043"
+
     if arg == "--graph":
         print(crew.get_graph().draw_mermaid())
         sys.exit()
+
     order_ids = list(ORDERS) if arg == "all" else [arg]
+
     for oid in order_ids:
+        # A known order id uses its demo message; anything else is taken as the customer's own text.
         message = ORDERS[oid]["demo_message"] if oid in ORDERS else " ".join(sys.argv[1:])
         print(f"\n=== {message}")
         result = run_agent(message)
+
+        # Print the flight recorder, one line per step.
         for s in result["steps"]:
-            detail = s.get("name", "") + (" " + json.dumps(s.get("args")) if s.get("args") else "")
+            detail = s.get("name", "")
+            if s.get("args"):
+                detail += " " + json.dumps(s.get("args"))
+
             if s["type"] == "review":
-                detail = ("APPROVED: " if s["approved"] else "SENT BACK: ") + s["reason"]
+                verdict = "APPROVED: " if s["approved"] else "SENT BACK: "
+                detail = verdict + s["reason"]
             elif s["type"] in ("plan", "tool_result"):
-                detail = (s.get("name", "") + " " + str(s["content"]).replace("\n", " "))[:110]
+                text = s.get("name", "") + " " + str(s["content"]).replace("\n", " ")
+                detail = text[:110]
+
             print(f"  {s['agent']:<11} {s['type']:<11} {detail}")
+
         print(f"  -> {result['outcome']}\n  customer sees: {result['reply']}")

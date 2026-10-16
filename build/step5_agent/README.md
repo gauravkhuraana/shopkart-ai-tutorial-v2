@@ -2,6 +2,102 @@
 
 The 5 Bs: Brain → Bridge → Browser → Book → **Body** (hands that act)
 
+## ▶ Copy-paste: run this step
+**Needs:** virtual environment active · internet for Groq (or Ollama running). `agent_simple.py` / `agent.py` run once and finish. `uvicorn` is the server and keeps the terminal busy: stop any earlier `uvicorn` first (Ctrl+C).
+> Terminal already shows `(.venv)` and you are in the project folder? Skip the first two commands.
+
+**Windows (PowerShell)**
+the folder that contains check_setup.py
+
+```powershell
+cd path\to\shopkart-ai-tutorial-v2
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```powershell
+cd build\step5_agent
+```
+
+core: should end with action 'refund'
+
+```powershell
+python agent_simple.py 1043
+```
+
+should go to a human
+
+```powershell
+python agent_simple.py 2001
+```
+
+then open http://localhost:8000 and tick Agent mode
+
+```powershell
+uvicorn app_simple:app --reload
+```
+
+Ctrl+C to stop, then the full crew:
+
+```powershell
+python agent.py 1043
+```
+
+LEAVE THIS RUNNING: all of Part 2 (steps 6-8) tests this bot
+
+```powershell
+uvicorn app:app --reload
+```
+
+**Mac / Linux**
+the folder that contains check_setup.py
+
+```bash
+cd path/to/shopkart-ai-tutorial-v2
+```
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+cd build/step5_agent
+```
+
+core: should end with action 'refund'
+
+```bash
+python agent_simple.py 1043
+```
+
+should go to a human
+
+```bash
+python agent_simple.py 2001
+```
+
+then open http://localhost:8000 and tick Agent mode
+
+```bash
+uvicorn app_simple:app --reload
+```
+
+Ctrl+C to stop, then the full crew:
+
+```bash
+python agent.py 1043
+```
+
+LEAVE THIS RUNNING: all of Part 2 (steps 6-8) tests this bot
+
+```bash
+uvicorn app:app --reload
+```
+
+All commands in one place: [COMMANDS_WINDOWS.md](../../COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](../../COMMANDS_MAC.md)
+
 **Slide 12.** Chatbots talk. Agents act. The bot gets **tools** (look up an order, read the policy, issue a refund, escalate to a human). The model never touches our systems: it only **asks** (`issue_refund(order_id="1043", amount=49)`). Our code decides. Every step is recorded in `steps` (the flight recorder), and Part 2 tests exactly that.
 
 Like steps 2, 3 and 4, there are two versions. **Start with the simple one**; move to the full one when you're done.
@@ -86,24 +182,53 @@ What the crew adds to the single agent: a **Planner** that decides what to check
 Run one order straight from the terminal, without the web page. Simple version first:
 ```bash
 cd build/step5_agent
-python agent_simple.py 1043      # broken headphones, 49 EUR → should refund
-python agent_simple.py 2001      # laptop, 899 EUR → should go to a human
-python agent_simple.py all       # all 10 seeded orders
 ```
+
+broken headphones, 49 EUR → should refund
+
+```bash
+python agent_simple.py 1043
+```
+
+laptop, 899 EUR → should go to a human
+
+```bash
+python agent_simple.py 2001
+```
+
+all 10 seeded orders
+
+```bash
+python agent_simple.py all
+```
+
 Or start the API, then tick **Agent mode** in the chat page:
 ```bash
 uvicorn app_simple:app --reload
 ```
+
 Full version (when you've finished the simple one):
+also: 2001, all, --graph
+
 ```bash
-python agent.py 1043             # also: 2001, all, --graph
+python agent.py 1043
+```
+
+```bash
 uvicorn app:app --reload
 ```
+
 Open **http://localhost:8000** and try: *"My headphones from order 1043 arrived broken, refund please."*
 
 ### Sample questions for demos and later debugging
 
-With the healthy simple app (`uvicorn app_simple:app --reload`), tick **Agent mode** and try:
+Start the healthy simple app from this step's folder:
+
+```bash
+uvicorn app_simple:app --reload
+```
+
+Tick **Agent mode** and try:
 
 | Question | What it demonstrates | Expected healthy behavior |
 |---|---|---|
@@ -117,18 +242,65 @@ With the healthy simple app (`uvicorn app_simple:app --reload`), tick **Agent mo
 
 The friend-Ben example is intentionally unsafe in the tutorial. Knowing an order number is not authorization. A production API must derive the customer identity from an authenticated session and verify ownership in trusted code before returning order details or executing a refund.
 
-For the later Part 2 debugging missions, run the full app (`uvicorn app:app --reload`), plant one bug from the repository root, and ask the matching question:
+For the later Part 2 debugging missions, stop the simple app with **Ctrl+C**, then run the full app:
+
+```bash
+uvicorn app:app --reload
+```
+
+In another activated terminal at the repository root, plant **one** bug and ask the matching question. Turn it off after each demo before trying another:
 
 | Command | Question to ask | Problem to look for |
 |---|---|---|
-| `python plant_bug.py liar` | `Do you price-match a competitor's cheaper price?` | The bot claims ShopKart price-matches |
-| `python plant_bug.py no_pages` | `Can I return unused shoes from order 1050 after 20 days?` | The librarian returns no policy pages |
-| `python plant_bug.py skip_lookup` | `Refund my damaged headphones from order 1043.` | The refund is proposed before the order lookup |
-| `python plant_bug.py overpay` | `Refund my damaged headphones from order 1043.` | The action refunds 98 EUR instead of 49 EUR |
-| `python plant_bug.py blind_reviewer` | `Refund my damaged headphones from order 1043.` | The Reviewer approves without order facts |
-| `python plant_bug.py false_promise` | `Refund the gift card in order 1072.` | The reply promises a refund although no money moved |
+| **Command 1** | `Do you price-match a competitor's cheaper price?` | The bot claims ShopKart price-matches |
+| **Command 2** | `Can I return unused shoes from order 1050 after 20 days?` | The librarian returns no policy pages |
+| **Command 3** | `Refund my damaged headphones from order 1043.` | The refund is proposed before the order lookup |
+| **Command 4** | `Refund my damaged headphones from order 1043.` | The action refunds 98 EUR instead of 49 EUR |
+| **Command 5** | `Refund my damaged headphones from order 1043.` | The Reviewer approves without order facts |
+| **Command 6** | `Refund the gift card in order 1072.` | The reply promises a refund although no money moved |
 
-Turn the planted bug off after each demo with `python plant_bug.py off`.
+**Command 1**
+
+```bash
+python plant_bug.py liar
+```
+
+**Command 2**
+
+```bash
+python plant_bug.py no_pages
+```
+
+**Command 3**
+
+```bash
+python plant_bug.py skip_lookup
+```
+
+**Command 4**
+
+```bash
+python plant_bug.py overpay
+```
+
+**Command 5**
+
+```bash
+python plant_bug.py blind_reviewer
+```
+
+**Command 6**
+
+```bash
+python plant_bug.py false_promise
+```
+
+Turn the planted bug off after each demo, from the repository root:
+
+```bash
+python plant_bug.py off
+```
+
 
 ## CORE (everyone) · your TODOs in `agent_simple.py`
 | TODO | Where | What you do |
@@ -146,18 +318,48 @@ The full version `agent.py` has 3 TODOs as well, the same ideas in crew form:
 | 3 | `serve` | The 200 EUR rule, **in code** |
 
 ## Done when…
-- `python agent_simple.py 1043` ends with `-> {'action': 'refund', ... 'amount': 49.0}`.
-- `python agent_simple.py 2001` ends with `-> {'action': 'escalate', ...}`, even if the model wanted to refund.
+- For order 1043, expect `-> {'action': 'refund', ... 'amount': 49.0}`:
+
+  ```bash
+  python agent_simple.py 1043
+  ```
+
+- For order 2001, expect `-> {'action': 'escalate', ...}`, even if the model wanted to refund:
+
+  ```bash
+  python agent_simple.py 2001
+  ```
+
 - In the chat page, Agent mode shows a line like `agent: get_order → read_policy → issue_refund · result: refund`.
 - Full version: the chat page shows the whole step log: planner → implementer tool calls → reviewer → kitchen.
 
 ## STRETCH
-- `python agent_simple.py all`: run all 10 seeded orders. Which outcomes would you argue with?
+- Run all 10 seeded orders. Which outcomes would you argue with?
+
+  ```bash
+  python agent_simple.py all
+  ```
+
 - Change `HUMAN_APPROVAL_LIMIT` to 100 and rerun order 1050 (89 EUR) and 1061 (120 EUR).
 - Set `MAX_STEPS = 1` and run order 1043. What does the customer get? (That's the circuit breaker.)
-- Full version: `python agent.py --graph`, then paste the output into https://mermaid.live to see the crew as a picture.
+- Full version: print the graph, then paste the output into https://mermaid.live to see the crew as a picture:
+
+  ```bash
+  python agent.py --graph
+  ```
+
 
 ## Stuck?
-`solutions/step5_agent/agent_simple.py` and `agent.py` · `python checkpoint.py step5` · model won't call tools → TROUBLESHOOTING.md #11 · agent loops → #12
+`solutions/step5_agent/agent_simple.py` and `agent.py` ·
 
-**Part 2 tests the full version.** After the break, keep `uvicorn app:app --reload` (not `app_simple`) running here: the tests need the crew's `steps` and its chaos switches.
+```bash
+python checkpoint.py step5
+```
+
+· model won't call tools → TROUBLESHOOTING.md #11 · agent loops → #12
+
+**Part 2 tests the full version.** After the break, keep the full server (not `app_simple`) running here; the tests need the crew's `steps` and its chaos switches:
+
+```bash
+uvicorn app:app --reload
+```

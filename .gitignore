@@ -6,3 +6,5 @@ __pycache__/
 *.mine
 .planted_bug
 evaluate/report.html
+dist/
+wheelhouse/

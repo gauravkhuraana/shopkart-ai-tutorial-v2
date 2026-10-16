@@ -170,7 +170,8 @@ def take_action(name, args, steps):
         amount = float(args["amount"])
         result = issue_refund(order_id, amount)
         outcome = {"action": "refund", "order_id": order_id, "amount": amount}
-        reply = "Done! I've refunded EUR " + format(amount, ".2f") + " for order " + order_id + ". It will reach your original payment method in 5-7 business days."
+        reply = ("Done! I've refunded EUR " + format(amount, ".2f") + " for order " + order_id + ". "
+                 "It will reach your original payment method in 5-7 business days.")
     else:
         result = escalate_to_human(order_id, args.get("reason", ""))
         outcome = {"action": "escalate", "order_id": order_id, "amount": 0}
@@ -221,7 +222,8 @@ def run_agent(message):
 
     # The loop ran out of steps: the circuit breaker. Don't leave the customer hanging: hand over to a human.
     result = escalate_to_human(order_id, "the agent took too many steps")
-    steps.append({"type": "action", "name": "escalate_to_human", "args": {"order_id": order_id, "reason": "circuit breaker"}, "content": result})
+    steps.append({"type": "action", "name": "escalate_to_human",
+                  "args": {"order_id": order_id, "reason": "circuit breaker"}, "content": result})
     return {"reply": "I've passed your case to a human specialist. You'll hear back within 2 business days.",
             "outcome": {"action": "escalate", "order_id": order_id, "amount": 0},
             "steps": steps}

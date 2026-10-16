@@ -30,8 +30,14 @@ from deepeval.test_case import LLMTestCase, SingleTurnParams
 
 import config     # shared/config.py: reads .env (SHOPKART_URL, JUDGE_*)
 
-GOLDEN = yaml.safe_load((config.ROOT / "evaluate" / "golden_questions.yaml").read_text(encoding="utf-8"))   # the answer key
-JUDGE_CASES = [c for c in GOLDEN if c.get("judge")]
+GOLDEN_FILE = config.ROOT / "evaluate" / "golden_questions.yaml"
+GOLDEN = yaml.safe_load(GOLDEN_FILE.read_text(encoding="utf-8"))   # the answer key
+
+# Only the golden questions that are marked for the AI judge.
+JUDGE_CASES = []
+for case in GOLDEN:
+    if case.get("judge"):
+        JUDGE_CASES.append(case)
 
 # TODO 1 · Choose your pass marks (0-1). Every metric passes when its score is AT LEAST its pass mark.
 #          What's "good enough" for a refund bot? (try 0.7 for both, then make one stricter)
@@ -85,6 +91,8 @@ def test_judge(case, scoreboard):
         metric.measure(test_case)
     scoreboard.add(metrics)
 
-    failed = [f"{m.__name__}: {m.score:.2f} (pass mark {m.threshold}) · {m.reason}"
-              for m in metrics if not m.is_successful()]
+    failed = []
+    for m in metrics:
+        if not m.is_successful():
+            failed.append(f"{m.__name__}: {m.score:.2f} (pass mark {m.threshold}) · {m.reason}")
     assert not failed, f"answer: {result['reply']}\n" + "\n".join(failed)

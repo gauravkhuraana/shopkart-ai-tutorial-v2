@@ -105,9 +105,13 @@ class ChatRequest(BaseModel):
     messages: list[Message]
 
     # The example body that /docs fills in for you when you click "Try it out"
-    model_config = {"json_schema_extra": {"examples": [
-        {"messages": [{"role": "user", "content": "Can I return shoes I bought 20 days ago?"}]}
-    ]}}
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {"messages": [{"role": "user", "content": "Can I return shoes I bought 20 days ago?"}]}
+            ]
+        }
+    }
 
 
 # ---------------------------------------------------------------------------

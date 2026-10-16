@@ -16,7 +16,27 @@ Finished code for every step. Each folder here mirrors the folder of the same na
 
 **Use them:**
 - **Compare.** Open your file and the solution side by side. Only the TODO parts differ.
-- **Copy into place.** From the repo root: `python checkpoint.py step3` (or `step1` … `step9`). Your own version is kept as `<name>.mine`.
-- **Run directly.** Every solution folder runs too, e.g. `cd solutions/step4_ground && uvicorn app:app --reload`.
+- **Copy into place.** From the repo root (replace `step3` with `step1` through `step9`). Your own version is kept as `<name>.mine`:
 
-The Part 2 solutions need the scoreboard and the answer key in `evaluate/`, so copy them in place with `python checkpoint.py step6` … `step9` and run them there. The simple files (`*_simple.py`) also run straight from here.
+  ```bash
+  python checkpoint.py step3
+  ```
+
+- **Run directly.** With `.venv` active, every solution folder runs too. For example, from the repo root:
+
+  ```bash
+  cd solutions/step4_ground
+  ```
+
+  ```bash
+  uvicorn app:app --reload
+  ```
+
+
+The Part 2 solutions need the scoreboard and answer key in `evaluate/`, so copy them in place from the project root, then run them in their evaluation step folders. For example (replace `step6` with `step7`, `step8` or `step9` as needed):
+
+```bash
+python checkpoint.py step6
+```
+
+The simple files (`*_simple.py`) also run straight from here.

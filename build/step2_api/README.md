@@ -2,6 +2,66 @@
 
 The 5 Bs: Brain → **Bridge** → Browser → Book → Body
 
+## ▶ Copy-paste: run this step
+**Needs:** virtual environment active · internet for Groq (or Ollama running) · this step **is** the server, so the terminal stays busy. Do anything else in a second terminal.
+> Terminal already shows `(.venv)` and you are in the project folder? Skip the first two commands.
+
+**Windows (PowerShell)**
+the folder that contains check_setup.py
+
+```powershell
+cd path\to\shopkart-ai-tutorial-v2
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```powershell
+cd build\step2_api
+```
+
+core. Then open http://localhost:8000/docs
+
+```powershell
+uvicorn app_simple:app --reload
+```
+
+Ctrl+C to stop, then the stretch version:
+
+```powershell
+uvicorn app:app --reload
+```
+
+**Mac / Linux**
+the folder that contains check_setup.py
+
+```bash
+cd path/to/shopkart-ai-tutorial-v2
+```
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+cd build/step2_api
+```
+
+core. Then open http://localhost:8000/docs
+
+```bash
+uvicorn app_simple:app --reload
+```
+
+Ctrl+C to stop, then the stretch version:
+
+```bash
+uvicorn app:app --reload
+```
+
+Port 8000 busy? Add `--port 8001`. All commands in one place: [COMMANDS_WINDOWS.md](../../COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](../../COMMANDS_MAC.md)
+
 **Slide 9.** A script works for you, but a web page, Postman, curl or an automated test can't call a script. They can all call an **API**. We wrap step 1's model call in **FastAPI**, a small Python web framework.
 
 ## What's in this folder
@@ -87,7 +147,13 @@ FastAPI on its own doesn't listen on any port, so it needs a server. That's uvic
 ### uvicorn: the web server that runs your app
 
 **Start with what you know.** `ask_simple.py` is a normal script: it runs **top to bottom once**, prints the answer, and **ends**.
-Now try `python app_simple.py`. **Nothing happens.** It creates the client, creates `app = FastAPI()`, defines `chat()`, reaches the end of the file, and stops.
+Now try running the API file as a normal script:
+
+```bash
+python app_simple.py
+```
+
+**No server starts.** It creates the client, creates `app = FastAPI()`, defines `chat()`, reaches the end of the file, and stops.
 `chat()` is never called, and nobody is listening at `localhost:8000`.
 
 **An API needs a program that never ends.** It has to sit and wait, maybe for hours, until someone calls, answer, and go back to waiting.
@@ -121,12 +187,13 @@ That's why the terminal shows `Uvicorn running on http://127.0.0.1:8000` and doe
 - **FastAPI** is the receptionist's directory: "refund questions → put them through to `chat()`".
 - **`chat()`** is the expert who gives the actual answer.
 
-`python app_simple.py` writes the directory and hires the expert, but **nobody sits by the phone**, so calls ring out.
-`uvicorn app_simple:app` puts the receptionist at the phone with your directory:
+Running `app_simple.py` as a normal script writes the directory and hires the expert, but **nobody sits by the phone**, so calls ring out.
+Starting it through uvicorn puts the receptionist at the phone with your directory:
 
 ```bash
 uvicorn app_simple:app --reload
 ```
+
 | Part | Meaning |
 |---|---|
 | `uvicorn` | start the web server |
@@ -135,11 +202,23 @@ uvicorn app_simple:app --reload
 | `--reload` | watch the file, and restart the loop with the new code every time you save (for development only) |
 
 That's why `app_simple.py` never imports uvicorn: uvicorn imports *your* file. (They fit together through a standard Python "plug" called **ASGI**, a bit like USB.)
-That's also why the two files start differently: `uvicorn app_simple:app` and `uvicorn app:app` point at different files, and both have a variable called `app`.
-Both are installed by `pip install -r requirements.txt` (`fastapi`, `uvicorn`; `pydantic` comes with FastAPI). Port busy? Add `--port 8001`.
+The server commands use `app_simple:app` and `app:app` to point at different files; both files have a variable called `app`.
+FastAPI and uvicorn are installed together by the project's library-install command. From the project folder, with `.venv` active:
+
+```bash
+pip install -r requirements.txt
+```
+
+Pydantic comes with FastAPI. Return to this step's folder before starting the server. Port busy? Add `--port 8001`.
 
 **See it yourself:**
-1. Run `uvicorn app_simple:app --reload`. The terminal **stays busy**: that's the endless loop.
+1. From this step's folder, start the server:
+
+   ```bash
+   uvicorn app_simple:app --reload
+   ```
+
+   The terminal **stays busy**: that's the endless loop.
 2. Open http://localhost:8000/docs and send a request. The uvicorn terminal prints `"POST /chat HTTP/1.1" 200 OK`: "a call came in, I passed it on, the answer was OK (200)".
 3. Press `Ctrl+C`. The loop stops. Refresh the browser: "This site can't be reached". Nobody is at the phone any more.
 **In one sentence:** uvicorn gets the request in, FastAPI sends it to the right function, Pydantic checks it's the right shape, and your function talks to the model.
@@ -148,8 +227,12 @@ Both are installed by `pip install -r requirements.txt` (`fastapi`, `uvicorn`; `
 From the repo root, with your virtual environment active:
 ```bash
 cd build/step2_api
+```
+
+```bash
 uvicorn app_simple:app --reload
 ```
+
 Leave it running. It reloads by itself every time you save the file.
 
 It runs on **Groq's free cloud**, with the key and model name from `.env` (`LLM_API_KEY`, `LLM_MODEL`). Want Ollama instead? Put a `#` in front of the two `# Groq` lines and remove the `#` from the two `# Ollama` lines (`Ctrl+/`).
@@ -166,6 +249,7 @@ Stop `app_simple` (`Ctrl+C`), then:
 ```bash
 uvicorn app:app --reload
 ```
+
 The terminal now prints `HOP 2 · HOP 3 · HOP 4` for every message, so you can follow it through the system.
 Do ONE experiment at a time. Some change one line in `app.py` (find `EXPERIMENT n`, remove its `#`, save), others only need a different body in `/docs`. Put the `#` back afterwards.
 
@@ -194,10 +278,21 @@ Do ONE experiment at a time. Some change one line in `app.py` (find `EXPERIMENT 
 For each one, ask the tester's question: **how would I write a test that catches this?** Tested a REST API before? You've already tested half a chatbot.
 
 Call it from other tools too:
-- **curl** (Mac/Linux/Git Bash): `curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"hi"}]}'`
+- **curl** (Mac/Linux/Git Bash):
+
+  ```bash
+  curl -X POST http://localhost:8000/chat -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"hi"}]}'
+  ```
+
 - **Postman**: POST `http://localhost:8000/chat`, Body → raw → JSON, same body as above.
 
 `app.py` runs on Groq too. Want Ollama instead? Section 1 of `app.py` has an Ollama block: remove the `#` from those lines.
 
 ## Stuck?
-`solutions/step2_api/` · `python checkpoint.py step2` · port 8000 busy → TROUBLESHOOTING.md #8
+`solutions/step2_api/` ·
+
+```bash
+python checkpoint.py step2
+```
+
+· port 8000 busy → TROUBLESHOOTING.md #8

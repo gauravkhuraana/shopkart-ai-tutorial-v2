@@ -2,6 +2,65 @@
 
 Part 2: Rules → AI judge → Agent → **Judge on trial**
 
+## ▶ Copy-paste: run this step
+**Needs:** virtual environment active · internet for the judge (Groq, `JUDGE_*` in `.env`) · the bot is **not** needed (we judge fixed answers).
+
+**Windows (PowerShell)**
+the folder that contains check_setup.py
+
+```powershell
+cd path\to\shopkart-ai-tutorial-v2
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```powershell
+cd evaluate\step9_trial
+```
+
+core: one answer, scored 3 times (fill in MY_SCORE first!)
+
+```powershell
+python trial_simple.py
+```
+
+stretch: both judges, five answers (fill in my_scores.yaml first!)
+
+```powershell
+python judge_the_judge.py --runs 2
+```
+
+**Mac / Linux**
+the folder that contains check_setup.py
+
+```bash
+cd path/to/shopkart-ai-tutorial-v2
+```
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+cd evaluate/step9_trial
+```
+
+core: one answer, scored 3 times (fill in MY_SCORE first!)
+
+```bash
+python trial_simple.py
+```
+
+stretch: both judges, five answers (fill in my_scores.yaml first!)
+
+```bash
+python judge_the_judge.py --runs 2
+```
+
+All commands in one place: [COMMANDS_WINDOWS.md](../../COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](../../COMMANDS_MAC.md)
+
 **Slide 20.** Our judge is AI too, so it can be wrong. Antivenom is tested before it's used, and so must our judge be. **Put a CAP on the judge:**
 
 | | Question | How | Everyday version |
@@ -39,8 +98,12 @@ sequenceDiagram
 2. Run it:
    ```bash
    cd evaluate/step9_trial
+   ```
+
+   ```bash
    python trial_simple.py
    ```
+
 3. The experiments, one at a time (remove the `#`, run, put it back):
 
 | # | Experiment | The change | What to look for |
@@ -56,6 +119,7 @@ sequenceDiagram
    ```bash
    python judge_the_judge.py --runs 2
    ```
+
 3. Read the table: the **range** shows how much each judge wobbles (C), the **distance from YOUR scores** shows how much it agrees with you (A).
 4. Make the `RUBRIC` in `judge_the_judge.py` more specific (e.g. "an invented fee is a serious error"). Does the wobble shrink? Does agreement improve?
 
@@ -64,5 +128,10 @@ sequenceDiagram
 - Work out the cost of one full test run: judge calls × tokens × price (**P**).
 
 ## Stuck?
-- Finished file: `solutions/step9_trial/trial_simple.py`, or from the repo root: `python checkpoint.py step9`
+- Finished file: `solutions/step9_trial/trial_simple.py`, or from the repo root:
+
+  ```bash
+  python checkpoint.py step9
+  ```
+
 - Rate limits → TROUBLESHOOTING.md #14 · the small judge too slow on your laptop? Skip experiment 1 and compare the big judge with your own score.

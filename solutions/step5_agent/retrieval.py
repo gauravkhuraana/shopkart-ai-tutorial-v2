@@ -33,15 +33,23 @@ here about into out up down over any all some more most other such own same too 
 
 def _words(text: str) -> list[str]:
     """Lower-case words without stopwords, with tiny 'stemming' (refunds -> refund, returned -> return)."""
-    words = re.findall(r"[a-z0-9]+", text.lower())
-    stems = [re.sub(r"(ing|ed|es|s)$", "", w) if len(w) > 4 else w for w in words]
-    return [w for w in stems if w not in STOPWORDS]
+    important = []
+    for word in re.findall(r"[a-z0-9]+", text.lower()):
+        # Cut common endings off longer words, so "returns" and "returned" both become "return".
+        if len(word) > 4:
+            word = re.sub(r"(ing|ed|es|s)$", "", word)
+
+        if word not in STOPWORDS:
+            important.append(word)
+    return important
 
 
 def load_pages() -> list[dict]:
     """Each policy file is one 'page': {"name": "returns.md", "text": "...the page..."}."""
-    return [{"name": p.name, "text": p.read_text(encoding="utf-8").strip()}
-            for p in sorted(POLICY_DIR.glob("*.md"))]
+    pages = []
+    for file in sorted(POLICY_DIR.glob("*.md")):
+        pages.append({"name": file.name, "text": file.read_text(encoding="utf-8").strip()})
+    return pages
 
 
 PAGES = load_pages()
@@ -49,24 +57,37 @@ PAGES = load_pages()
 # How many pages contain each word. Rare words (like "gift") count more than common ones (like "order").
 _DOC_FREQ: dict[str, int] = {}
 for _page in PAGES:
-    for _w in set(_words(_page["text"])):
-        _DOC_FREQ[_w] = _DOC_FREQ.get(_w, 0) + 1
+    unique_words = set(_words(_page["text"]))
+    for _word in unique_words:
+        _DOC_FREQ[_word] = _DOC_FREQ.get(_word, 0) + 1
 
 
 def retrieve(question: str, top_k: int = 3) -> list[dict]:
     """Return the top_k pages that share the most (rare) words with the question. [] if nothing matches."""
     if top_k <= 0:
         return []
-    q_words = set(_words(question))
+
+    question_words = set(_words(question))
+
+    # Score every page: each question word adds (times it appears on the page) x (how rare it is).
     scored = []
     for page in PAGES:
         page_words = _words(page["text"])
-        score = sum(page_words.count(w) * math.log(1 + len(PAGES) / _DOC_FREQ.get(w, 1))
-                    for w in q_words)
+
+        score = 0
+        for word in question_words:
+            rarity = math.log(1 + len(PAGES) / _DOC_FREQ.get(word, 1))
+            score += page_words.count(word) * rarity
+
         if score > 0:
             scored.append((score, page))
+
+    # Best score first, then keep only the top_k pages.
     scored.sort(key=lambda pair: pair[0], reverse=True)
-    return [page for _, page in scored[:top_k]]
+    best_pages = []
+    for _score, page in scored[:top_k]:
+        best_pages.append(page)
+    return best_pages
 
 
 if __name__ == "__main__":

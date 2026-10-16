@@ -2,6 +2,66 @@
 
 The 5 Bs: Brain → Bridge → **Browser** → Book → Body
 
+## ▶ Copy-paste: run this step
+**Needs:** virtual environment active · internet for Groq (or Ollama running) · this step **is** the server (the terminal stays busy). Stop any earlier `uvicorn` first (Ctrl+C), because only one thing can use port 8000.
+> Terminal already shows `(.venv)` and you are in the project folder? Skip the first two commands.
+
+**Windows (PowerShell)**
+the folder that contains check_setup.py
+
+```powershell
+cd path\to\shopkart-ai-tutorial-v2
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```powershell
+cd build\step3_ui
+```
+
+core. Then open http://localhost:8000
+
+```powershell
+uvicorn app_simple:app --reload
+```
+
+Ctrl+C to stop, then the stretch version:
+
+```powershell
+uvicorn app:app --reload
+```
+
+**Mac / Linux**
+the folder that contains check_setup.py
+
+```bash
+cd path/to/shopkart-ai-tutorial-v2
+```
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+cd build/step3_ui
+```
+
+core. Then open http://localhost:8000
+
+```bash
+uvicorn app_simple:app --reload
+```
+
+Ctrl+C to stop, then the stretch version:
+
+```bash
+uvicorn app:app --reload
+```
+
+After editing the HTML file, just refresh the browser. All commands in one place: [COMMANDS_WINDOWS.md](../../COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](../../COMMANDS_MAC.md)
+
 **Slide 10.** Put a web page around the API. The page is ready-made; you add the one call that sends your message to `POST /chat`. Now the whole system works, and it's the same shape as the bot you broke this morning.
 
 ```
@@ -62,12 +122,17 @@ The model is still a goldfish, so the page keeps the whole `history` and re-send
 Simple version (start here):
 ```bash
 cd build/step3_ui
+```
+
+```bash
 uvicorn app_simple:app --reload
 ```
+
 Full version (when you've finished the simple one):
 ```bash
 uvicorn app:app --reload
 ```
+
 Open **http://localhost:8000**. After editing the HTML file, just refresh the browser.
 
 ## CORE (everyone) · your TODOs in `index_simple.html` (or `index.html`), top of the `<script>` section
@@ -93,4 +158,10 @@ When something goes wrong, the tester's question is: **at which hop?** (The term
 Open your browser's developer tools (F12) → **Network** tab, send a message, and click the `chat` request. That's hop 1 and hop 5 as raw JSON, the same thing a tester sees in Postman.
 
 ## Stuck?
-`solutions/step3_ui/index_simple.html` and `index.html` · `python checkpoint.py step3` · running late? Skip the coding: copy the solution and just chat.
+`solutions/step3_ui/index_simple.html` and `index.html` ·
+
+```bash
+python checkpoint.py step3
+```
+
+· running late? Skip the coding: copy the solution and just chat.

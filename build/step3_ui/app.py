@@ -123,9 +123,13 @@ class ChatRequest(BaseModel):
     messages: list[Message]
 
     # The example body that /docs fills in for you when you click "Try it out"
-    model_config = {"json_schema_extra": {"examples": [
-        {"messages": [{"role": "user", "content": "Can I return shoes I bought 20 days ago?"}]}
-    ]}}
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {"messages": [{"role": "user", "content": "Can I return shoes I bought 20 days ago?"}]}
+            ]
+        }
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -202,13 +206,23 @@ def record_chat(seconds: float):
 
 
 def load_orders() -> list[dict]:
+    """Read the demo orders. An empty list if the file is missing."""
     path = DATA_DIR / "orders.json"
-    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+    if not path.exists():
+        return []
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def policy_pages() -> dict[str, Path]:
+    """Map each policy name (the file name without .md) to its file."""
     folder = DATA_DIR / "policies"
-    return {p.stem: p for p in sorted(folder.glob("*.md"))} if folder.exists() else {}
+    if not folder.exists():
+        return {}
+
+    pages = {}
+    for page in sorted(folder.glob("*.md")):
+        pages[page.stem] = page
+    return pages
 
 
 # --- Is it alive? What is it running? -------------------------------------------------
@@ -220,7 +234,12 @@ def health():
 
 @app.get("/config")
 def config():
-    return {"model": MODEL, "max_tokens": MAX_TOKENS, "temperature": TEMPERATURE, "system_prompt": SYSTEM_PROMPT}
+    return {
+        "model": MODEL,
+        "max_tokens": MAX_TOKENS,
+        "temperature": TEMPERATURE,
+        "system_prompt": SYSTEM_PROMPT,
+    }
 
 
 @app.get("/suggestions")
@@ -257,10 +276,15 @@ def get_order(order_id: str):
 
 @app.get("/policies")
 def list_policies():
-    return {"policies": [
-        {"name": name, "title": name.replace("-", " ").title(), "words": len(path.read_text(encoding="utf-8").split())}
-        for name, path in policy_pages().items()
-    ]}
+    policies = []
+    for name, path in policy_pages().items():
+        text = path.read_text(encoding="utf-8")
+        policies.append({
+            "name": name,
+            "title": name.replace("-", " ").title(),   # "final-sale" -> "Final Sale"
+            "words": len(text.split()),
+        })
+    return {"policies": policies}
 
 
 @app.get("/policies/{name}")
@@ -313,9 +337,15 @@ def get_stats():
     with stats_lock:
         ratings = [f["rating"] for f in stats["feedback"]]
         chats = stats["chats"]
+
+        if chats:
+            average_seconds = round(stats["total_seconds"] / chats, 1)
+        else:
+            average_seconds = 0
+
         return {
             "chats": chats,
-            "average_seconds": round(stats["total_seconds"] / chats, 1) if chats else 0,
+            "average_seconds": average_seconds,
             "feedback": {"up": ratings.count("up"), "down": ratings.count("down")},
             "uptime_seconds": round(time.time() - STARTED),
         }

@@ -2,6 +2,129 @@
 
 Part 2: Rules → **AI judge** → Agent → Judge on trial
 
+## ▶ Copy-paste: run this step
+**Needs:** virtual environment active · **the step 5 bot running (window 2)** · internet for the bot's model **and** for the judge (Groq, `JUDGE_*` in `.env`).
+
+**Windows (PowerShell)**
+WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running)
+
+the folder that contains check_setup.py
+
+```powershell
+cd path\to\shopkart-ai-tutorial-v2
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```powershell
+cd build\step5_agent
+```
+
+```powershell
+uvicorn app:app --reload
+```
+
+WINDOW 3: a NEW terminal, for your tests
+
+```powershell
+cd path\to\shopkart-ai-tutorial-v2
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```powershell
+cd evaluate\step7_judge
+```
+
+core: two scores + the judge's reasons
+
+```powershell
+python judge_simple.py
+```
+
+stretch: one question first
+
+```powershell
+pytest test_judge.py -v -k price
+```
+
+stretch: all judge questions (slower)
+
+```powershell
+pytest test_judge.py -v
+```
+
+the scoreboard
+
+```powershell
+start ..\report.html
+```
+
+**Mac / Linux**
+WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running)
+
+the folder that contains check_setup.py
+
+```bash
+cd path/to/shopkart-ai-tutorial-v2
+```
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+cd build/step5_agent
+```
+
+```bash
+uvicorn app:app --reload
+```
+
+WINDOW 3: a NEW terminal, for your tests
+
+```bash
+cd path/to/shopkart-ai-tutorial-v2
+```
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+cd evaluate/step7_judge
+```
+
+core: two scores + the judge's reasons
+
+```bash
+python judge_simple.py
+```
+
+stretch: one question first
+
+```bash
+pytest test_judge.py -v -k price
+```
+
+stretch: all judge questions (slower)
+
+```bash
+pytest test_judge.py -v
+```
+
+the scoreboard (Linux: xdg-open)
+
+```bash
+open ../report.html
+```
+
+All commands in one place: [COMMANDS_WINDOWS.md](../../COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](../../COMMANDS_MAC.md)
+
 **Slide 17.** Poison kills poison. A rule can't tell whether an answer is *true*. So we hand the answer to a second, bigger AI, the **judge**, with a rubric, like a teacher marking an essay. It gives back a **score** (0 to 1) and a **reason**, and we compare the score with a **pass mark**, like any other test. The library is **DeepEval**; each rubric is called a **metric**.
 
 ```
@@ -49,8 +172,12 @@ Same "universal plug" as step 1: `LocalModel` talks to any OpenAI-compatible ser
 ## CORE (everyone) · `judge_simple.py`
 ```bash
 cd evaluate/step7_judge
+```
+
+```bash
 python judge_simple.py
 ```
+
 1. It already runs: one score from the judge (Hallucination) with its reason. Read the reason: that's the judge "showing its work".
 2. **TODO 1:** add the second metric, **U**ses the source: `FaithfulnessMetric(model=judge, threshold=0.7, async_mode=False)`. Run again: two scores.
 3. Now the experiments, one at a time (remove the `#`, run, put it back):
@@ -63,17 +190,47 @@ python judge_simple.py
 **Done when** you've seen experiment 2 give one PASS and one FAIL, and you can explain why.
 
 ## STRETCH (if you finish early) · `test_judge.py`
+one question first (5 metrics = several judge calls)
+
 ```bash
-pytest test_judge.py -v -k price      # one question first (5 metrics = several judge calls)
-pytest test_judge.py -v               # all judge questions (slower)
+pytest test_judge.py -v -k price
 ```
+
+all judge questions (slower)
+
+```bash
+pytest test_judge.py -v
+```
+
 1. Everything is **skipped**: that's TODO 1. Choose your pass marks `TRUTHFUL_PASS` and `GROUNDED_PASS` (try 0.7). What's "good enough" for a refund bot?
 2. Open **`evaluate/report.html`**: one bar per metric, the pass mark as a line, the judge's reason underneath.
-3. Plant the real liar and watch the scoreboard: `python ../../plant_bug.py liar`, run the price question again, then `python ../../plant_bug.py off`.
+3. Plant the real liar and watch the scoreboard:
+
+   ```bash
+   python ../../plant_bug.py liar
+   ```
+
+   Run the price question again:
+
+   ```bash
+   pytest test_judge.py -v -k price
+   ```
+
+   Then restore the healthy bot:
+
+   ```bash
+   python ../../plant_bug.py off
+   ```
+
 4. **Boss level:** write your own `GEval` rubric at the bottom of the metrics list, e.g. "never promises compensation that isn't in the policy".
 
 **Cheapest first:** a judge is slower and costs calls. Rules on every question (step 6), the judge only where judgement is needed, a human on a sample (step 9).
 
 ## Stuck?
-- Finished files: `solutions/step7_judge/`, or from the repo root: `python checkpoint.py step7`
+- Finished files: `solutions/step7_judge/`, or from the repo root:
+
+  ```bash
+  python checkpoint.py step7
+  ```
+
 - Judge says "invalid JSON" → TROUBLESHOOTING.md #13 · 429 rate limit → #14 · very slow → #15 · JUDGE key missing → #7

@@ -57,7 +57,12 @@ class ChatRequest(BaseModel):
 @app.post("/chat")
 def chat(req: ChatRequest):
     conversation = [m.model_dump() for m in req.messages]   # turn each Message back into a plain dict
-    messages = [{"role": "system", "content": "You are ShopKart's refund assistant. Be friendly and brief."}] + conversation
+
+    job_description = {
+        "role": "system",
+        "content": "You are ShopKart's refund assistant. Be friendly and brief.",
+    }
+    messages = [job_description] + conversation
 
     response = client.chat.completions.create(model=MODEL, messages=messages)
 

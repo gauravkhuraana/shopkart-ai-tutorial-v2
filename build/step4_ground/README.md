@@ -2,6 +2,78 @@
 
 The 5 Bs: Brain → Bridge → Browser → **Book** → Body
 
+## ▶ Copy-paste: run this step
+**Needs:** virtual environment active · internet for Groq (or Ollama running) · this step **is** the server (the terminal stays busy). Stop any earlier `uvicorn` first (Ctrl+C). Run `retrieval.py` in a **second** terminal, or before you start the server.
+> Terminal already shows `(.venv)` and you are in the project folder? Skip the first two commands.
+
+**Windows (PowerShell)**
+the folder that contains check_setup.py
+
+```powershell
+cd path\to\shopkart-ai-tutorial-v2
+```
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+```powershell
+cd build\step4_ground
+```
+
+what pages does the librarian find? (no model needed)
+
+```powershell
+python retrieval.py "Do you price-match?"
+```
+
+core. Then open http://localhost:8000
+
+```powershell
+uvicorn app_simple:app --reload
+```
+
+Ctrl+C to stop, then the stretch version:
+
+```powershell
+uvicorn app:app --reload
+```
+
+**Mac / Linux**
+the folder that contains check_setup.py
+
+```bash
+cd path/to/shopkart-ai-tutorial-v2
+```
+
+```bash
+source .venv/bin/activate
+```
+
+```bash
+cd build/step4_ground
+```
+
+what pages does the librarian find? (no model needed)
+
+```bash
+python retrieval.py "Do you price-match?"
+```
+
+core. Then open http://localhost:8000
+
+```bash
+uvicorn app_simple:app --reload
+```
+
+Ctrl+C to stop, then the stretch version:
+
+```bash
+uvicorn app:app --reload
+```
+
+All commands in one place: [COMMANDS_WINDOWS.md](../../COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](../../COMMANDS_MAC.md)
+
 **Slide 11.** Open the book before you answer. Before the model replies, the **librarian** (`retrieval.py`) finds the matching ShopKart policy pages and we put them into the context, with the rule *answer only from these pages*. That's **RAG** (Retrieval-Augmented Generation).
 
 ```
@@ -48,12 +120,17 @@ sequenceDiagram
 Simple version (start here):
 ```bash
 cd build/step4_ground
+```
+
+```bash
 uvicorn app_simple:app --reload
 ```
+
 Full version (when you've finished the simple one):
 ```bash
 uvicorn app:app --reload
 ```
+
 Open **http://localhost:8000**.
 
 **First, catch it bluffing.** Before you change anything, ask: *"Do you price-match?"* ShopKart has no such policy, but the bot will probably invent one.
@@ -61,6 +138,9 @@ Open **http://localhost:8000**.
 Try the full version's librarian on its own:
 ```bash
 python retrieval.py "Can I return shoes after 20 days?"
+```
+
+```bash
 python retrieval.py "Do you price-match?"
 ```
 
@@ -81,4 +161,10 @@ python retrieval.py "Do you price-match?"
 When a grounded bot is wrong, first ask **"what did the librarian bring?"**, not "is the model bad?" With the full version, set `SHOW_PROMPT=1` in `.env` and restart to see the full prompt. Then try `TOP_K=1` in `.env`: with fewer pages, which answers get worse?
 
 ## Stuck?
-`solutions/step4_ground/app_simple.py` and `app.py` · `python checkpoint.py step4` · bot ignores the pages → TROUBLESHOOTING.md #10
+`solutions/step4_ground/app_simple.py` and `app.py` ·
+
+```bash
+python checkpoint.py step4
+```
+
+· bot ignores the pages → TROUBLESHOOTING.md #10
