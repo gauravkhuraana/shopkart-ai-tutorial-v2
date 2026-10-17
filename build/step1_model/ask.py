@@ -26,7 +26,6 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
-
 # ---------------------------------------------------------------------------
 # 1. Connect to the model
 # ---------------------------------------------------------------------------
@@ -34,14 +33,16 @@ from openai import OpenAI
 # so we use the OpenAI library to talk to it.
 # Your Groq key and the model name come from the .env file in the main project folder.
 
-load_dotenv()                                    # reads the .env file
+load_dotenv()  # reads the .env file
 
 client = OpenAI(
-    base_url="https://api.groq.com/openai/v1",   # where the model lives (Groq's cloud)
-    api_key=os.getenv("LLM_API_KEY"),            # your free Groq key, read from .env
+    base_url="https://api.groq.com/openai/v1",  # where the model lives (Groq's cloud)
+    api_key=os.getenv("LLM_API_KEY"),  # your free Groq key, read from .env
 )
 
-MODEL = os.getenv("LLM_MODEL")                   # which model to use, read from .env (e.g. openai/gpt-oss-20b)
+MODEL = os.getenv(
+    "LLM_MODEL"
+)  # which model to use, read from .env (e.g. openai/gpt-oss-20b)
 
 
 # Want to run the model on your own laptop instead? Use Ollama (first: ollama pull qwen3:4b).
@@ -95,8 +96,14 @@ TEMPERATURE = 0.2
 # EXPERIMENT 4 · Put a # in front of the "system" line, so the model never sees its job description.
 
 messages = [
-    {"role": "system", "content": SYSTEM_PROMPT},
-    {"role": "user", "content": QUESTION},
+    {
+        "role": "system",
+        "content": SYSTEM_PROMPT,
+    },
+    {
+        "role": "user",
+        "content": QUESTION,
+    },
 ]
 
 
@@ -106,10 +113,10 @@ messages = [
 # This sends everything to the model and waits for the answer.
 
 response = client.chat.completions.create(
-    model=MODEL,                # which model
-    messages=messages,          # the context we just built
-    max_tokens=MAX_TOKENS,      # the token limit
-    temperature=TEMPERATURE,    # the creativity dial
+    model=MODEL,  # which model
+    messages=messages,  # the context we just built
+    max_tokens=MAX_TOKENS,  # the token limit
+    temperature=TEMPERATURE,  # the creativity dial
 )
 
 
@@ -125,18 +132,34 @@ finish_reason = response.choices[0].finish_reason
 
 
 print()
-print("Settings:", "model =", MODEL, "| max_tokens =", MAX_TOKENS, "| temperature =", TEMPERATURE)
+print(
+    "Settings:",
+    "model =",
+    MODEL,
+    "| max_tokens =",
+    MAX_TOKENS,
+    "| temperature =",
+    TEMPERATURE,
+)
 print()
 print("Question:", QUESTION)
 print()
 print("Answer:  ", answer)
 print()
 print("Finish reason:", finish_reason)
-print("Tokens used:  ", response.usage.prompt_tokens, "in +", response.usage.completion_tokens, "out")
+print(
+    "Tokens used:  ",
+    response.usage.prompt_tokens,
+    "in +",
+    response.usage.completion_tokens,
+    "out",
+)
 
 if finish_reason == "length":
     print()
     print("!! The answer was CUT OFF: the model ran out of tokens.")
-    print("   (No answer at all? It used every token for thinking, before it could answer.)")
+    print(
+        "   (No answer at all? It used every token for thinking, before it could answer.)"
+    )
 
 print()

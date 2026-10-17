@@ -46,15 +46,21 @@
   //   request looks like: {"messages": [{"role": "user", "content": "Can I return shoes?"}]}
   //   fetch() is the browser's built-in way to call an API (like Postman, but in JavaScript).
   async function sendToApi(request) {
+    // "/chat" uses the same server that served this page; no separate API address is needed.
+    // JSON.stringify turns the JavaScript object into JSON text; the header tells FastAPI its format.
+    // await pauses this function while the request runs, without freezing the browser.
     const res = await fetch("/chat", {method: "POST", headers: {"Content-Type": "application/json"},
                                       body: JSON.stringify(request)});
+    // fetch does not throw for HTTP errors such as 422 or 500, so check the status ourselves.
     if (!res.ok) throw new Error(res.statusText);
+    // The response body arrives as JSON text; parse it into an object so we can read data.reply.
     return await res.json();
   }
 
   // HOP 5 · API -> UI: show the answer to the customer.
   //   data is the JSON our API returned, e.g. {"reply": "Yes, within 30 days."}
   function showAnswer(line, data) {
+    // line is the waiting chat element. textContent displays plain text, never executes model HTML.
     line.textContent = data.reply;   // customers shouldn't see raw JSON
   }
 
@@ -63,7 +69,9 @@
   // =====================================================================
   const chat = document.getElementById("chat");
   let history = [];   // the whole conversation: the model is a goldfish, so we re-send it every time
+  // This history lives only in this page's memory: refreshing starts a new conversation.
 
+  // Create a chat line and return it so the waiting placeholder can later become the answer.
   function add(cls, text) {
     const div = document.createElement("div");
     div.className = cls; div.textContent = text;
@@ -81,12 +89,14 @@
   }
 
   document.getElementById("form").addEventListener("submit", async (e) => {
+    // Handle Send (or Enter) ourselves instead of letting the form reload the page and lose history.
     e.preventDefault();
     const input = document.getElementById("text");
     const text = input.value.trim(); if (!text) return;
     input.value = ""; add("user", text);
     const waiting = add("bot", "…");
     try {
+      // Store the user message before sending, so the request includes the latest question.
       history.push({role: "user", content: text});
       if (document.getElementById("agent").checked) {
         const result = await askAgent(text);
@@ -96,11 +106,14 @@
         history.push({role: "assistant", content: result.reply});
         return;
       }
+      // The property must be named "messages" to match the API's ChatRequest schema.
       const data = await sendToApi({messages: history});   // HOP 1 (HOPS 2-4 happen on the server)
       showAnswer(waiting, data);                           // HOP 5
       if (data.sources && data.sources.length) add("src", "from: " + data.sources.join(", "));   // step 4 adds sources
+      // Keep the reply too: the next request sends both sides of the conversation.
       history.push({role: "assistant", content: data.reply});
     } catch (err) {
+      // Show request or parsing failures in the waiting line rather than leaving it stuck on "...".
       waiting.textContent = "Error: " + err.message + "  (is uvicorn running? see TROUBLESHOOTING.md)";
     }
   });

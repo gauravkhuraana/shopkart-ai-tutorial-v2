@@ -56,24 +56,25 @@ from fastapi.responses import FileResponse, HTMLResponse
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # 1. Connect to the model (exactly like step 1)
 # ---------------------------------------------------------------------------
 # The model runs on Groq's free cloud.
 # Your Groq key and the model name come from the .env file in the main project folder.
 
-load_dotenv()                                    # reads the .env file
+load_dotenv()  # reads the .env file
 
 # Windows consoles can't print emoji (the model loves them) and would crash the request: print "?" instead
 sys.stdout.reconfigure(errors="replace")
 
 client = OpenAI(
-    base_url="https://api.groq.com/openai/v1",   # where the model lives (Groq's cloud)
-    api_key=os.getenv("LLM_API_KEY"),            # your free Groq key, read from .env
+    base_url="https://api.groq.com/openai/v1",  # where the model lives (Groq's cloud)
+    api_key=os.getenv("LLM_API_KEY"),  # your free Groq key, read from .env
 )
 
-MODEL = os.getenv("LLM_MODEL")                   # which model to use, read from .env (e.g. openai/gpt-oss-20b)
+MODEL = os.getenv(
+    "LLM_MODEL"
+)  # which model to use, read from .env (e.g. openai/gpt-oss-20b)
 
 
 # Want to run the model on your own laptop instead? Use Ollama (first: ollama pull qwen3:4b).
@@ -112,9 +113,10 @@ app = FastAPI(title="ShopKart Assistant")
 #    FastAPI checks every request against it, and shows it on the /docs page.
 # ---------------------------------------------------------------------------
 
+
 class Message(BaseModel):
-    role: str        # "user" (the customer) or "assistant" (the bot)
-    content: str     # the text
+    role: str  # "user" (the customer) or "assistant" (the bot)
+    content: str  # the text
 
 
 class ChatRequest(BaseModel):
@@ -126,7 +128,14 @@ class ChatRequest(BaseModel):
     model_config = {
         "json_schema_extra": {
             "examples": [
-                {"messages": [{"role": "user", "content": "Can I return shoes I bought 20 days ago?"}]}
+                {
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": "Can I return shoes I bought 20 days ago?",
+                        },
+                    ]
+                },
             ]
         }
     }
@@ -136,18 +145,32 @@ class ChatRequest(BaseModel):
 # 5. POST /chat : the one endpoint that matters
 # ---------------------------------------------------------------------------
 
+
 @app.post("/chat")
 def chat(req: ChatRequest):
 
     # HOP 2 · the API received the JSON
     print()
-    print("HOP 2  API got", len(req.messages), "message(s). Latest:", req.messages[-1].content[:70])
+    print(
+        "HOP 2  API got",
+        len(req.messages),
+        "message(s). Latest:",
+        req.messages[-1].content[:70],
+    )
 
-    conversation = [m.model_dump() for m in req.messages]   # turn each Message back into a plain dict
+    # Convert each validated Message object into a plain dictionary for the model.
+    conversation = []
+    for message in req.messages:
+        conversation.append(message.model_dump())
 
     # The model is a goldfish: it only knows what we send.
     # So we send the job description PLUS the whole conversation. That's "memory".
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + conversation
+    messages = [
+        {
+            "role": "system",
+            "content": SYSTEM_PROMPT,
+        },
+    ] + conversation
 
     # messages = [{"role": "system", "content": SYSTEM_PROMPT}, conversation[-1]]   # EXPERIMENT 2: only the last message
 
@@ -179,24 +202,33 @@ def chat(req: ChatRequest):
 # 6. GET / : the web page (step 3).
 # ---------------------------------------------------------------------------
 
+
 @app.get("/", response_class=HTMLResponse)
 def home():
     page = Path(__file__).parent / "index.html"
     if page.exists():
         return FileResponse(page)
-    return "<p>No web page in this folder. Try the API at <a href='/docs'>/docs</a>.</p>"
+    return (
+        "<p>No web page in this folder. Try the API at <a href='/docs'>/docs</a>.</p>"
+    )
 
 
 # ===========================================================================
 # EXTRA ENDPOINTS: they make the page feel like a real app. /chat above doesn't depend on any of them.
 # ===========================================================================
 
-DATA_DIR = Path(__file__).resolve().parents[2] / "shared" / "data"   # the same demo data steps 4 and 5 use
+DATA_DIR = (
+    Path(__file__).resolve().parents[2] / "shared" / "data"
+)  # the same demo data steps 4 and 5 use
 STARTED = time.time()
 
 # A tiny in-memory scoreboard. It resets when uvicorn restarts. (A real app would use a database.)
 stats_lock = threading.Lock()
-stats = {"chats": 0, "total_seconds": 0.0, "feedback": []}
+stats = {
+    "chats": 0,
+    "total_seconds": 0.0,
+    "feedback": [],
+}
 
 
 def record_chat(seconds: float):
@@ -227,9 +259,14 @@ def policy_pages() -> dict[str, Path]:
 
 # --- Is it alive? What is it running? -------------------------------------------------
 
+
 @app.get("/health")
 def health():
-    return {"status": "ok", "model": MODEL, "uptime_seconds": round(time.time() - STARTED)}
+    return {
+        "status": "ok",
+        "model": MODEL,
+        "uptime_seconds": round(time.time() - STARTED),
+    }
 
 
 @app.get("/config")
@@ -244,23 +281,54 @@ def config():
 
 @app.get("/suggestions")
 def suggestions():
-    return {"suggestions": [
-        {"icon": "👟", "title": "Return window", "prompt": "Can I return shoes I bought 20 days ago?"},
-        {"icon": "💶", "title": "Refund timing", "prompt": "How long does a refund take to reach my card?"},
-        {"icon": "📦", "title": "Wrong item", "prompt": "I ordered a coffee grinder but got a toaster. What now?"},
-        {"icon": "🎁", "title": "Gift cards", "prompt": "Can I get a refund on a digital gift card?"},
-        {"icon": "🚚", "title": "Shipping", "prompt": "My order is in transit. Can I cancel it?"},
-        {"icon": "🛠️", "title": "Warranty", "prompt": "My headphones stopped working after 3 months. Am I covered?"},
-    ]}
+    return {
+        "suggestions": [
+            {
+                "icon": "👟",
+                "title": "Return window",
+                "prompt": "Can I return shoes I bought 20 days ago?",
+            },
+            {
+                "icon": "💶",
+                "title": "Refund timing",
+                "prompt": "How long does a refund take to reach my card?",
+            },
+            {
+                "icon": "📦",
+                "title": "Wrong item",
+                "prompt": "I ordered a coffee grinder but got a toaster. What now?",
+            },
+            {
+                "icon": "🎁",
+                "title": "Gift cards",
+                "prompt": "Can I get a refund on a digital gift card?",
+            },
+            {
+                "icon": "🚚",
+                "title": "Shipping",
+                "prompt": "My order is in transit. Can I cancel it?",
+            },
+            {
+                "icon": "🛠️",
+                "title": "Warranty",
+                "prompt": "My headphones stopped working after 3 months. Am I covered?",
+            },
+        ]
+    }
 
 
 # --- The demo orders ------------------------------------------------------------------
+
 
 @app.get("/orders")
 def list_orders(status: str | None = None):
     orders = load_orders()
     if status:
-        orders = [o for o in orders if o["status"] == status]
+        matching_orders = []
+        for order in orders:
+            if order["status"] == status:
+                matching_orders.append(order)
+        orders = matching_orders
     return {"orders": orders}
 
 
@@ -269,33 +337,49 @@ def get_order(order_id: str):
     for order in load_orders():
         if order["order_id"] == order_id.strip().lstrip("#"):
             return order
-    raise HTTPException(status_code=404, detail=f"order {order_id} not found")
+    raise HTTPException(
+        status_code=404,
+        detail=f"order {order_id} not found",
+    )
 
 
 # --- The policy pages -----------------------------------------------------------------
+
 
 @app.get("/policies")
 def list_policies():
     policies = []
     for name, path in policy_pages().items():
         text = path.read_text(encoding="utf-8")
-        policies.append({
-            "name": name,
-            "title": name.replace("-", " ").title(),   # "final-sale" -> "Final Sale"
-            "words": len(text.split()),
-        })
+        policies.append(
+            {
+                "name": name,
+                "title": name.replace("-", " ").title(),  # "final-sale" -> "Final Sale"
+                "words": len(text.split()),
+            }
+        )
     return {"policies": policies}
 
 
 @app.get("/policies/{name}")
 def get_policy(name: str):
-    path = policy_pages().get(name)          # only names that really exist: no path tricks possible
+    path = policy_pages().get(
+        name
+    )  # only names that really exist: no path tricks possible
     if path is None:
-        raise HTTPException(status_code=404, detail=f"policy {name} not found")
-    return {"name": name, "title": name.replace("-", " ").title(), "text": path.read_text(encoding="utf-8")}
+        raise HTTPException(
+            status_code=404,
+            detail=f"policy {name} not found",
+        )
+    return {
+        "name": name,
+        "title": name.replace("-", " ").title(),
+        "text": path.read_text(encoding="utf-8"),
+    }
 
 
 # --- Summarize a conversation ---------------------------------------------------------
+
 
 class SummarizeRequest(BaseModel):
     messages: list[Message] = Field(min_length=1)
@@ -303,13 +387,23 @@ class SummarizeRequest(BaseModel):
 
 @app.post("/summarize")
 def summarize(req: SummarizeRequest):
-    transcript = "\n".join(f"{m.role}: {m.content}" for m in req.messages)
+    # Build one readable line per message before asking for a summary.
+    transcript_lines = []
+    for message in req.messages:
+        transcript_lines.append(f"{message.role}: {message.content}")
+    transcript = "\n".join(transcript_lines)
     response = client.chat.completions.create(
         model=MODEL,
         messages=[
-            {"role": "system", "content": "Summarize this customer-support conversation in 2-3 short sentences: "
-                                          "what the customer wants and where things stand."},
-            {"role": "user", "content": transcript},
+            {
+                "role": "system",
+                "content": "Summarize this customer-support conversation in 2-3 short sentences: "
+                "what the customer wants and where things stand.",
+            },
+            {
+                "role": "user",
+                "content": transcript,
+            },
         ],
         max_tokens=MAX_TOKENS,
         temperature=TEMPERATURE,
@@ -319,9 +413,10 @@ def summarize(req: SummarizeRequest):
 
 # --- Thumbs up / down, and the scoreboard ---------------------------------------------
 
+
 class FeedbackRequest(BaseModel):
     rating: Literal["up", "down"]
-    message: str = ""          # the answer that was rated
+    message: str = ""  # the answer that was rated
     comment: str = ""
 
 
@@ -329,13 +424,18 @@ class FeedbackRequest(BaseModel):
 def feedback(req: FeedbackRequest):
     with stats_lock:
         stats["feedback"].append(req.model_dump())
-    return {"ok": True, "total": len(stats["feedback"])}
+    return {
+        "ok": True,
+        "total": len(stats["feedback"]),
+    }
 
 
 @app.get("/stats")
 def get_stats():
     with stats_lock:
-        ratings = [f["rating"] for f in stats["feedback"]]
+        ratings = []
+        for item in stats["feedback"]:
+            ratings.append(item["rating"])
         chats = stats["chats"]
 
         if chats:
@@ -346,6 +446,9 @@ def get_stats():
         return {
             "chats": chats,
             "average_seconds": average_seconds,
-            "feedback": {"up": ratings.count("up"), "down": ratings.count("down")},
+            "feedback": {
+                "up": ratings.count("up"),
+                "down": ratings.count("down"),
+            },
             "uptime_seconds": round(time.time() - STARTED),
         }

@@ -27,7 +27,9 @@ core. Then open http://localhost:8000/docs
 uvicorn app_simple:app --reload
 ```
 
-Ctrl+C to stop, then the stretch version:
+Leave this server running and follow [Try POST /chat in the browser](#try-post-chat-in-the-browser) below before stopping it.
+
+Ctrl+C to stop, then the stretch version; repeat the same browser request and watch the terminal logs:
 
 ```powershell
 uvicorn app:app --reload
@@ -54,13 +56,47 @@ core. Then open http://localhost:8000/docs
 uvicorn app_simple:app --reload
 ```
 
-Ctrl+C to stop, then the stretch version:
+Leave this server running and follow [Try POST /chat in the browser](#try-post-chat-in-the-browser) below before stopping it.
+
+Ctrl+C to stop, then the stretch version; repeat the same browser request and watch the terminal logs:
 
 ```bash
 uvicorn app:app --reload
 ```
 
 Port 8000 busy? Add `--port 8001`. All commands in one place: [COMMANDS_WINDOWS.md](../../COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](../../COMMANDS_MAC.md)
+
+## Try POST /chat in the browser
+
+1. Wait for **Application startup complete** in the server terminal. Leave it running.
+2. Open http://localhost:8000/docs (use port **8001** if you started with `--port 8001`). **Codespaces:** open the server's forwarded port from VS Code's **Ports** panel, then add `/docs` to that URL.
+3. Expand **POST /chat** and click **Try it out**.
+4. Replace the entire **Request body** with:
+
+```json
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an expert test architect"
+    },
+    {
+      "role": "user",
+      "content": "Is testing an important part? Can we release software without testing?"
+    }
+  ]
+}
+```
+
+5. Click **Execute**, wait for the model, then scroll to **Server response**.
+6. Expect response code **200** and a **Response body** containing `{"reply": "..."}` with a real answer. Wording can vary.
+7. Change the user's question and execute again.
+
+The system message comes before the user's question. The server also prepends its own ShopKart system instruction, so this is a role experiment, not a guaranteed override. To try only the ShopKart role, remove the system-message object and send a single user message asking `Can I return shoes I bought 20 days ago?`.
+
+A **422** response means the request did not match the required JSON shape: check `messages`, `role` and `content`. If the call fails or keeps waiting, inspect the server terminal for errors. A running server alone does not prove the model call works.
+
+**Done when:** executing `POST /chat` returns **200** and a real answer in `reply`, not merely when Uvicorn starts.
 
 **Slide 9.** A script works for you, but a web page, Postman, curl or an automated test can't call a script. They can all call an **API**. We wrap step 1's model call in **FastAPI**, a small Python web framework.
 

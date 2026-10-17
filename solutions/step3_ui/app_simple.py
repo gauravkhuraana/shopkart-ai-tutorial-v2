@@ -66,7 +66,8 @@ def chat(req: ChatRequest):
 
     response = client.chat.completions.create(model=MODEL, messages=messages)
 
-    return {"reply": response.choices[0].message.content}
+    return response.choices[0].message.content
+    #return {"reply": response.choices[0].message.content}
 
 
 # 5. NEW in step 3: GET / hands the browser the chat page.

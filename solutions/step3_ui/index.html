@@ -23,623 +23,1981 @@
   New here? Do the bare version first: index_simple.html (served by app_simple.py).
 -->
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ShopKart Assistant</title>
-<style>
-  :root {
-    --navy:#141B4D; --blue:#2037C3; --blue-2:#3B52E0; --pink:#E21147; --teal:#00968F; --amber:#B7791F;
-    --bg:#F6F7FB; --surface:#FFFFFF; --surface-2:#F0F2F8; --line:#E1E5F0; --ink:#1F2937; --muted:#6B7280;
-    --bot:#FFFFFF; --user:linear-gradient(135deg,#2037C3,#3B52E0); --shadow:0 4px 18px rgba(20,27,77,.08);
-    --side:#141B4D; --side-ink:#DDE3FF; --side-muted:#8E99D6; --side-hover:rgba(255,255,255,.08);
-    --radius:14px;
-  }
-  [data-theme="dark"] {
-    --bg:#0E1224; --surface:#171C34; --surface-2:#1F2542; --line:#2A3157; --ink:#E6E9F7; --muted:#97A0C9;
-    --bot:#1B2140; --shadow:0 4px 18px rgba(0,0,0,.35); --side:#0A0D1C; --side-hover:rgba(255,255,255,.07);
-  }
-  * { box-sizing:border-box; }
-  html, body { height:100%; overflow:hidden; }
-  body { margin:0; font-family:"Segoe UI", system-ui, -apple-system, Arial, sans-serif; background:var(--bg); color:var(--ink); font-size:15px; }
-  button { font-family:inherit; color:inherit; cursor:pointer; }
-  .app { display:grid; grid-template-columns:272px minmax(0,1fr) 0; height:100vh; transition:grid-template-columns .25s; }
-  .app.panel-open { grid-template-columns:272px minmax(0,1fr) 340px; }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ShopKart Assistant</title>
+    <style>
+      :root {
+        --navy: #141b4d;
+        --blue: #2037c3;
+        --blue-2: #3b52e0;
+        --pink: #e21147;
+        --teal: #00968f;
+        --amber: #b7791f;
+        --bg: #f6f7fb;
+        --surface: #ffffff;
+        --surface-2: #f0f2f8;
+        --line: #e1e5f0;
+        --ink: #1f2937;
+        --muted: #6b7280;
+        --bot: #ffffff;
+        --user: linear-gradient(135deg, #2037c3, #3b52e0);
+        --shadow: 0 4px 18px rgba(20, 27, 77, 0.08);
+        --side: #141b4d;
+        --side-ink: #dde3ff;
+        --side-muted: #8e99d6;
+        --side-hover: rgba(255, 255, 255, 0.08);
+        --radius: 14px;
+      }
+      [data-theme="dark"] {
+        --bg: #0e1224;
+        --surface: #171c34;
+        --surface-2: #1f2542;
+        --line: #2a3157;
+        --ink: #e6e9f7;
+        --muted: #97a0c9;
+        --bot: #1b2140;
+        --shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+        --side: #0a0d1c;
+        --side-hover: rgba(255, 255, 255, 0.07);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        margin: 0;
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          Arial,
+          sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        font-size: 15px;
+      }
+      button {
+        font-family: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+      .app {
+        display: grid;
+        grid-template-columns: 272px minmax(0, 1fr) 0;
+        height: 100vh;
+        transition: grid-template-columns 0.25s;
+      }
+      .app.panel-open {
+        grid-template-columns: 272px minmax(0, 1fr) 340px;
+      }
 
-  /* ---------- sidebar ---------- */
-  .sidebar { background:var(--side); color:var(--side-ink); display:flex; flex-direction:column; padding:16px 12px; min-height:0; z-index:30; }
-  .brand { display:flex; align-items:center; gap:10px; padding:4px 8px 16px; }
-  .logo { width:38px; height:38px; border-radius:11px; background:linear-gradient(135deg,var(--pink),#FF6B8B); display:grid; place-items:center; font-size:20px; }
-  .brand b { display:block; font-size:16px; color:#fff; } .brand span { font-size:11px; color:var(--side-muted); }
-  .new-chat { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:11px; border-radius:12px; border:1px dashed rgba(255,255,255,.3);
-              background:transparent; color:#fff; font-size:14px; }
-  .new-chat:hover { background:var(--side-hover); }
-  .side-label { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--side-muted); margin:18px 8px 6px; }
-  #convList { flex:1; overflow-y:auto; min-height:0; }
-  .conv { display:flex; align-items:center; gap:8px; width:100%; padding:9px 10px; border:none; border-radius:10px; background:none; text-align:left; color:var(--side-ink); font-size:13.5px; }
-  .conv:hover { background:var(--side-hover); } .conv.active { background:rgba(255,255,255,.14); }
-  .conv .t { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .conv .x { opacity:0; border:none; background:none; color:var(--side-muted); font-size:14px; padding:0 4px; }
-  .conv:hover .x { opacity:1; } .conv .x:hover { color:#fff; }
-  .side-empty { color:var(--side-muted); font-size:13px; padding:8px 10px; }
-  .side-foot { border-top:1px solid rgba(255,255,255,.12); padding-top:12px; display:flex; flex-direction:column; gap:10px; }
-  .pill { display:flex; align-items:center; gap:8px; font-size:12.5px; padding:8px 10px; border-radius:10px; background:var(--side-hover); }
-  .dot { width:9px; height:9px; border-radius:50%; background:#888; flex:none; }
-  .dot.ok { background:#2BD48A; box-shadow:0 0 0 3px rgba(43,212,138,.2); } .dot.bad { background:var(--pink); }
-  .pill .m { color:var(--side-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      /* ---------- sidebar ---------- */
+      .sidebar {
+        background: var(--side);
+        color: var(--side-ink);
+        display: flex;
+        flex-direction: column;
+        padding: 16px 12px;
+        min-height: 0;
+        z-index: 30;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 8px 16px;
+      }
+      .logo {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        background: linear-gradient(135deg, var(--pink), #ff6b8b);
+        display: grid;
+        place-items: center;
+        font-size: 20px;
+      }
+      .brand b {
+        display: block;
+        font-size: 16px;
+        color: #fff;
+      }
+      .brand span {
+        font-size: 11px;
+        color: var(--side-muted);
+      }
+      .new-chat {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 11px;
+        border-radius: 12px;
+        border: 1px dashed rgba(255, 255, 255, 0.3);
+        background: transparent;
+        color: #fff;
+        font-size: 14px;
+      }
+      .new-chat:hover {
+        background: var(--side-hover);
+      }
+      .side-label {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--side-muted);
+        margin: 18px 8px 6px;
+      }
+      #convList {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+      }
+      .conv {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 9px 10px;
+        border: none;
+        border-radius: 10px;
+        background: none;
+        text-align: left;
+        color: var(--side-ink);
+        font-size: 13.5px;
+      }
+      .conv:hover {
+        background: var(--side-hover);
+      }
+      .conv.active {
+        background: rgba(255, 255, 255, 0.14);
+      }
+      .conv .t {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .conv .x {
+        opacity: 0;
+        border: none;
+        background: none;
+        color: var(--side-muted);
+        font-size: 14px;
+        padding: 0 4px;
+      }
+      .conv:hover .x {
+        opacity: 1;
+      }
+      .conv .x:hover {
+        color: #fff;
+      }
+      .side-empty {
+        color: var(--side-muted);
+        font-size: 13px;
+        padding: 8px 10px;
+      }
+      .side-foot {
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        padding-top: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12.5px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: var(--side-hover);
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #888;
+        flex: none;
+      }
+      .dot.ok {
+        background: #2bd48a;
+        box-shadow: 0 0 0 3px rgba(43, 212, 138, 0.2);
+      }
+      .dot.bad {
+        background: var(--pink);
+      }
+      .pill .m {
+        color: var(--side-muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
 
-  /* ---------- main column ---------- */
-  .main { display:flex; flex-direction:column; min-width:0; min-height:0; }
-  .topbar { display:flex; align-items:center; gap:14px; padding:12px 20px; background:var(--surface); border-bottom:1px solid var(--line); }
-  .topbar > .titlebox { min-width:0; flex:1 1 0; }
-  .topbar h1 { margin:0; font-size:16px; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .topbar .sub { font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .spacer { display:none; }
-  .switch { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink); cursor:pointer; user-select:none; white-space:nowrap; }
-  .switch input { display:none; }
-  .switch .track { width:34px; height:20px; border-radius:20px; background:var(--line); position:relative; transition:.2s; }
-  .switch .track::after { content:""; position:absolute; top:3px; left:3px; width:14px; height:14px; border-radius:50%; background:#fff; transition:.2s; box-shadow:0 1px 3px rgba(0,0,0,.3); }
-  .switch input:checked + .track { background:var(--blue); } .switch input:checked + .track::after { left:17px; }
-  .switch.agent input:checked + .track { background:var(--pink); }
-  .icon { width:36px; height:36px; border-radius:10px; border:1px solid var(--line); background:var(--surface); font-size:16px; display:grid; place-items:center; }
-  .icon:hover { background:var(--surface-2); } .icon.on { background:var(--surface-2); border-color:var(--blue); }
-  .mobile-only { display:none; }
-  .menu-wrap { position:relative; }
-  .menu { position:absolute; right:0; top:44px; min-width:210px; background:var(--surface); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); padding:6px; display:none; z-index:40; }
-  .menu.open { display:block; }
-  .menu button { display:block; width:100%; padding:9px 12px; border:none; background:none; text-align:left; border-radius:8px; font-size:13.5px; }
-  .menu button:hover { background:var(--surface-2); } .menu hr { border:none; border-top:1px solid var(--line); margin:6px 0; }
+      /* ---------- main column ---------- */
+      .main {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 20px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+      }
+      .topbar > .titlebox {
+        min-width: 0;
+        flex: 1 1 0;
+      }
+      .topbar h1 {
+        margin: 0;
+        font-size: 16px;
+        color: var(--ink);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .topbar .sub {
+        font-size: 12px;
+        color: var(--muted);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .spacer {
+        display: none;
+      }
+      .switch {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--ink);
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+      }
+      .switch input {
+        display: none;
+      }
+      .switch .track {
+        width: 34px;
+        height: 20px;
+        border-radius: 20px;
+        background: var(--line);
+        position: relative;
+        transition: 0.2s;
+      }
+      .switch .track::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #fff;
+        transition: 0.2s;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      }
+      .switch input:checked + .track {
+        background: var(--blue);
+      }
+      .switch input:checked + .track::after {
+        left: 17px;
+      }
+      .switch.agent input:checked + .track {
+        background: var(--pink);
+      }
+      .icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        font-size: 16px;
+        display: grid;
+        place-items: center;
+      }
+      .icon:hover {
+        background: var(--surface-2);
+      }
+      .icon.on {
+        background: var(--surface-2);
+        border-color: var(--blue);
+      }
+      .mobile-only {
+        display: none;
+      }
+      .menu-wrap {
+        position: relative;
+      }
+      .menu {
+        position: absolute;
+        right: 0;
+        top: 44px;
+        min-width: 210px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 6px;
+        display: none;
+        z-index: 40;
+      }
+      .menu.open {
+        display: block;
+      }
+      .menu button {
+        display: block;
+        width: 100%;
+        padding: 9px 12px;
+        border: none;
+        background: none;
+        text-align: left;
+        border-radius: 8px;
+        font-size: 13.5px;
+      }
+      .menu button:hover {
+        background: var(--surface-2);
+      }
+      .menu hr {
+        border: none;
+        border-top: 1px solid var(--line);
+        margin: 6px 0;
+      }
 
-  .scroller { flex:1; overflow-y:auto; min-height:0; scroll-behavior:smooth; }
-  #chat { max-width:800px; margin:0 auto; padding:24px 20px 12px; }
+      .scroller {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+        scroll-behavior: smooth;
+      }
+      #chat {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 24px 20px 12px;
+      }
 
-  /* welcome screen */
-  .welcome { text-align:center; padding:36px 0 10px; }
-  .welcome .big { font-size:46px; }
-  .welcome h2 { margin:8px 0 6px; font-size:26px; color:var(--ink); }
-  .welcome p { margin:0 auto 26px; color:var(--muted); max-width:52ch; line-height:1.5; }
-  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; text-align:left; }
-  .card { display:block; width:100%; text-align:left; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow); transition:.15s; }
-  .card:hover { transform:translateY(-2px); border-color:var(--blue); }
-  .card .i { font-size:22px; } .card b { display:block; margin:6px 0 2px; font-size:14px; color:var(--ink); } .card span { font-size:13px; color:var(--muted); line-height:1.4; }
-  .hint { color:var(--muted); font-size:13px; margin-top:22px; }
+      /* welcome screen */
+      .welcome {
+        text-align: center;
+        padding: 36px 0 10px;
+      }
+      .welcome .big {
+        font-size: 46px;
+      }
+      .welcome h2 {
+        margin: 8px 0 6px;
+        font-size: 26px;
+        color: var(--ink);
+      }
+      .welcome p {
+        margin: 0 auto 26px;
+        color: var(--muted);
+        max-width: 52ch;
+        line-height: 1.5;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+        text-align: left;
+      }
+      .card {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 14px;
+        box-shadow: var(--shadow);
+        transition: 0.15s;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        border-color: var(--blue);
+      }
+      .card .i {
+        font-size: 22px;
+      }
+      .card b {
+        display: block;
+        margin: 6px 0 2px;
+        font-size: 14px;
+        color: var(--ink);
+      }
+      .card span {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.4;
+      }
+      .hint {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 22px;
+      }
 
-  /* messages */
-  .row { display:flex; gap:10px; margin:14px 0; align-items:flex-start; animation:pop .18s ease-out; }
-  @keyframes pop { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
-  .row.user { flex-direction:row-reverse; }
-  .avatar { width:34px; height:34px; border-radius:50%; flex:none; display:grid; place-items:center; font-size:17px; }
-  .row.bot .avatar { background:linear-gradient(135deg,var(--pink),#FF6B8B); } .row.user .avatar { background:var(--surface-2); border:1px solid var(--line); }
-  .body { max-width:min(82%,620px); min-width:0; }
-  .row.user .body { display:flex; flex-direction:column; align-items:flex-end; }
-  .bubble { padding:11px 15px; border-radius:16px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; box-shadow:var(--shadow); }
-  .row.user .bubble { background:var(--user); color:#fff; border-top-right-radius:4px; }
-  .row.bot .bubble { background:var(--bot); border:1px solid var(--line); border-top-left-radius:4px; }
-  .row.err .bubble { border-color:var(--pink); color:var(--pink); }
-  .bubble code { font-family:Consolas,"Courier New",monospace; background:rgba(127,127,160,.18); padding:1px 5px; border-radius:5px; font-size:.92em; }
-  .meta { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin:5px 4px 0; font-size:12px; color:var(--muted); }
-  .meta .act { border:none; background:none; padding:2px 5px; border-radius:6px; font-size:13px; opacity:.7; }
-  .meta .act:hover { opacity:1; background:var(--surface-2); } .meta .act.picked { opacity:1; background:var(--surface-2); }
-  .chip { display:inline-block; font-size:11px; padding:2px 9px; border-radius:10px; background:rgba(0,150,143,.14); color:var(--teal); }
-  .chip.pink { background:rgba(226,17,71,.12); color:var(--pink); } .chip.blue { background:rgba(32,55,195,.12); color:var(--blue-2); } .chip.amber { background:rgba(183,121,31,.15); color:var(--amber); }
-  .cite-label { font-weight:600; }
-  button.chip.cite { border:1px solid transparent; font-family:inherit; cursor:pointer; }
-  button.chip.cite:hover { border-color:var(--teal); }
-  .retry { margin-left:8px; border:1px solid var(--pink); color:var(--pink); background:none; border-radius:8px; padding:2px 10px; font-size:12px; }
-  .typing { display:inline-flex; gap:4px; align-items:center; height:18px; }
-  .typing i { width:7px; height:7px; border-radius:50%; background:var(--muted); animation:blink 1.2s infinite; } .typing i:nth-child(2) { animation-delay:.2s; } .typing i:nth-child(3) { animation-delay:.4s; }
-  @keyframes blink { 0%,60%,100% { opacity:.25; transform:none; } 30% { opacity:1; transform:translateY(-3px); } }
-  .note { margin:14px 0; padding:12px 14px; border-radius:var(--radius); background:rgba(32,55,195,.08); border:1px solid rgba(32,55,195,.25); font-size:14px; line-height:1.5; }
-  .note b { color:var(--blue-2); }
+      /* messages */
+      .row {
+        display: flex;
+        gap: 10px;
+        margin: 14px 0;
+        align-items: flex-start;
+        animation: pop 0.18s ease-out;
+      }
+      @keyframes pop {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .row.user {
+        flex-direction: row-reverse;
+      }
+      .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        flex: none;
+        display: grid;
+        place-items: center;
+        font-size: 17px;
+      }
+      .row.bot .avatar {
+        background: linear-gradient(135deg, var(--pink), #ff6b8b);
+      }
+      .row.user .avatar {
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+      }
+      .body {
+        max-width: min(82%, 620px);
+        min-width: 0;
+      }
+      .row.user .body {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+      }
+      .bubble {
+        padding: 11px 15px;
+        border-radius: 16px;
+        line-height: 1.55;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        box-shadow: var(--shadow);
+      }
+      .row.user .bubble {
+        background: var(--user);
+        color: #fff;
+        border-top-right-radius: 4px;
+      }
+      .row.bot .bubble {
+        background: var(--bot);
+        border: 1px solid var(--line);
+        border-top-left-radius: 4px;
+      }
+      .row.err .bubble {
+        border-color: var(--pink);
+        color: var(--pink);
+      }
+      .bubble code {
+        font-family: Consolas, "Courier New", monospace;
+        background: rgba(127, 127, 160, 0.18);
+        padding: 1px 5px;
+        border-radius: 5px;
+        font-size: 0.92em;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+        margin: 5px 4px 0;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .meta .act {
+        border: none;
+        background: none;
+        padding: 2px 5px;
+        border-radius: 6px;
+        font-size: 13px;
+        opacity: 0.7;
+      }
+      .meta .act:hover {
+        opacity: 1;
+        background: var(--surface-2);
+      }
+      .meta .act.picked {
+        opacity: 1;
+        background: var(--surface-2);
+      }
+      .chip {
+        display: inline-block;
+        font-size: 11px;
+        padding: 2px 9px;
+        border-radius: 10px;
+        background: rgba(0, 150, 143, 0.14);
+        color: var(--teal);
+      }
+      .chip.pink {
+        background: rgba(226, 17, 71, 0.12);
+        color: var(--pink);
+      }
+      .chip.blue {
+        background: rgba(32, 55, 195, 0.12);
+        color: var(--blue-2);
+      }
+      .chip.amber {
+        background: rgba(183, 121, 31, 0.15);
+        color: var(--amber);
+      }
+      .cite-label {
+        font-weight: 600;
+      }
+      button.chip.cite {
+        border: 1px solid transparent;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      button.chip.cite:hover {
+        border-color: var(--teal);
+      }
+      .retry {
+        margin-left: 8px;
+        border: 1px solid var(--pink);
+        color: var(--pink);
+        background: none;
+        border-radius: 8px;
+        padding: 2px 10px;
+        font-size: 12px;
+      }
+      .typing {
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+        height: 18px;
+      }
+      .typing i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--muted);
+        animation: blink 1.2s infinite;
+      }
+      .typing i:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .typing i:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      @keyframes blink {
+        0%,
+        60%,
+        100% {
+          opacity: 0.25;
+          transform: none;
+        }
+        30% {
+          opacity: 1;
+          transform: translateY(-3px);
+        }
+      }
+      .note {
+        margin: 14px 0;
+        padding: 12px 14px;
+        border-radius: var(--radius);
+        background: rgba(32, 55, 195, 0.08);
+        border: 1px solid rgba(32, 55, 195, 0.25);
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .note b {
+        color: var(--blue-2);
+      }
 
-  .steps { font-family:Consolas,"Courier New",monospace; font-size:12px; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:8px 12px; margin:8px 0 0; }
-  .steps div { padding:3px 0; border-bottom:1px dashed var(--line); } .steps div:last-child { border-bottom:none; }
-  .who { font-weight:bold; color:var(--blue-2); } .bad { color:var(--pink); }
-  pre.json { font-family:Consolas,"Courier New",monospace; font-size:12px; background:#0F1433; color:#DDE6FF; border-radius:12px; padding:12px 14px; margin:8px 0 0; overflow-x:auto; white-space:pre-wrap; }
-  pre.json b { color:#4FD1E8; }
+      .steps {
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 8px 12px;
+        margin: 8px 0 0;
+      }
+      .steps div {
+        padding: 3px 0;
+        border-bottom: 1px dashed var(--line);
+      }
+      .steps div:last-child {
+        border-bottom: none;
+      }
+      .who {
+        font-weight: bold;
+        color: var(--blue-2);
+      }
+      .bad {
+        color: var(--pink);
+      }
+      pre.json {
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 12px;
+        background: #0f1433;
+        color: #dde6ff;
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin: 8px 0 0;
+        overflow-x: auto;
+        white-space: pre-wrap;
+      }
+      pre.json b {
+        color: #4fd1e8;
+      }
 
-  /* composer */
-  form { padding:10px 20px 16px; background:linear-gradient(transparent,var(--bg) 30%); }
-  .composer { max-width:800px; margin:0 auto; display:flex; align-items:flex-end; gap:8px; background:var(--surface); border:1px solid var(--line); border-radius:20px; padding:8px 8px 8px 16px; box-shadow:var(--shadow); }
-  .composer:focus-within { border-color:var(--blue); }
-  textarea { flex:1; resize:none; border:none; outline:none; background:transparent; color:var(--ink); font:inherit; line-height:1.5; max-height:160px; padding:7px 0; }
-  .send { width:42px; height:42px; border:none; border-radius:50%; background:var(--blue); color:#fff; font-size:18px; flex:none; }
-  .send:hover { background:var(--blue-2); } .send:disabled { opacity:.5; cursor:wait; }
-  .foot { max-width:800px; margin:6px auto 0; text-align:center; font-size:11.5px; color:var(--muted); }
-  kbd { font-family:inherit; background:var(--surface-2); border:1px solid var(--line); border-radius:5px; padding:0 5px; font-size:11px; }
+      /* composer */
+      form {
+        padding: 10px 20px 16px;
+        background: linear-gradient(transparent, var(--bg) 30%);
+      }
+      .composer {
+        max-width: 800px;
+        margin: 0 auto;
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 8px 8px 8px 16px;
+        box-shadow: var(--shadow);
+      }
+      .composer:focus-within {
+        border-color: var(--blue);
+      }
+      textarea {
+        flex: 1;
+        resize: none;
+        border: none;
+        outline: none;
+        background: transparent;
+        color: var(--ink);
+        font: inherit;
+        line-height: 1.5;
+        max-height: 160px;
+        padding: 7px 0;
+      }
+      .send {
+        width: 42px;
+        height: 42px;
+        border: none;
+        border-radius: 50%;
+        background: var(--blue);
+        color: #fff;
+        font-size: 18px;
+        flex: none;
+      }
+      .send:hover {
+        background: var(--blue-2);
+      }
+      .send:disabled {
+        opacity: 0.5;
+        cursor: wait;
+      }
+      .foot {
+        max-width: 800px;
+        margin: 6px auto 0;
+        text-align: center;
+        font-size: 11.5px;
+        color: var(--muted);
+      }
+      kbd {
+        font-family: inherit;
+        background: var(--surface-2);
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        padding: 0 5px;
+        font-size: 11px;
+      }
 
-  /* ---------- right panel ---------- */
-  .panel { background:var(--surface); border-left:1px solid var(--line); display:flex; flex-direction:column; min-width:0; min-height:0; overflow:hidden; }
-  .tabs { display:flex; gap:4px; padding:10px 12px 0; border-bottom:1px solid var(--line); align-items:center; }
-  .panel-close { display:none; width:30px; height:30px; flex:none; margin-bottom:6px; }
-  .tab { flex:1; padding:10px 4px; border:none; background:none; font-size:13.5px; color:var(--muted); border-bottom:2px solid transparent; }
-  .tab.active { color:var(--blue-2); border-bottom-color:var(--blue-2); font-weight:600; }
-  .tabpane { display:none; flex:1; overflow-y:auto; padding:14px; min-height:0; } .tabpane.active { display:block; }
-  .search { width:100%; padding:9px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); color:var(--ink); font:inherit; font-size:13.5px; outline:none; }
-  .filters { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0; }
-  .filter { border:1px solid var(--line); background:none; border-radius:16px; padding:3px 11px; font-size:12px; color:var(--muted); }
-  .filter.active { background:var(--blue); border-color:var(--blue); color:#fff; }
-  .order { border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:10px; background:var(--bg); }
-  .order .top { display:flex; justify-content:space-between; gap:8px; font-weight:600; font-size:14px; }
-  .order .sub { color:var(--muted); font-size:12.5px; margin:3px 0 8px; }
-  .order .tags { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:9px; }
-  .order .btns { display:flex; gap:6px; }
-  .mini { flex:1; border:1px solid var(--line); background:var(--surface); border-radius:8px; padding:6px 8px; font-size:12.5px; }
-  .mini:hover { border-color:var(--blue); color:var(--blue-2); } .mini.agent:hover { border-color:var(--pink); color:var(--pink); }
-  .policy { display:flex; justify-content:space-between; width:100%; text-align:left; padding:11px 12px; margin-bottom:8px; border:1px solid var(--line); border-radius:10px; background:var(--bg); font-size:14px; }
-  .policy:hover { border-color:var(--blue); } .policy small { color:var(--muted); }
-  .stats { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; }
-  .stat { border:1px solid var(--line); border-radius:12px; padding:12px; background:var(--bg); }
-  .stat b { display:block; font-size:24px; color:var(--ink); } .stat span { font-size:12px; color:var(--muted); }
-  .kv { font-size:13px; border:1px solid var(--line); border-radius:12px; padding:4px 12px; background:var(--bg); }
-  .kv div { display:flex; justify-content:space-between; gap:10px; padding:8px 0; border-bottom:1px dashed var(--line); } .kv div:last-child { border-bottom:none; }
-  .kv span:first-child { color:var(--muted); }
-  details.prompt { margin-top:12px; font-size:13px; } details.prompt summary { cursor:pointer; color:var(--muted); }
-  details.prompt pre { white-space:pre-wrap; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:10px; margin-top:8px; font-family:inherit; }
-  .empty { color:var(--muted); font-size:13px; text-align:center; padding:26px 10px; line-height:1.5; }
-  .h { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:18px 0 8px; }
+      /* ---------- right panel ---------- */
+      .panel {
+        background: var(--surface);
+        border-left: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 0;
+        overflow: hidden;
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        padding: 10px 12px 0;
+        border-bottom: 1px solid var(--line);
+        align-items: center;
+      }
+      .panel-close {
+        display: none;
+        width: 30px;
+        height: 30px;
+        flex: none;
+        margin-bottom: 6px;
+      }
+      .tab {
+        flex: 1;
+        padding: 10px 4px;
+        border: none;
+        background: none;
+        font-size: 13.5px;
+        color: var(--muted);
+        border-bottom: 2px solid transparent;
+      }
+      .tab.active {
+        color: var(--blue-2);
+        border-bottom-color: var(--blue-2);
+        font-weight: 600;
+      }
+      .tabpane {
+        display: none;
+        flex: 1;
+        overflow-y: auto;
+        padding: 14px;
+        min-height: 0;
+      }
+      .tabpane.active {
+        display: block;
+      }
+      .search {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--surface-2);
+        color: var(--ink);
+        font: inherit;
+        font-size: 13.5px;
+        outline: none;
+      }
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 10px 0;
+      }
+      .filter {
+        border: 1px solid var(--line);
+        background: none;
+        border-radius: 16px;
+        padding: 3px 11px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .filter.active {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #fff;
+      }
+      .order {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 10px;
+        background: var(--bg);
+      }
+      .order .top {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .order .sub {
+        color: var(--muted);
+        font-size: 12.5px;
+        margin: 3px 0 8px;
+      }
+      .order .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-bottom: 9px;
+      }
+      .order .btns {
+        display: flex;
+        gap: 6px;
+      }
+      .mini {
+        flex: 1;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        border-radius: 8px;
+        padding: 6px 8px;
+        font-size: 12.5px;
+      }
+      .mini:hover {
+        border-color: var(--blue);
+        color: var(--blue-2);
+      }
+      .mini.agent:hover {
+        border-color: var(--pink);
+        color: var(--pink);
+      }
+      .policy {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        text-align: left;
+        padding: 11px 12px;
+        margin-bottom: 8px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--bg);
+        font-size: 14px;
+      }
+      .policy:hover {
+        border-color: var(--blue);
+      }
+      .policy small {
+        color: var(--muted);
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+      .stat {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+        background: var(--bg);
+      }
+      .stat b {
+        display: block;
+        font-size: 24px;
+        color: var(--ink);
+      }
+      .stat span {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .kv {
+        font-size: 13px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 4px 12px;
+        background: var(--bg);
+      }
+      .kv div {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px dashed var(--line);
+      }
+      .kv div:last-child {
+        border-bottom: none;
+      }
+      .kv span:first-child {
+        color: var(--muted);
+      }
+      details.prompt {
+        margin-top: 12px;
+        font-size: 13px;
+      }
+      details.prompt summary {
+        cursor: pointer;
+        color: var(--muted);
+      }
+      details.prompt pre {
+        white-space: pre-wrap;
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        margin-top: 8px;
+        font-family: inherit;
+      }
+      .empty {
+        color: var(--muted);
+        font-size: 13px;
+        text-align: center;
+        padding: 26px 10px;
+        line-height: 1.5;
+      }
+      .h {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 18px 0 8px;
+      }
 
-  dialog { border:1px solid var(--line); border-radius:16px; background:var(--surface); color:var(--ink); max-width:640px; width:92vw; padding:0; box-shadow:0 20px 60px rgba(0,0,0,.35); }
-  dialog::backdrop { background:rgba(10,13,28,.55); }
-  .dlg-head { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); } .dlg-head h3 { margin:0; }
-  .dlg-body { padding:16px 18px; max-height:60vh; overflow-y:auto; white-space:pre-wrap; line-height:1.6; font-size:14.5px; }
-  .dlg-foot { padding:12px 18px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:8px; }
-  .btn { border:1px solid var(--line); background:var(--surface); border-radius:10px; padding:8px 14px; font-size:14px; } .btn.primary { background:var(--blue); border-color:var(--blue); color:#fff; }
-  #toast { position:fixed; left:50%; bottom:90px; transform:translate(-50%,20px); background:#141B4D; color:#fff; padding:9px 16px; border-radius:20px; font-size:13px; opacity:0; pointer-events:none; transition:.25s; z-index:99; }
-  #toast.show { opacity:1; transform:translate(-50%,0); }
+      dialog {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: var(--surface);
+        color: var(--ink);
+        max-width: 640px;
+        width: 92vw;
+        padding: 0;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+      }
+      dialog::backdrop {
+        background: rgba(10, 13, 28, 0.55);
+      }
+      .dlg-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--line);
+      }
+      .dlg-head h3 {
+        margin: 0;
+      }
+      .dlg-body {
+        padding: 16px 18px;
+        max-height: 60vh;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        line-height: 1.6;
+        font-size: 14.5px;
+      }
+      .dlg-foot {
+        padding: 12px 18px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+      .btn {
+        border: 1px solid var(--line);
+        background: var(--surface);
+        border-radius: 10px;
+        padding: 8px 14px;
+        font-size: 14px;
+      }
+      .btn.primary {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: #fff;
+      }
+      #toast {
+        position: fixed;
+        left: 50%;
+        bottom: 90px;
+        transform: translate(-50%, 20px);
+        background: #141b4d;
+        color: #fff;
+        padding: 9px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        opacity: 0;
+        pointer-events: none;
+        transition: 0.25s;
+        z-index: 99;
+      }
+      #toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
 
-  /* ---------- small screens ---------- */
-  @media (max-width:1180px) {
-    .app, .app.panel-open { grid-template-columns:272px minmax(0,1fr); }
-    .panel { position:fixed; right:0; top:0; bottom:0; width:min(360px,92vw); transform:translateX(100%); transition:.25s; z-index:50; box-shadow:-10px 0 40px rgba(0,0,0,.25); }
-    .app.panel-open .panel { transform:none; }
-    .panel-close { display:grid; }
-  }
-  @media (max-width:820px) {
-    .app, .app.panel-open { grid-template-columns:minmax(0,1fr); }
-    .sidebar { position:fixed; left:0; top:0; bottom:0; width:272px; transform:translateX(-100%); transition:.25s; }
-    .app.side-open .sidebar { transform:none; box-shadow:10px 0 40px rgba(0,0,0,.35); }
-    .mobile-only { display:grid; } .switch .lbl { display:none; } .topbar { padding:10px 12px; gap:10px; } .body { max-width:88%; }
-  }
-</style>
-</head>
-<body>
-<div class="app panel-open" id="app">
-
-  <aside class="sidebar" id="sidebar">
-    <div class="brand"><div class="logo">🛍️</div><div><b>ShopKart</b><span>Assistant · refunds, returns, orders</span></div></div>
-    <button class="new-chat" id="newChat">＋ New chat</button>
-    <div class="side-label">Recent chats</div>
-    <div id="convList"></div>
-    <div class="side-foot">
-      <div class="pill"><span class="dot" id="dot"></span><span id="statusText">Checking…</span></div>
-      <div class="pill"><span>🧠</span><span class="m" id="modelName">model: …</span></div>
-    </div>
-  </aside>
-
-  <section class="main">
-    <header class="topbar">
-      <button class="icon mobile-only" id="menuBtn" title="Chats">☰</button>
-      <div class="titlebox"><h1 id="chatTitle">New chat</h1><div class="sub" id="chatSub">Ask about a return, a refund or an order</div></div>
-      <span class="spacer"></span>
-      <label class="switch" title="Show the raw JSON of every request and response"><input type="checkbox" id="showJson"><span class="track"></span><span class="lbl">Show JSON</span></label>
-      <label class="switch agent" title="Send your message to the agent crew (step 5)"><input type="checkbox" id="agentMode"><span class="track"></span><span class="lbl">Agent mode</span></label>
-      <button class="icon" id="themeBtn" title="Light / dark">🌙</button>
-      <div class="menu-wrap">
-        <button class="icon" id="moreBtn" title="More">⋯</button>
-        <div class="menu" id="moreMenu">
-          <button id="summarize">📝 Summarize this chat</button>
-          <button id="exportMd">⬇️ Export as Markdown</button>
-          <button id="exportJson">⬇️ Export as JSON</button>
-          <hr>
-          <button id="clear">🧹 Clear this chat</button>
-          <button id="clearAll">🗑️ Delete all chats</button>
+      /* ---------- small screens ---------- */
+      @media (max-width: 1180px) {
+        .app,
+        .app.panel-open {
+          grid-template-columns: 272px minmax(0, 1fr);
+        }
+        .panel {
+          position: fixed;
+          right: 0;
+          top: 0;
+          bottom: 0;
+          width: min(360px, 92vw);
+          transform: translateX(100%);
+          transition: 0.25s;
+          z-index: 50;
+          box-shadow: -10px 0 40px rgba(0, 0, 0, 0.25);
+        }
+        .app.panel-open .panel {
+          transform: none;
+        }
+        .panel-close {
+          display: grid;
+        }
+      }
+      @media (max-width: 820px) {
+        .app,
+        .app.panel-open {
+          grid-template-columns: minmax(0, 1fr);
+        }
+        .sidebar {
+          position: fixed;
+          left: 0;
+          top: 0;
+          bottom: 0;
+          width: 272px;
+          transform: translateX(-100%);
+          transition: 0.25s;
+        }
+        .app.side-open .sidebar {
+          transform: none;
+          box-shadow: 10px 0 40px rgba(0, 0, 0, 0.35);
+        }
+        .mobile-only {
+          display: grid;
+        }
+        .switch .lbl {
+          display: none;
+        }
+        .topbar {
+          padding: 10px 12px;
+          gap: 10px;
+        }
+        .body {
+          max-width: 88%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app panel-open" id="app">
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <div class="logo">🛍️</div>
+          <div>
+            <b>ShopKart</b><span>Assistant · refunds, returns, orders</span>
+          </div>
         </div>
+        <button class="new-chat" id="newChat">＋ New chat</button>
+        <div class="side-label">Recent chats</div>
+        <div id="convList"></div>
+        <div class="side-foot">
+          <div class="pill">
+            <span class="dot" id="dot"></span
+            ><span id="statusText">Checking…</span>
+          </div>
+          <div class="pill">
+            <span>🧠</span><span class="m" id="modelName">model: …</span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="main">
+        <header class="topbar">
+          <button class="icon mobile-only" id="menuBtn" title="Chats">
+            ☰
+          </button>
+          <div class="titlebox">
+            <h1 id="chatTitle">New chat</h1>
+            <div class="sub" id="chatSub">
+              Ask about a return, a refund or an order
+            </div>
+          </div>
+          <span class="spacer"></span>
+          <label
+            class="switch"
+            title="Show the raw JSON of every request and response"
+            ><input type="checkbox" id="showJson" /><span class="track"></span
+            ><span class="lbl">Show JSON</span></label
+          >
+          <label
+            class="switch agent"
+            title="Send your message to the agent crew (step 5)"
+            ><input type="checkbox" id="agentMode" /><span class="track"></span
+            ><span class="lbl">Agent mode</span></label
+          >
+          <button class="icon" id="themeBtn" title="Light / dark">🌙</button>
+          <div class="menu-wrap">
+            <button class="icon" id="moreBtn" title="More">⋯</button>
+            <div class="menu" id="moreMenu">
+              <button id="summarize">📝 Summarize this chat</button>
+              <button id="exportMd">⬇️ Export as Markdown</button>
+              <button id="exportJson">⬇️ Export as JSON</button>
+              <hr />
+              <button id="clear">🧹 Clear this chat</button>
+              <button id="clearAll">🗑️ Delete all chats</button>
+            </div>
+          </div>
+          <button
+            class="icon on"
+            id="panelBtn"
+            title="Orders, policies and insights"
+          >
+            🗂️
+          </button>
+        </header>
+
+        <div class="scroller" id="scroller"><main id="chat"></main></div>
+
+        <form id="form">
+          <div class="composer">
+            <textarea
+              id="text"
+              rows="1"
+              placeholder="Type your message…"
+              autocomplete="off"
+              autofocus
+            ></textarea>
+            <button class="send" id="sendBtn" type="submit" title="Send">
+              ➤
+            </button>
+          </div>
+          <div class="foot">
+            <kbd>Enter</kbd> send · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line ·
+            <kbd>Ctrl</kbd>+<kbd>K</kbd> new chat
+          </div>
+        </form>
+      </section>
+
+      <aside class="panel" id="panel">
+        <div class="tabs">
+          <button class="tab active" data-tab="orders">📦 Orders</button>
+          <button class="tab" data-tab="policies">📜 Policies</button>
+          <button class="tab" data-tab="insights">📊 Insights</button>
+          <button class="icon panel-close" id="panelClose" title="Close">
+            ✕
+          </button>
+        </div>
+        <div class="tabpane active" id="tab-orders">
+          <input
+            class="search"
+            id="orderSearch"
+            placeholder="Search by order, customer or item…"
+          />
+          <div class="filters" id="orderFilters"></div>
+          <div id="orderList"><div class="empty">Loading orders…</div></div>
+        </div>
+        <div class="tabpane" id="tab-policies">
+          <div id="policyList"><div class="empty">Loading policies…</div></div>
+        </div>
+        <div class="tabpane" id="tab-insights">
+          <div class="stats" id="statGrid"></div>
+          <div class="h">Model settings</div>
+          <div class="kv" id="configBox">
+            <div><span>Loading…</span><span></span></div>
+          </div>
+          <details class="prompt" id="promptBox" hidden>
+            <summary>System prompt (the job description)</summary>
+            <pre id="promptText"></pre>
+          </details>
+        </div>
+      </aside>
+    </div>
+
+    <dialog id="dialog">
+      <div class="dlg-head">
+        <h3 id="dlgTitle"></h3>
+        <button class="icon" id="dlgClose">✕</button>
       </div>
-      <button class="icon on" id="panelBtn" title="Orders, policies and insights">🗂️</button>
-    </header>
-
-    <div class="scroller" id="scroller"><main id="chat"></main></div>
-
-    <form id="form">
-      <div class="composer">
-        <textarea id="text" rows="1" placeholder="Type your message…" autocomplete="off" autofocus></textarea>
-        <button class="send" id="sendBtn" type="submit" title="Send">➤</button>
+      <div class="dlg-body" id="dlgBody"></div>
+      <div class="dlg-foot">
+        <button class="btn" id="dlgAsk">💬 Ask the bot about this</button
+        ><button class="btn primary" id="dlgOk">Close</button>
       </div>
-      <div class="foot"><kbd>Enter</kbd> send · <kbd>Shift</kbd>+<kbd>Enter</kbd> new line · <kbd>Ctrl</kbd>+<kbd>K</kbd> new chat</div>
-    </form>
-  </section>
+    </dialog>
+    <div id="toast"></div>
 
-  <aside class="panel" id="panel">
-    <div class="tabs">
-      <button class="tab active" data-tab="orders">📦 Orders</button>
-      <button class="tab" data-tab="policies">📜 Policies</button>
-      <button class="tab" data-tab="insights">📊 Insights</button>
-      <button class="icon panel-close" id="panelClose" title="Close">✕</button>
-    </div>
-    <div class="tabpane active" id="tab-orders">
-      <input class="search" id="orderSearch" placeholder="Search by order, customer or item…">
-      <div class="filters" id="orderFilters"></div>
-      <div id="orderList"><div class="empty">Loading orders…</div></div>
-    </div>
-    <div class="tabpane" id="tab-policies"><div id="policyList"><div class="empty">Loading policies…</div></div></div>
-    <div class="tabpane" id="tab-insights">
-      <div class="stats" id="statGrid"></div>
-      <div class="h">Model settings</div>
-      <div class="kv" id="configBox"><div><span>Loading…</span><span></span></div></div>
-      <details class="prompt" id="promptBox" hidden><summary>System prompt (the job description)</summary><pre id="promptText"></pre></details>
-    </div>
-  </aside>
-</div>
+    <script>
+      // =====================================================================
+      //  YOUR PART (step 3) · the two hops that happen in the browser
+      // =====================================================================
 
-<dialog id="dialog">
-  <div class="dlg-head"><h3 id="dlgTitle"></h3><button class="icon" id="dlgClose">✕</button></div>
-  <div class="dlg-body" id="dlgBody"></div>
-  <div class="dlg-foot"><button class="btn" id="dlgAsk">💬 Ask the bot about this</button><button class="btn primary" id="dlgOk">Close</button></div>
-</dialog>
-<div id="toast"></div>
+      // HOP 1 · UI -> API: send the request as JSON to our API and get JSON back.
+      //   request looks like: {"messages": [{"role": "user", "content": "Can I return shoes?"}]}
+      //   fetch() is the browser's built-in way to call an API (like Postman, but in JavaScript).
+      async function sendToApi(request) {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(request),
+        });
+        if (!res.ok) throw new Error(res.statusText);
+        return await res.json();
+      }
 
-<script>
-  // =====================================================================
-  //  YOUR PART (step 3) · the two hops that happen in the browser
-  // =====================================================================
+      // HOP 5 · API -> UI: show the answer to the customer.
+      //   data is the JSON our API returned, e.g. {"reply": "Yes, within 30 days."}
+      //   (from step 4 it also has "sources" and "context": the policy pages the librarian brought)
+      function showAnswer(bubble, data) {
+        bubble.textContent = data.reply;
+      }
 
-  // HOP 1 · UI -> API: send the request as JSON to our API and get JSON back.
-  //   request looks like: {"messages": [{"role": "user", "content": "Can I return shoes?"}]}
-  //   fetch() is the browser's built-in way to call an API (like Postman, but in JavaScript).
-  async function sendToApi(request) {
-    const res = await fetch("/chat", {method: "POST", headers: {"Content-Type": "application/json"},
-                                      body: JSON.stringify(request)});
-    if (!res.ok) throw new Error(res.statusText);
-    return await res.json();
-  }
+      // =====================================================================
+      //  Given code below: you don't need to change anything from here on.
+      // =====================================================================
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) =>
+        String(s).replace(
+          /[&<>"]/g,
+          (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c],
+        );
+      // tiny, safe formatter: escape first, then allow **bold**, `code` and "- " bullets
+      const fmt = (s) =>
+        esc(s)
+          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+          .replace(/`([^`\n]+)`/g, "<code>$1</code>")
+          .replace(/^[-*] /gm, "• ");
+      const clock = (t) =>
+        new Date(t).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      const chat = $("chat"),
+        scroller = $("scroller");
+      const FALLBACK_SUGGESTIONS = [
+        {
+          icon: "👟",
+          title: "Return window",
+          prompt: "Can I return shoes I bought 20 days ago?",
+        },
+        {
+          icon: "💶",
+          title: "Refund timing",
+          prompt: "How long does a refund take to reach my card?",
+        },
+        {
+          icon: "📦",
+          title: "Wrong item",
+          prompt: "I ordered a coffee grinder but got a toaster. What now?",
+        },
+        {
+          icon: "🎁",
+          title: "Gift cards",
+          prompt: "Can I get a refund on a digital gift card?",
+        },
+      ];
 
-  // HOP 5 · API -> UI: show the answer to the customer.
-  //   data is the JSON our API returned, e.g. {"reply": "Yes, within 30 days."}
-  //   (from step 4 it also has "sources" and "context": the policy pages the librarian brought)
-  function showAnswer(bubble, data) {
-    bubble.textContent = data.reply;
-  }
+      // ---------- chats are saved in the browser (localStorage) ----------
+      // A chat = {id, title, updated, messages: [{role, content, time, ms, sources, rating}]}
+      let convs = [],
+        current = null,
+        busy = false,
+        suggestions = FALLBACK_SUGGESTIONS;
+      try {
+        convs = JSON.parse(localStorage.getItem("shopkart.chats") || "[]");
+      } catch (e) {
+        convs = [];
+      }
+      const persist = () => {
+        try {
+          localStorage.setItem(
+            "shopkart.chats",
+            JSON.stringify(convs.slice(0, 30)),
+          );
+        } catch (e) {}
+      };
+      const newConv = () => ({
+        id: Date.now().toString(36),
+        title: "New chat",
+        updated: Date.now(),
+        messages: [],
+      });
+      // the model is a goldfish, so we re-send the whole conversation every time (only role + content)
+      const apiMessages = () =>
+        current.messages
+          .filter((m) => !m.failed)
+          .map((m) => ({ role: m.role, content: m.content }));
 
-  // =====================================================================
-  //  Given code below: you don't need to change anything from here on.
-  // =====================================================================
-  const $ = id => document.getElementById(id);
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-  // tiny, safe formatter: escape first, then allow **bold**, `code` and "- " bullets
-  const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/`([^`\n]+)`/g, "<code>$1</code>").replace(/^[-*] /gm, "• ");
-  const clock = t => new Date(t).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
-  const chat = $("chat"), scroller = $("scroller");
-  const FALLBACK_SUGGESTIONS = [
-    {icon: "👟", title: "Return window", prompt: "Can I return shoes I bought 20 days ago?"},
-    {icon: "💶", title: "Refund timing", prompt: "How long does a refund take to reach my card?"},
-    {icon: "📦", title: "Wrong item", prompt: "I ordered a coffee grinder but got a toaster. What now?"},
-    {icon: "🎁", title: "Gift cards", prompt: "Can I get a refund on a digital gift card?"},
-  ];
+      function toast(text) {
+        const t = $("toast");
+        t.textContent = text;
+        t.classList.add("show");
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(() => t.classList.remove("show"), 1800);
+      }
+      const toBottom = () => scroller.scrollTo({ top: scroller.scrollHeight });
 
-  // ---------- chats are saved in the browser (localStorage) ----------
-  // A chat = {id, title, updated, messages: [{role, content, time, ms, sources, rating}]}
-  let convs = [], current = null, busy = false, suggestions = FALLBACK_SUGGESTIONS;
-  try { convs = JSON.parse(localStorage.getItem("shopkart.chats") || "[]"); } catch (e) { convs = []; }
-  const persist = () => { try { localStorage.setItem("shopkart.chats", JSON.stringify(convs.slice(0, 30))); } catch (e) {} };
-  const newConv = () => ({id: Date.now().toString(36), title: "New chat", updated: Date.now(), messages: []});
-  // the model is a goldfish, so we re-send the whole conversation every time (only role + content)
-  const apiMessages = () => current.messages.filter(m => !m.failed).map(m => ({role: m.role, content: m.content}));
-
-  function toast(text) {
-    const t = $("toast"); t.textContent = text; t.classList.add("show");
-    clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("show"), 1800);
-  }
-  const toBottom = () => scroller.scrollTo({top: scroller.scrollHeight});
-
-  // ---------- rendering ----------
-  function renderWelcome() {
-    chat.innerHTML = `<div class="welcome" id="welcome"><div class="big">🛍️</div><h2>Hi, I'm ShopKart's assistant</h2>
+      // ---------- rendering ----------
+      function renderWelcome() {
+        chat.innerHTML = `<div class="welcome" id="welcome"><div class="big">🛍️</div><h2>Hi, I'm ShopKart's assistant</h2>
       <p>I can help with returns, refunds and orders. Pick a question below, or type your own.<br>
       <b>Agent mode</b>: try “My headphones from order 1043 arrived broken, refund please.”</p>
       <div class="cards">${suggestions.map((s, i) => `<button class="card" data-i="${i}"><div class="i">${s.icon}</div><b>${esc(s.title)}</b><span>${esc(s.prompt)}</span></button>`).join("")}</div>
       <div class="hint">Tip: the right-hand panel has demo orders, policy pages and live stats.</div></div>`;
-    chat.querySelectorAll(".card").forEach(c => c.onclick = () => send(suggestions[c.dataset.i].prompt));
-  }
-
-  function makeRow(role) {
-    $("welcome")?.remove();
-    const row = document.createElement("div");
-    row.className = "row " + role;
-    row.innerHTML = `<div class="avatar">${role === "user" ? "🙂" : "🤖"}</div><div class="body"><div class="bubble"></div><div class="meta"></div></div>`;
-    chat.appendChild(row); toBottom();
-    return {row, bubble: row.querySelector(".bubble"), meta: row.querySelector(".meta")};
-  }
-
-  function addChip(meta, text, cls = "") { meta.insertAdjacentHTML("beforeend", `<span class="chip ${cls}">${esc(text)}</span>`); }
-
-  function fillMeta(r, m) {
-    r.meta.innerHTML = `<span>${clock(m.time)}</span>`;
-    if (m.ms) r.meta.insertAdjacentHTML("beforeend", `<span>· ${(m.ms / 1000).toFixed(1)}s</span>`);
-    if (m.role !== "assistant") return;
-    const mk = (icon, title, fn) => { const b = document.createElement("button"); b.className = "act"; b.textContent = icon; b.title = title; b.onclick = () => fn(b); r.meta.appendChild(b); return b; };
-    mk("📋", "Copy", () => { navigator.clipboard?.writeText(m.content); toast("Copied"); });
-    const up = mk("👍", "Good answer", () => rate(m, "up", up, down));
-    const down = mk("👎", "Bad answer", () => rate(m, "down", up, down));
-    if (m.rating) (m.rating === "up" ? up : down).classList.add("picked");
-    if (m.sources && m.sources.length) {
-      r.meta.insertAdjacentHTML("beforeend", `<span class="cite-label">Sources:</span>`);
-      m.sources.forEach(s => {
-        const b = document.createElement("button");
-        b.className = "chip cite"; b.textContent = "📄 " + policyTitle(s); b.title = "Open the " + s + " policy page";
-        b.onclick = () => openPolicy(s.replace(/\.md$/, ""));
-        r.meta.appendChild(b);
-      });
-    }
-  }
-
-  // "damaged-items.md" -> "Damaged Items"
-  function policyTitle(file) { return file.replace(/\.md$/, "").replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()); }
-
-  async function rate(m, rating, up, down) {
-    m.rating = rating; persist();
-    up.classList.toggle("picked", rating === "up"); down.classList.toggle("picked", rating === "down");
-    toast(rating === "up" ? "Thanks! 👍" : "Thanks, we'll improve 👎");
-    try { await fetch("/feedback", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({rating, message: m.content})}); } catch (e) {}
-    loadStats();
-  }
-
-  function renderMessage(m) {
-    const r = makeRow(m.role === "user" ? "user" : "bot");
-    if (m.role === "user") r.bubble.textContent = m.content; else r.bubble.innerHTML = fmt(m.content);
-    fillMeta(r, m);
-    return r;
-  }
-
-  function renderSteps(steps) {
-    const lines = steps.map(s => {
-      let detail = "";
-      if (s.type === "tool_call") detail = `${esc(s.name)}(${esc(JSON.stringify(s.args))})`;
-      else if (s.type === "tool_result") detail = `→ ${esc(String(s.content).slice(0, 140))}`;
-      else if (s.type === "proposal") detail = `proposes ${esc(s.name)}(${esc(JSON.stringify(s.args))})`;
-      else if (s.type === "review") detail = `${s.approved ? "approved" : "<span class='bad'>sent back</span>"}: ${esc(s.reason)}`;
-      else if (s.type === "action") detail = `<b>${esc(s.name)}</b> ${esc(JSON.stringify(s.args))}`;
-      else detail = esc(String(s.content || "").slice(0, 160));
-      return `<div><span class="who">${esc(s.agent)}</span> · ${detail}</div>`;
-    });
-    return `<div class="steps">${lines.join("")}</div>`;
-  }
-
-  // "Show JSON": print exactly what travelled over the wire
-  function showJson(parent, label, request, response) {
-    if (!$("showJson").checked) return;
-    const short = obj => JSON.stringify(obj, (k, v) => (k === "context" && Array.isArray(v)) ? v.map(t => t.slice(0, 60) + "…") : v, 2);
-    parent.insertAdjacentHTML("beforeend", `<pre class="json"><b>→ ${esc(label)}  (request)</b>\n${esc(short(request))}\n\n<b>← response</b>\n${esc(short(response))}</pre>`);
-    toBottom();
-  }
-
-  // ---------- conversations: list, open, new, delete ----------
-  function renderList() {
-    const list = $("convList");
-    const items = convs.filter(c => c.messages.length).sort((a, b) => b.updated - a.updated);
-    list.innerHTML = items.length ? "" : `<div class="side-empty">No chats yet. Say hi!</div>`;
-    items.forEach(c => {
-      const b = document.createElement("button");
-      b.className = "conv" + (c === current ? " active" : "");
-      b.innerHTML = `<span>💬</span><span class="t">${esc(c.title)}</span><span class="x" title="Delete">✕</span>`;
-      b.onclick = e => { if (e.target.classList.contains("x")) { removeConv(c); } else { openConv(c); $("app").classList.remove("side-open"); } };
-      list.appendChild(b);
-    });
-  }
-  function openConv(c) {
-    current = c; chat.innerHTML = "";
-    if (c.messages.length) c.messages.forEach(renderMessage); else renderWelcome();
-    $("chatTitle").textContent = c.title; renderList(); toBottom();
-  }
-  function startNew() {
-    if (current && !current.messages.length) { $("text").focus(); return; }   // reuse the empty chat
-    current = newConv(); convs.push(current); persist(); openConv(current); $("text").focus();
-  }
-  function removeConv(c) {
-    convs = convs.filter(x => x !== c); persist();
-    if (c === current) { current = null; startNew(); } else renderList();
-  }
-
-  // ---------- sending ----------
-  async function send(text) {
-    text = (text || "").trim();
-    if (!text || busy) return;
-    busy = true; $("sendBtn").disabled = true;
-    const agentMode = $("agentMode").checked;
-    const userMsg = {role: "user", content: text, time: Date.now()};
-    const userRow = renderMessage(userMsg);
-    current.messages.push(userMsg);
-    if (current.title === "New chat") { current.title = text.length > 38 ? text.slice(0, 38) + "…" : text; $("chatTitle").textContent = current.title; }
-    current.updated = Date.now(); renderList();
-
-    const bot = makeRow("bot");
-    bot.bubble.innerHTML = `<span class="typing"><i></i><i></i><i></i></span>` + (agentMode ? `  The crew is working on it…` : "");
-    const started = performance.now();
-    try {
-      if (agentMode) {
-        const res = await fetch("/agent", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({message: text})});
-        if (res.status === 404) throw new Error("Agent mode arrives in step 5 (agent.py).");
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || res.statusText);
-        bot.bubble.innerHTML = fmt(data.reply);
-        const m = {role: "assistant", content: String(data.reply), time: Date.now(), ms: performance.now() - started};
-        current.messages.push(m); fillMeta(bot, m);
-        if (data.outcome) addChip(bot.meta, `${data.outcome.action}${data.outcome.amount ? " · EUR " + data.outcome.amount : ""}`, data.outcome.action === "refund" ? "" : "pink");
-        if (data.steps) bot.row.querySelector(".body").insertAdjacentHTML("beforeend", renderSteps(data.steps));
-        showJson(bot.row.querySelector(".body"), "POST /agent", {message: text}, {reply: data.reply, outcome: data.outcome, steps: `(${(data.steps || []).length} steps)`});
-      } else {
-        const request = {messages: apiMessages()};       // the JSON we send (HOP 1)
-        const data = await sendToApi(request);           // ... HOPS 2-4 happen on the server (app.py)
-        showAnswer(bot.bubble, data);                    // the JSON we got back (HOP 5)
-        bot.bubble.innerHTML = fmt(bot.bubble.textContent);   // polish: **bold**, `code` and bullets
-        const m = {role: "assistant", content: String(data.reply), time: Date.now(), ms: performance.now() - started, sources: data.sources || []};
-        current.messages.push(m); fillMeta(bot, m);
-        showJson(bot.row.querySelector(".body"), "POST /chat", request, data);
+        chat
+          .querySelectorAll(".card")
+          .forEach(
+            (c) => (c.onclick = () => send(suggestions[c.dataset.i].prompt)),
+          );
       }
-    } catch (err) {
-      userMsg.failed = true;           // don't re-send a message that never got an answer
-      bot.row.classList.add("err");
-      bot.bubble.textContent = "Error: " + err.message + "  (is uvicorn running? see TROUBLESHOOTING.md)";
-      const retryBtn = document.createElement("button"); retryBtn.className = "retry"; retryBtn.textContent = "↻ Retry";
-      retryBtn.onclick = () => {
-        current.messages = current.messages.filter(x => x !== userMsg);
-        userRow.row.remove(); bot.row.remove(); busy = false; send(text);
+
+      function makeRow(role) {
+        $("welcome")?.remove();
+        const row = document.createElement("div");
+        row.className = "row " + role;
+        row.innerHTML = `<div class="avatar">${role === "user" ? "🙂" : "🤖"}</div><div class="body"><div class="bubble"></div><div class="meta"></div></div>`;
+        chat.appendChild(row);
+        toBottom();
+        return {
+          row,
+          bubble: row.querySelector(".bubble"),
+          meta: row.querySelector(".meta"),
+        };
+      }
+
+      function addChip(meta, text, cls = "") {
+        meta.insertAdjacentHTML(
+          "beforeend",
+          `<span class="chip ${cls}">${esc(text)}</span>`,
+        );
+      }
+
+      function fillMeta(r, m) {
+        r.meta.innerHTML = `<span>${clock(m.time)}</span>`;
+        if (m.ms)
+          r.meta.insertAdjacentHTML(
+            "beforeend",
+            `<span>· ${(m.ms / 1000).toFixed(1)}s</span>`,
+          );
+        if (m.role !== "assistant") return;
+        const mk = (icon, title, fn) => {
+          const b = document.createElement("button");
+          b.className = "act";
+          b.textContent = icon;
+          b.title = title;
+          b.onclick = () => fn(b);
+          r.meta.appendChild(b);
+          return b;
+        };
+        mk("📋", "Copy", () => {
+          navigator.clipboard?.writeText(m.content);
+          toast("Copied");
+        });
+        const up = mk("👍", "Good answer", () => rate(m, "up", up, down));
+        const down = mk("👎", "Bad answer", () => rate(m, "down", up, down));
+        if (m.rating) (m.rating === "up" ? up : down).classList.add("picked");
+        if (m.sources && m.sources.length) {
+          r.meta.insertAdjacentHTML(
+            "beforeend",
+            `<span class="cite-label">Sources:</span>`,
+          );
+          m.sources.forEach((s) => {
+            const b = document.createElement("button");
+            b.className = "chip cite";
+            b.textContent = "📄 " + policyTitle(s);
+            b.title = "Open the " + s + " policy page";
+            b.onclick = () => openPolicy(s.replace(/\.md$/, ""));
+            r.meta.appendChild(b);
+          });
+        }
+      }
+
+      // "damaged-items.md" -> "Damaged Items"
+      function policyTitle(file) {
+        return file
+          .replace(/\.md$/, "")
+          .replace(/-/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+      }
+
+      async function rate(m, rating, up, down) {
+        m.rating = rating;
+        persist();
+        up.classList.toggle("picked", rating === "up");
+        down.classList.toggle("picked", rating === "down");
+        toast(rating === "up" ? "Thanks! 👍" : "Thanks, we'll improve 👎");
+        try {
+          await fetch("/feedback", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ rating, message: m.content }),
+          });
+        } catch (e) {}
+        loadStats();
+      }
+
+      function renderMessage(m) {
+        const r = makeRow(m.role === "user" ? "user" : "bot");
+        if (m.role === "user") r.bubble.textContent = m.content;
+        else r.bubble.innerHTML = fmt(m.content);
+        fillMeta(r, m);
+        return r;
+      }
+
+      function renderSteps(steps) {
+        const lines = steps.map((s) => {
+          let detail = "";
+          if (s.type === "tool_call")
+            detail = `${esc(s.name)}(${esc(JSON.stringify(s.args))})`;
+          else if (s.type === "tool_result")
+            detail = `→ ${esc(String(s.content).slice(0, 140))}`;
+          else if (s.type === "proposal")
+            detail = `proposes ${esc(s.name)}(${esc(JSON.stringify(s.args))})`;
+          else if (s.type === "review")
+            detail = `${s.approved ? "approved" : "<span class='bad'>sent back</span>"}: ${esc(s.reason)}`;
+          else if (s.type === "action")
+            detail = `<b>${esc(s.name)}</b> ${esc(JSON.stringify(s.args))}`;
+          else detail = esc(String(s.content || "").slice(0, 160));
+          return `<div><span class="who">${esc(s.agent)}</span> · ${detail}</div>`;
+        });
+        return `<div class="steps">${lines.join("")}</div>`;
+      }
+
+      // "Show JSON": print exactly what travelled over the wire
+      function showJson(parent, label, request, response) {
+        if (!$("showJson").checked) return;
+        const short = (obj) =>
+          JSON.stringify(
+            obj,
+            (k, v) =>
+              k === "context" && Array.isArray(v)
+                ? v.map((t) => t.slice(0, 60) + "…")
+                : v,
+            2,
+          );
+        parent.insertAdjacentHTML(
+          "beforeend",
+          `<pre class="json"><b>→ ${esc(label)}  (request)</b>\n${esc(short(request))}\n\n<b>← response</b>\n${esc(short(response))}</pre>`,
+        );
+        toBottom();
+      }
+
+      // ---------- conversations: list, open, new, delete ----------
+      function renderList() {
+        const list = $("convList");
+        const items = convs
+          .filter((c) => c.messages.length)
+          .sort((a, b) => b.updated - a.updated);
+        list.innerHTML = items.length
+          ? ""
+          : `<div class="side-empty">No chats yet. Say hi!</div>`;
+        items.forEach((c) => {
+          const b = document.createElement("button");
+          b.className = "conv" + (c === current ? " active" : "");
+          b.innerHTML = `<span>💬</span><span class="t">${esc(c.title)}</span><span class="x" title="Delete">✕</span>`;
+          b.onclick = (e) => {
+            if (e.target.classList.contains("x")) {
+              removeConv(c);
+            } else {
+              openConv(c);
+              $("app").classList.remove("side-open");
+            }
+          };
+          list.appendChild(b);
+        });
+      }
+      function openConv(c) {
+        current = c;
+        chat.innerHTML = "";
+        if (c.messages.length) c.messages.forEach(renderMessage);
+        else renderWelcome();
+        $("chatTitle").textContent = c.title;
+        renderList();
+        toBottom();
+      }
+      function startNew() {
+        if (current && !current.messages.length) {
+          $("text").focus();
+          return;
+        } // reuse the empty chat
+        current = newConv();
+        convs.push(current);
+        persist();
+        openConv(current);
+        $("text").focus();
+      }
+      function removeConv(c) {
+        convs = convs.filter((x) => x !== c);
+        persist();
+        if (c === current) {
+          current = null;
+          startNew();
+        } else renderList();
+      }
+
+      // ---------- sending ----------
+      async function send(text) {
+        text = (text || "").trim();
+        if (!text || busy) return;
+        busy = true;
+        $("sendBtn").disabled = true;
+        const agentMode = $("agentMode").checked;
+        const userMsg = { role: "user", content: text, time: Date.now() };
+        const userRow = renderMessage(userMsg);
+        current.messages.push(userMsg);
+        if (current.title === "New chat") {
+          current.title = text.length > 38 ? text.slice(0, 38) + "…" : text;
+          $("chatTitle").textContent = current.title;
+        }
+        current.updated = Date.now();
+        renderList();
+
+        const bot = makeRow("bot");
+        bot.bubble.innerHTML =
+          `<span class="typing"><i></i><i></i><i></i></span>` +
+          (agentMode ? `  The crew is working on it…` : "");
+        const started = performance.now();
+        try {
+          if (agentMode) {
+            const res = await fetch("/agent", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ message: text }),
+            });
+            if (res.status === 404)
+              throw new Error("Agent mode arrives in step 5 (agent.py).");
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.detail || res.statusText);
+            bot.bubble.innerHTML = fmt(data.reply);
+            const m = {
+              role: "assistant",
+              content: String(data.reply),
+              time: Date.now(),
+              ms: performance.now() - started,
+            };
+            current.messages.push(m);
+            fillMeta(bot, m);
+            if (data.outcome)
+              addChip(
+                bot.meta,
+                `${data.outcome.action}${data.outcome.amount ? " · EUR " + data.outcome.amount : ""}`,
+                data.outcome.action === "refund" ? "" : "pink",
+              );
+            if (data.steps)
+              bot.row
+                .querySelector(".body")
+                .insertAdjacentHTML("beforeend", renderSteps(data.steps));
+            showJson(
+              bot.row.querySelector(".body"),
+              "POST /agent",
+              { message: text },
+              {
+                reply: data.reply,
+                outcome: data.outcome,
+                steps: `(${(data.steps || []).length} steps)`,
+              },
+            );
+          } else {
+            const request = { messages: apiMessages() }; // the JSON we send (HOP 1)
+            const data = await sendToApi(request); // ... HOPS 2-4 happen on the server (app.py)
+            showAnswer(bot.bubble, data); // the JSON we got back (HOP 5)
+            bot.bubble.innerHTML = fmt(bot.bubble.textContent); // polish: **bold**, `code` and bullets
+            const m = {
+              role: "assistant",
+              content: String(data.reply),
+              time: Date.now(),
+              ms: performance.now() - started,
+              sources: data.sources || [],
+            };
+            current.messages.push(m);
+            fillMeta(bot, m);
+            showJson(
+              bot.row.querySelector(".body"),
+              "POST /chat",
+              request,
+              data,
+            );
+          }
+        } catch (err) {
+          userMsg.failed = true; // don't re-send a message that never got an answer
+          bot.row.classList.add("err");
+          bot.bubble.textContent =
+            "Error: " +
+            err.message +
+            "  (is uvicorn running? see TROUBLESHOOTING.md)";
+          const retryBtn = document.createElement("button");
+          retryBtn.className = "retry";
+          retryBtn.textContent = "↻ Retry";
+          retryBtn.onclick = () => {
+            current.messages = current.messages.filter((x) => x !== userMsg);
+            userRow.row.remove();
+            bot.row.remove();
+            busy = false;
+            send(text);
+          };
+          bot.meta.appendChild(retryBtn);
+        }
+        current.updated = Date.now();
+        persist();
+        renderList();
+        toBottom();
+        busy = false;
+        $("sendBtn").disabled = false;
+        $("text").focus();
+      }
+
+      const box = $("text");
+      const grow = () => {
+        box.style.height = "auto";
+        box.style.height = Math.min(box.scrollHeight, 160) + "px";
       };
-      bot.meta.appendChild(retryBtn);
-    }
-    current.updated = Date.now(); persist(); renderList(); toBottom();
-    busy = false; $("sendBtn").disabled = false; $("text").focus();
-  }
+      box.addEventListener("input", grow);
+      box.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
+          e.preventDefault();
+          $("form").requestSubmit();
+        }
+      });
+      $("form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const t = box.value;
+        box.value = "";
+        grow();
+        send(t);
+      });
+      function fillComposer(text, agent) {
+        box.value = text;
+        $("agentMode").checked = !!agent;
+        grow();
+        box.focus();
+      }
 
-  const box = $("text");
-  const grow = () => { box.style.height = "auto"; box.style.height = Math.min(box.scrollHeight, 160) + "px"; };
-  box.addEventListener("input", grow);
-  box.addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("form").requestSubmit(); } });
-  $("form").addEventListener("submit", e => { e.preventDefault(); const t = box.value; box.value = ""; grow(); send(t); });
-  function fillComposer(text, agent) { box.value = text; $("agentMode").checked = !!agent; grow(); box.focus(); }
+      // ---------- toolbar ----------
+      $("newChat").onclick = () => {
+        startNew();
+        $("app").classList.remove("side-open");
+      };
+      $("menuBtn").onclick = () => $("app").classList.toggle("side-open");
+      $("panelBtn").onclick = () => {
+        const on = $("app").classList.toggle("panel-open");
+        $("panelBtn").classList.toggle("on", on);
+      };
+      $("panelClose").onclick = () => {
+        $("app").classList.remove("panel-open");
+        $("panelBtn").classList.remove("on");
+      };
+      $("moreBtn").onclick = (e) => {
+        e.stopPropagation();
+        $("moreMenu").classList.toggle("open");
+      };
+      document.addEventListener("click", () =>
+        $("moreMenu").classList.remove("open"),
+      );
+      $("clear").onclick = () => {
+        current.messages = [];
+        current.title = "New chat";
+        persist();
+        openConv(current);
+      };
+      $("clearAll").onclick = () => {
+        if (confirm("Delete all saved chats?")) {
+          convs = [];
+          persist();
+          current = null;
+          startNew();
+        }
+      };
 
-  // ---------- toolbar ----------
-  $("newChat").onclick = () => { startNew(); $("app").classList.remove("side-open"); };
-  $("menuBtn").onclick = () => $("app").classList.toggle("side-open");
-  $("panelBtn").onclick = () => { const on = $("app").classList.toggle("panel-open"); $("panelBtn").classList.toggle("on", on); };
-  $("panelClose").onclick = () => { $("app").classList.remove("panel-open"); $("panelBtn").classList.remove("on"); };
-  $("moreBtn").onclick = e => { e.stopPropagation(); $("moreMenu").classList.toggle("open"); };
-  document.addEventListener("click", () => $("moreMenu").classList.remove("open"));
-  $("clear").onclick = () => { current.messages = []; current.title = "New chat"; persist(); openConv(current); };
-  $("clearAll").onclick = () => { if (confirm("Delete all saved chats?")) { convs = []; persist(); current = null; startNew(); } };
+      function applyTheme(t) {
+        document.documentElement.dataset.theme = t;
+        $("themeBtn").textContent = t === "dark" ? "☀️" : "🌙";
+        try {
+          localStorage.setItem("shopkart.theme", t);
+        } catch (e) {}
+      }
+      $("themeBtn").onclick = () =>
+        applyTheme(
+          document.documentElement.dataset.theme === "dark" ? "light" : "dark",
+        );
+      applyTheme(
+        (() => {
+          try {
+            return localStorage.getItem("shopkart.theme");
+          } catch (e) {
+            return null;
+          }
+        })() ||
+          (matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light"),
+      );
 
-  function applyTheme(t) { document.documentElement.dataset.theme = t; $("themeBtn").textContent = t === "dark" ? "☀️" : "🌙"; try { localStorage.setItem("shopkart.theme", t); } catch (e) {} }
-  $("themeBtn").onclick = () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
-  applyTheme((() => { try { return localStorage.getItem("shopkart.theme"); } catch (e) { return null; } })() || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"));
+      function download(name, text, type) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([text], { type }));
+        a.download = name;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+      $("exportMd").onclick = () => {
+        if (!current.messages.length) return toast("Nothing to export yet");
+        download(
+          "shopkart-chat.md",
+          `# ${current.title}\n\n` +
+            current.messages
+              .map(
+                (m) =>
+                  `**${m.role === "user" ? "Customer" : "Assistant"}** (${clock(m.time)})\n\n${m.content}\n`,
+              )
+              .join("\n"),
+          "text/markdown",
+        );
+      };
+      $("exportJson").onclick = () => {
+        if (!current.messages.length) return toast("Nothing to export yet");
+        download(
+          "shopkart-chat.json",
+          JSON.stringify({ messages: apiMessages() }, null, 2),
+          "application/json",
+        );
+      };
+      $("summarize").onclick = async () => {
+        if (!current.messages.length) return toast("Nothing to summarize yet");
+        toast("Summarizing…");
+        try {
+          const res = await fetch("/summarize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages: apiMessages() }),
+          });
+          if (res.status === 404)
+            throw new Error(
+              "Summaries need the full app.py (POST /summarize).",
+            );
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || res.statusText);
+          chat.insertAdjacentHTML(
+            "beforeend",
+            `<div class="note"><b>📝 Summary</b><br>${fmt(data.summary)}</div>`,
+          );
+          toBottom();
+        } catch (err) {
+          toast(err.message);
+        }
+      };
 
-  function download(name, text, type) {
-    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], {type})); a.download = name; a.click(); URL.revokeObjectURL(a.href);
-  }
-  $("exportMd").onclick = () => {
-    if (!current.messages.length) return toast("Nothing to export yet");
-    download("shopkart-chat.md", `# ${current.title}\n\n` + current.messages.map(m => `**${m.role === "user" ? "Customer" : "Assistant"}** (${clock(m.time)})\n\n${m.content}\n`).join("\n"), "text/markdown");
-  };
-  $("exportJson").onclick = () => {
-    if (!current.messages.length) return toast("Nothing to export yet");
-    download("shopkart-chat.json", JSON.stringify({messages: apiMessages()}, null, 2), "application/json");
-  };
-  $("summarize").onclick = async () => {
-    if (!current.messages.length) return toast("Nothing to summarize yet");
-    toast("Summarizing…");
-    try {
-      const res = await fetch("/summarize", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({messages: apiMessages()})});
-      if (res.status === 404) throw new Error("Summaries need the full app.py (POST /summarize).");
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || res.statusText);
-      chat.insertAdjacentHTML("beforeend", `<div class="note"><b>📝 Summary</b><br>${fmt(data.summary)}</div>`); toBottom();
-    } catch (err) { toast(err.message); }
-  };
+      // ---------- right panel ----------
+      document.querySelectorAll(".tab").forEach(
+        (t) =>
+          (t.onclick = () => {
+            document
+              .querySelectorAll(".tab, .tabpane")
+              .forEach((x) => x.classList.remove("active"));
+            t.classList.add("active");
+            $("tab-" + t.dataset.tab).classList.add("active");
+            if (t.dataset.tab === "insights") {
+              loadStats();
+              loadConfig();
+            }
+          }),
+      );
+      const getJson = async (url) => {
+        const r = await fetch(url);
+        if (!r.ok) throw new Error(r.status);
+        return r.json();
+      };
 
-  // ---------- right panel ----------
-  document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
-    document.querySelectorAll(".tab, .tabpane").forEach(x => x.classList.remove("active"));
-    t.classList.add("active"); $("tab-" + t.dataset.tab).classList.add("active");
-    if (t.dataset.tab === "insights") { loadStats(); loadConfig(); }
-  });
-  const getJson = async url => { const r = await fetch(url); if (!r.ok) throw new Error(r.status); return r.json(); };
-
-  let orders = [], orderFilter = "all";
-  const STATUS_CLS = {delivered: "", in_transit: "blue", refunded: "amber"};
-  function renderOrders() {
-    const q = $("orderSearch").value.toLowerCase();
-    const shown = orders.filter(o => (orderFilter === "all" || o.status === orderFilter) && `${o.order_id} ${o.customer} ${o.item}`.toLowerCase().includes(q));
-    $("orderList").innerHTML = shown.length ? "" : `<div class="empty">No orders match.</div>`;
-    shown.forEach(o => {
-      const d = document.createElement("div"); d.className = "order";
-      d.innerHTML = `<div class="top"><span>${esc(o.item)}</span><span>€${o.price_paid.toFixed(2)}</span></div>
+      let orders = [],
+        orderFilter = "all";
+      const STATUS_CLS = {
+        delivered: "",
+        in_transit: "blue",
+        refunded: "amber",
+      };
+      function renderOrders() {
+        const q = $("orderSearch").value.toLowerCase();
+        const shown = orders.filter(
+          (o) =>
+            (orderFilter === "all" || o.status === orderFilter) &&
+            `${o.order_id} ${o.customer} ${o.item}`.toLowerCase().includes(q),
+        );
+        $("orderList").innerHTML = shown.length
+          ? ""
+          : `<div class="empty">No orders match.</div>`;
+        shown.forEach((o) => {
+          const d = document.createElement("div");
+          d.className = "order";
+          d.innerHTML = `<div class="top"><span>${esc(o.item)}</span><span>€${o.price_paid.toFixed(2)}</span></div>
         <div class="sub">#${esc(o.order_id)} · ${esc(o.customer)}${o.days_since_delivery != null ? " · delivered " + o.days_since_delivery + " days ago" : ""}</div>
         <div class="tags"><span class="chip ${STATUS_CLS[o.status] ?? ""}">${esc(o.status.replace("_", " "))}</span><span class="chip ${o.condition === "unused" ? "" : "pink"}">${esc(o.condition.replace("_", " "))}</span>
         ${o.final_sale ? '<span class="chip pink">final sale</span>' : ""}</div>
         <div class="btns"><button class="mini ask">💬 Ask the bot</button><button class="mini agent">🤖 Run agent</button></div>`;
-      d.querySelector(".ask").onclick = () => fillComposer(o.demo_message, false);
-      d.querySelector(".agent").onclick = () => fillComposer(o.demo_message, true);
-      $("orderList").appendChild(d);
-    });
-  }
-  async function loadOrders() {
-    try {
-      orders = (await getJson("/orders")).orders;
-      const statuses = ["all", ...new Set(orders.map(o => o.status))];
-      $("orderFilters").innerHTML = statuses.map(s => `<button class="filter ${s === orderFilter ? "active" : ""}" data-s="${s}">${s.replace("_", " ")}</button>`).join("");
-      $("orderFilters").querySelectorAll(".filter").forEach(b => b.onclick = () => { orderFilter = b.dataset.s; loadOrdersFilters(); renderOrders(); });
-      renderOrders();
-    } catch (e) { $("orderList").innerHTML = `<div class="empty">Orders show up here when app.py has the <code>/orders</code> endpoint.</div>`; }
-  }
-  function loadOrdersFilters() { $("orderFilters").querySelectorAll(".filter").forEach(b => b.classList.toggle("active", b.dataset.s === orderFilter)); }
-  $("orderSearch").oninput = renderOrders;
+          d.querySelector(".ask").onclick = () =>
+            fillComposer(o.demo_message, false);
+          d.querySelector(".agent").onclick = () =>
+            fillComposer(o.demo_message, true);
+          $("orderList").appendChild(d);
+        });
+      }
+      async function loadOrders() {
+        try {
+          orders = (await getJson("/orders")).orders;
+          const statuses = ["all", ...new Set(orders.map((o) => o.status))];
+          $("orderFilters").innerHTML = statuses
+            .map(
+              (s) =>
+                `<button class="filter ${s === orderFilter ? "active" : ""}" data-s="${s}">${s.replace("_", " ")}</button>`,
+            )
+            .join("");
+          $("orderFilters")
+            .querySelectorAll(".filter")
+            .forEach(
+              (b) =>
+                (b.onclick = () => {
+                  orderFilter = b.dataset.s;
+                  loadOrdersFilters();
+                  renderOrders();
+                }),
+            );
+          renderOrders();
+        } catch (e) {
+          $("orderList").innerHTML =
+            `<div class="empty">Orders show up here when app.py has the <code>/orders</code> endpoint.</div>`;
+        }
+      }
+      function loadOrdersFilters() {
+        $("orderFilters")
+          .querySelectorAll(".filter")
+          .forEach((b) =>
+            b.classList.toggle("active", b.dataset.s === orderFilter),
+          );
+      }
+      $("orderSearch").oninput = renderOrders;
 
-  let dialogPolicy = null;
-  async function openPolicy(name) {   // used by the Policies tab and by the Sources chips under an answer
-    try {
-      const full = await getJson("/policies/" + encodeURIComponent(name));
-      dialogPolicy = full; $("dlgTitle").textContent = full.title; $("dlgBody").innerHTML = fmt(full.text); $("dialog").showModal();
-    } catch (e) { toast("Could not open the policy page"); }
-  }
-  async function loadPolicies() {
-    try {
-      const list = (await getJson("/policies")).policies;
-      $("policyList").innerHTML = "";
-      list.forEach(p => {
-        const b = document.createElement("button"); b.className = "policy";
-        b.innerHTML = `<span>📄 ${esc(p.title)}</span><small>${p.words} words</small>`;
-        b.onclick = () => openPolicy(p.name);
-        $("policyList").appendChild(b);
+      let dialogPolicy = null;
+      async function openPolicy(name) {
+        // used by the Policies tab and by the Sources chips under an answer
+        try {
+          const full = await getJson("/policies/" + encodeURIComponent(name));
+          dialogPolicy = full;
+          $("dlgTitle").textContent = full.title;
+          $("dlgBody").innerHTML = fmt(full.text);
+          $("dialog").showModal();
+        } catch (e) {
+          toast("Could not open the policy page");
+        }
+      }
+      async function loadPolicies() {
+        try {
+          const list = (await getJson("/policies")).policies;
+          $("policyList").innerHTML = "";
+          list.forEach((p) => {
+            const b = document.createElement("button");
+            b.className = "policy";
+            b.innerHTML = `<span>📄 ${esc(p.title)}</span><small>${p.words} words</small>`;
+            b.onclick = () => openPolicy(p.name);
+            $("policyList").appendChild(b);
+          });
+        } catch (e) {
+          $("policyList").innerHTML =
+            `<div class="empty">Policy pages show up here when app.py has the <code>/policies</code> endpoint.</div>`;
+        }
+      }
+      $("dlgClose").onclick = $("dlgOk").onclick = () => $("dialog").close();
+      $("dlgAsk").onclick = () => {
+        $("dialog").close();
+        fillComposer(
+          `Explain the ${dialogPolicy.title} policy in simple words.`,
+          false,
+        );
+      };
+
+      const upTime = (s) =>
+        s < 90
+          ? s + "s"
+          : s < 5400
+            ? Math.round(s / 60) + " min"
+            : (s / 3600).toFixed(1) + " h";
+      async function loadStats() {
+        try {
+          const s = await getJson("/stats");
+          $("statGrid").innerHTML = [
+            ["💬", s.chats, "answers served"],
+            ["⏱️", s.average_seconds + "s", "average speed"],
+            ["👍", s.feedback.up, "thumbs up"],
+            ["👎", s.feedback.down, "thumbs down"],
+          ]
+            .map(
+              ([i, v, l]) =>
+                `<div class="stat"><span>${i} ${l}</span><b>${v}</b></div>`,
+            )
+            .join("");
+          $("statGrid").dataset.uptime = upTime(s.uptime_seconds);
+        } catch (e) {
+          $("statGrid").innerHTML =
+            `<div class="empty" style="grid-column:1/3">Live stats need the <code>/stats</code> endpoint in app.py.</div>`;
+        }
+      }
+      async function loadConfig() {
+        try {
+          const c = await getJson("/config");
+          $("configBox").innerHTML = [
+            ["Model", c.model],
+            ["Temperature", c.temperature],
+            ["Max tokens", c.max_tokens],
+            ["Uptime", $("statGrid").dataset.uptime || "…"],
+          ]
+            .map(
+              ([k, v]) => `<div><span>${k}</span><span>${esc(v)}</span></div>`,
+            )
+            .join("");
+          $("promptText").textContent = c.system_prompt;
+          $("promptBox").hidden = false;
+        } catch (e) {
+          $("configBox").innerHTML =
+            `<div><span>Needs the <code>/config</code> endpoint in app.py</span><span></span></div>`;
+        }
+      }
+
+      // ---------- health check + startup ----------
+      async function checkHealth() {
+        try {
+          const res = await fetch("/health");
+          const up = res.ok || res.status === 404; // 404 = a smaller app.py that has no /health, but it answered
+          $("dot").className = "dot " + (up ? "ok" : "bad");
+          $("statusText").textContent = up ? "API online" : "API error";
+          if (res.ok)
+            $("modelName").textContent = "model: " + (await res.json()).model;
+        } catch (e) {
+          $("dot").className = "dot bad";
+          $("statusText").textContent = "API offline: start uvicorn";
+        }
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+          e.preventDefault();
+          startNew();
+        } else if (e.key === "/" && document.activeElement === document.body) {
+          e.preventDefault();
+          box.focus();
+        } else if (e.key === "Escape") {
+          $("moreMenu").classList.remove("open");
+          $("app").classList.remove("side-open");
+        }
       });
-    } catch (e) { $("policyList").innerHTML = `<div class="empty">Policy pages show up here when app.py has the <code>/policies</code> endpoint.</div>`; }
-  }
-  $("dlgClose").onclick = $("dlgOk").onclick = () => $("dialog").close();
-  $("dlgAsk").onclick = () => { $("dialog").close(); fillComposer(`Explain the ${dialogPolicy.title} policy in simple words.`, false); };
 
-  const upTime = s => s < 90 ? s + "s" : s < 5400 ? Math.round(s / 60) + " min" : (s / 3600).toFixed(1) + " h";
-  async function loadStats() {
-    try {
-      const s = await getJson("/stats");
-      $("statGrid").innerHTML = [["💬", s.chats, "answers served"], ["⏱️", s.average_seconds + "s", "average speed"], ["👍", s.feedback.up, "thumbs up"], ["👎", s.feedback.down, "thumbs down"]]
-        .map(([i, v, l]) => `<div class="stat"><span>${i} ${l}</span><b>${v}</b></div>`).join("");
-      $("statGrid").dataset.uptime = upTime(s.uptime_seconds);
-    } catch (e) { $("statGrid").innerHTML = `<div class="empty" style="grid-column:1/3">Live stats need the <code>/stats</code> endpoint in app.py.</div>`; }
-  }
-  async function loadConfig() {
-    try {
-      const c = await getJson("/config");
-      $("configBox").innerHTML = [["Model", c.model], ["Temperature", c.temperature], ["Max tokens", c.max_tokens], ["Uptime", $("statGrid").dataset.uptime || "…"]]
-        .map(([k, v]) => `<div><span>${k}</span><span>${esc(v)}</span></div>`).join("");
-      $("promptText").textContent = c.system_prompt; $("promptBox").hidden = false;
-    } catch (e) { $("configBox").innerHTML = `<div><span>Needs the <code>/config</code> endpoint in app.py</span><span></span></div>`; }
-  }
-
-  // ---------- health check + startup ----------
-  async function checkHealth() {
-    try {
-      const res = await fetch("/health");
-      const up = res.ok || res.status === 404;          // 404 = a smaller app.py that has no /health, but it answered
-      $("dot").className = "dot " + (up ? "ok" : "bad"); $("statusText").textContent = up ? "API online" : "API error";
-      if (res.ok) $("modelName").textContent = "model: " + (await res.json()).model;
-    } catch (e) { $("dot").className = "dot bad"; $("statusText").textContent = "API offline: start uvicorn"; }
-  }
-
-  document.addEventListener("keydown", e => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); startNew(); }
-    else if (e.key === "/" && document.activeElement === document.body) { e.preventDefault(); box.focus(); }
-    else if (e.key === "Escape") { $("moreMenu").classList.remove("open"); $("app").classList.remove("side-open"); }
-  });
-
-  (async () => {
-    if (innerWidth <= 1180) $("app").classList.remove("panel-open");
-    $("panelBtn").classList.toggle("on", $("app").classList.contains("panel-open"));
-    current = convs.find(c => !c.messages.length) || newConv();
-    if (!convs.includes(current)) convs.push(current);
-    openConv(current);
-    checkHealth(); setInterval(checkHealth, 20000);
-    loadOrders(); loadPolicies(); loadStats();
-    try { suggestions = (await getJson("/suggestions")).suggestions; if (!current.messages.length) renderWelcome(); } catch (e) {}
-  })();
-  setInterval(() => { if ($("tab-insights").classList.contains("active")) loadStats(); }, 10000);
-</script>
-</body>
+      (async () => {
+        if (innerWidth <= 1180) $("app").classList.remove("panel-open");
+        $("panelBtn").classList.toggle(
+          "on",
+          $("app").classList.contains("panel-open"),
+        );
+        current = convs.find((c) => !c.messages.length) || newConv();
+        if (!convs.includes(current)) convs.push(current);
+        openConv(current);
+        checkHealth();
+        setInterval(checkHealth, 20000);
+        loadOrders();
+        loadPolicies();
+        loadStats();
+        try {
+          suggestions = (await getJson("/suggestions")).suggestions;
+          if (!current.messages.length) renderWelcome();
+        } catch (e) {}
+      })();
+      setInterval(() => {
+        if ($("tab-insights").classList.contains("active")) loadStats();
+      }, 10000);
+    </script>
+  </body>
 </html>

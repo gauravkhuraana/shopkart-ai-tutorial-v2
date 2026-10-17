@@ -41,21 +41,22 @@ from fastapi.responses import FileResponse, HTMLResponse
 from openai import OpenAI
 from pydantic import BaseModel
 
-
 # ---------------------------------------------------------------------------
 # 1. Connect to the model (exactly like step 1)
 # ---------------------------------------------------------------------------
 # The model runs on Groq's free cloud.
 # Your Groq key and the model name come from the .env file in the main project folder.
 
-load_dotenv()                                    # reads the .env file
+load_dotenv()  # reads the .env file
 
 client = OpenAI(
-    base_url="https://api.groq.com/openai/v1",   # where the model lives (Groq's cloud)
-    api_key=os.getenv("LLM_API_KEY"),            # your free Groq key, read from .env
+    base_url="https://api.groq.com/openai/v1",  # where the model lives (Groq's cloud)
+    api_key=os.getenv("LLM_API_KEY"),  # your free Groq key, read from .env
 )
 
-MODEL = os.getenv("LLM_MODEL")                   # which model to use, read from .env (e.g. openai/gpt-oss-20b)
+MODEL = os.getenv(
+    "LLM_MODEL"
+)  # which model to use, read from .env (e.g. openai/gpt-oss-20b)
 
 
 # Want to run the model on your own laptop instead? Use Ollama (first: ollama pull qwen3:4b).
@@ -94,9 +95,10 @@ app = FastAPI(title="ShopKart Assistant")
 #    FastAPI checks every request against it, and shows it on the /docs page.
 # ---------------------------------------------------------------------------
 
+
 class Message(BaseModel):
-    role: str        # "user" (the customer) or "assistant" (the bot)
-    content: str     # the text
+    role: str  # "user" (the customer) or "assistant" (the bot)
+    content: str  # the text
 
 
 class ChatRequest(BaseModel):
@@ -108,7 +110,14 @@ class ChatRequest(BaseModel):
     model_config = {
         "json_schema_extra": {
             "examples": [
-                {"messages": [{"role": "user", "content": "Can I return shoes I bought 20 days ago?"}]}
+                {
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": "Can I return shoes I bought 20 days ago?",
+                        },
+                    ]
+                },
             ]
         }
     }
@@ -118,18 +127,32 @@ class ChatRequest(BaseModel):
 # 5. POST /chat : the one endpoint that matters
 # ---------------------------------------------------------------------------
 
+
 @app.post("/chat")
 def chat(req: ChatRequest):
 
     # HOP 2 · the API received the JSON
     print()
-    print("HOP 2  API got", len(req.messages), "message(s). Latest:", req.messages[-1].content[:70])
+    print(
+        "HOP 2  API got",
+        len(req.messages),
+        "message(s). Latest:",
+        req.messages[-1].content[:70],
+    )
 
-    conversation = [m.model_dump() for m in req.messages]   # turn each Message back into a plain dict
+    # Convert each validated Message object into a plain dictionary for the model.
+    conversation = []
+    for message in req.messages:
+        conversation.append(message.model_dump())
 
     # The model is a goldfish: it only knows what we send.
     # So we send the job description PLUS the whole conversation. That's "memory".
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + conversation
+    messages = [
+        {
+            "role": "system",
+            "content": SYSTEM_PROMPT,
+        },
+    ] + conversation
 
     # messages = [{"role": "system", "content": SYSTEM_PROMPT}, conversation[-1]]   # EXPERIMENT 2: only the last message
 
@@ -159,6 +182,7 @@ def chat(req: ChatRequest):
 # ---------------------------------------------------------------------------
 # 6. GET / : the web page. There isn't one yet in step 2 (that's step 3), so we say so.
 # ---------------------------------------------------------------------------
+
 
 @app.get("/", response_class=HTMLResponse)
 def home():

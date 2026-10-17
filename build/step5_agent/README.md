@@ -303,6 +303,11 @@ python plant_bug.py off
 
 
 ## CORE (everyone) · your TODOs in `agent_simple.py`
+
+Each answer is already written between `BEGIN SOLUTION` and `END SOLUTION`. Uncomment only the code inside each block with **Ctrl+/** (Windows/Linux) or **Cmd+/** (Mac), keeping the indentation. Leave the markers commented; no placeholder deletion is needed.
+
+**Complete the three blocks before expecting the finished behavior below.** The EUR 200 guard and human handover on loop exhaustion are intentionally inactive in the starter. The full crew's review gate is also an exercise, not an active safeguard until uncommented.
+
 | TODO | Where | What you do |
 |---|---|---|
 | 1 | section 2, the menu | Add the `escalate_to_human` tool, with a description that says *when* to use it |
@@ -314,8 +319,8 @@ The full version `agent.py` has 3 TODOs as well, the same ideas in crew form:
 | TODO | Where | What you do |
 |---|---|---|
 | 1 | section 2, the menu | Add the `escalate_to_human` tool |
-| 2 | `route_after_review` | The circuit breaker: serve if approved, send back if not, give up after `MAX_ROUNDS` |
-| 3 | `serve` | The 200 EUR rule, **in code** |
+| 2 | `route_after_policy_review` | The circuit breaker: execute if approved, send back if not, give up after `MAX_ROUNDS` |
+| 3 | `execute_action` | The 200 EUR rule, **in code** |
 
 ## Done when…
 - For order 1043, expect `-> {'action': 'refund', ... 'amount': 49.0}`:

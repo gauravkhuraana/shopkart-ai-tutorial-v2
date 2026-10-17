@@ -15,95 +15,165 @@
   The "Agent mode" tick box does nothing until step 5 (it calls POST /agent).
 -->
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<title>ShopKart Assistant</title>
-<style>
-  body { font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 20px auto; padding: 0 12px; }
-  #chat { border: 1px solid #ccc; border-radius: 6px; height: 360px; overflow-y: auto; padding: 8px; margin-bottom: 8px; }
-  .user { text-align: right; color: #2037C3; margin: 6px 0; }
-  .bot  { text-align: left;  color: #222;    margin: 6px 0; }
-  .src  { text-align: left;  color: #888;    margin: -2px 0 6px; font-size: 12px; }
-  form { display: flex; gap: 6px; }
-  input#text { flex: 1; padding: 8px; }
-  label { font-size: 13px; color: #555; align-self: center; white-space: nowrap; }
-</style>
-</head>
-<body>
-<h2>ShopKart Assistant</h2>
-<div id="chat"></div>
-<form id="form">
-  <input id="text" placeholder="e.g. Can I return shoes after 20 days?" autocomplete="off" autofocus>
-  <button>Send</button>
-  <label><input type="checkbox" id="agent"> Agent mode</label>
-</form>
-<script>
-  // =====================================================================
-  //  YOUR PART (step 3) · the two hops that happen in the browser
-  // =====================================================================
-
-  // HOP 1 · UI -> API: send the request as JSON to our API and get JSON back.
-  //   request looks like: {"messages": [{"role": "user", "content": "Can I return shoes?"}]}
-  //   fetch() is the browser's built-in way to call an API (like Postman, but in JavaScript).
-  async function sendToApi(request) {
-    const res = await fetch("/chat", {method: "POST", headers: {"Content-Type": "application/json"},
-                                      body: JSON.stringify(request)});
-    if (!res.ok) throw new Error(res.statusText);
-    return await res.json();
-  }
-
-  // HOP 5 · API -> UI: show the answer to the customer.
-  //   data is the JSON our API returned, e.g. {"reply": "Yes, within 30 days."}
-  function showAnswer(line, data) {
-    line.textContent = data.reply;   // customers shouldn't see raw JSON
-  }
-
-  // =====================================================================
-  //  Given code below: you don't need to change anything from here on.
-  // =====================================================================
-  const chat = document.getElementById("chat");
-  let history = [];   // the whole conversation: the model is a goldfish, so we re-send it every time
-
-  function add(cls, text) {
-    const div = document.createElement("div");
-    div.className = cls; div.textContent = text;
-    chat.appendChild(div); chat.scrollTop = chat.scrollHeight;
-    return div;
-  }
-
-  // Step 5 only: Agent mode sends the customer's message to POST /agent instead of POST /chat.
-  async function askAgent(message) {
-    const res = await fetch("/agent", {method: "POST", headers: {"Content-Type": "application/json"},
-                                       body: JSON.stringify({message})});
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || res.statusText);
-    return data;
-  }
-
-  document.getElementById("form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const input = document.getElementById("text");
-    const text = input.value.trim(); if (!text) return;
-    input.value = ""; add("user", text);
-    const waiting = add("bot", "…");
-    try {
-      history.push({role: "user", content: text});
-      if (document.getElementById("agent").checked) {
-        const result = await askAgent(text);
-        waiting.textContent = result.reply;
-        const tools = result.steps.filter(s => s.type === "tool_call").map(s => s.name).join(" → ");
-        add("src", "agent: " + tools + "  ·  result: " + result.outcome.action);
-        history.push({role: "assistant", content: result.reply});
-        return;
+  <head>
+    <meta charset="utf-8" />
+    <title>ShopKart Assistant</title>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 0 12px;
       }
-      const data = await sendToApi({messages: history});   // HOP 1 (HOPS 2-4 happen on the server)
-      showAnswer(waiting, data);                           // HOP 5
-      if (data.sources && data.sources.length) add("src", "from: " + data.sources.join(", "));   // step 4 adds sources
-      history.push({role: "assistant", content: data.reply});
-    } catch (err) {
-      waiting.textContent = "Error: " + err.message + "  (is uvicorn running? see TROUBLESHOOTING.md)";
-    }
-  });
-</script>
-</body>
+      #chat {
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        height: 360px;
+        overflow-y: auto;
+        padding: 8px;
+        margin-bottom: 8px;
+      }
+      .user {
+        text-align: right;
+        color: #2037c3;
+        margin: 6px 0;
+      }
+      .bot {
+        text-align: left;
+        color: #222;
+        margin: 6px 0;
+      }
+      .src {
+        text-align: left;
+        color: #888;
+        margin: -2px 0 6px;
+        font-size: 12px;
+      }
+      form {
+        display: flex;
+        gap: 6px;
+      }
+      input#text {
+        flex: 1;
+        padding: 8px;
+      }
+      label {
+        font-size: 13px;
+        color: #555;
+        align-self: center;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>ShopKart Assistant</h2>
+    <div id="chat"></div>
+    <form id="form">
+      <input
+        id="text"
+        placeholder="e.g. Can I return shoes after 20 days?"
+        autocomplete="off"
+        autofocus
+      />
+      <button>Send</button>
+      <label><input type="checkbox" id="agent" /> Agent mode</label>
+    </form>
+    <script>
+      // =====================================================================
+      //  YOUR PART (step 3) · the two hops that happen in the browser
+      // =====================================================================
+
+      // HOP 1 · UI -> API: send the request as JSON to our API and get JSON back.
+      //   request looks like: {"messages": [{"role": "user", "content": "Can I return shoes?"}]}
+      //   fetch() is the browser's built-in way to call an API (like Postman, but in JavaScript).
+      async function sendToApi(request) {
+        const res = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(request),
+        });
+        if (!res.ok) throw new Error(res.statusText);
+        return await res.json();
+      }
+
+      // HOP 5 · API -> UI: show the answer to the customer.
+      //   data is the JSON our API returned, e.g. {"reply": "Yes, within 30 days."}
+      function showAnswer(line, data) {
+        line.textContent = data.reply; // customers shouldn't see raw JSON
+      }
+
+      // =====================================================================
+      //  Given code below: you don't need to change anything from here on.
+      // =====================================================================
+      const chat = document.getElementById("chat");
+      let history = []; // the whole conversation: the model is a goldfish, so we re-send it every time
+
+      function add(cls, text) {
+        const div = document.createElement("div");
+        div.className = cls;
+        div.textContent = text;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+        return div;
+      }
+
+      // Step 5 only: Agent mode sends the customer's message to POST /agent instead of POST /chat.
+      async function askAgent(message) {
+        const res = await fetch("/agent", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || res.statusText);
+        return data;
+      }
+
+      document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const input = document.getElementById("text");
+        const text = input.value.trim();
+
+        if (!text) {
+          return;
+        }
+        input.value = "";
+        add("user", text);
+        const waiting = add("bot", "…");
+        try {
+          history.push({ role: "user", content: text });
+          if (document.getElementById("agent").checked) {
+            const result = await askAgent(text);
+            waiting.textContent = result.reply;
+            // Collect the requested tool names in the order they were called.
+            const toolNames = [];
+
+            for (const step of result.steps) {
+              if (step.type === "tool_call") {
+                toolNames.push(step.name);
+              }
+            }
+
+            const tools = toolNames.join(" → ");
+            add(
+              "src",
+              "agent: " + tools + "  ·  result: " + result.outcome.action,
+            );
+            history.push({ role: "assistant", content: result.reply });
+            return;
+          }
+          const data = await sendToApi({ messages: history }); // HOP 1 (HOPS 2-4 happen on the server)
+          showAnswer(waiting, data); // HOP 5
+          if (data.sources && data.sources.length)
+            add("src", "from: " + data.sources.join(", ")); // step 4 adds sources
+          history.push({ role: "assistant", content: data.reply });
+        } catch (err) {
+          waiting.textContent =
+            "Error: " +
+            err.message +
+            "  (is uvicorn running? see TROUBLESHOOTING.md)";
+        }
+      });
+    </script>
+  </body>
 </html>

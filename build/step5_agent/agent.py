@@ -44,10 +44,13 @@ The file reads top to bottom:
   4. Workflow roles: functions that read and update the case state
   5. Workflow graph: LangGraph nodes and routes
 """
+
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))   # find shared/config.py
+sys.path.insert(
+    0, str(Path(__file__).resolve().parents[2] / "shared")
+)  # find shared/config.py
 import json  # noqa: E402
 import re  # noqa: E402
 from typing import TypedDict  # noqa: E402
@@ -68,9 +71,11 @@ ORDERS = {}
 for order in json.loads(orders_file.read_text(encoding="utf-8")):
     ORDERS[order["order_id"]] = order
 
-MAX_ROUNDS = 3              # circuit breaker: how often the Policy Reviewer may send work back
+MAX_ROUNDS = 3  # circuit breaker: how often the Policy Reviewer may send work back
 HUMAN_APPROVAL_LIMIT = 200  # execution rule: refunds above this always go to a human
-CHAOS = None                # set by the Part 2 tests (LAB 7): "order_system_down" or "reviewer_says_no"
+CHAOS = (
+    None  # set by the Part 2 tests (LAB 7): "order_system_down" or "reviewer_says_no"
+)
 # NOTE for testers: CHAOS is ONE variable shared by every request. Two customers at the same moment
 # could see each other's chaos: a real "two-user isolation" bug, kept on purpose as a talking point.
 _PREVIOUS_FACTS: list = []  # used only by the planted bug "shared_memory"
@@ -125,7 +130,11 @@ def _tool(name, description, **params):
         "function": {
             "name": name,
             "description": description,
-            "parameters": {"type": "object", "properties": params, "required": list(params)},
+            "parameters": {
+                "type": "object",
+                "properties": params,
+                "required": list(params),
+            },
         },
     }
 
@@ -135,28 +144,46 @@ TOOLS = [
         "get_order",
         "Look up an order by its order number. Returns item, price paid, status, "
         "days since delivery, condition and whether it was a final-sale item.",
-        order_id={"type": "string", "description": "The order number, e.g. 1043"},
+        order_id={
+            "type": "string",
+            "description": "The order number, e.g. 1043",
+        },
     ),
     _tool(
         "check_policy",
         "Read ShopKart's refund/return policy on a topic, e.g. 'damaged items' or 'return window'.",
-        topic={"type": "string", "description": "What to look up in the policy"},
+        topic={
+            "type": "string",
+            "description": "What to look up in the policy",
+        },
     ),
     _tool(
         "issue_refund",
         "Refund money to the customer. Use only when the policy allows a refund.",
         order_id={"type": "string"},
-        amount={"type": "number", "description": "Amount in EUR"},
+        amount={
+            "type": "number",
+            "description": "Amount in EUR",
+        },
     ),
     # TODO 1 · Add the fourth tool to the menu, so the model can hand a case to a human.
     #   The model only knows what a tool does from its description, so say WHEN to use it:
-    #     _tool("escalate_to_human", "Hand the case to a human specialist, e.g. refunds above 200 EUR, "
-    #                                "systems not working, or anything outside the rules.",
-    #           order_id={"type": "string"}, reason={"type": "string"}),
+    # BEGIN SOLUTION
+    # _tool(
+    #     "escalate_to_human",
+    #     "Hand the case to a human specialist, e.g. refunds above 200 EUR, "
+    #     "systems not working, or anything outside the rules.",
+    #     order_id={"type": "string"},
+    #     reason={"type": "string"},
+    # ),
+    # END SOLUTION
 ]
 
-READ_TOOLS = {"get_order": get_order, "check_policy": check_policy}      # cooked immediately
-ACTION_TOOLS = {                                                         # cooked only after review
+READ_TOOLS = {
+    "get_order": get_order,
+    "check_policy": check_policy,
+}  # cooked immediately
+ACTION_TOOLS = {  # cooked only after review
     "issue_refund": issue_refund,
     "escalate_to_human": escalate_to_human,
 }
@@ -194,15 +221,17 @@ Reply in JSON only: {"approved": true or false, "reason": "one sentence"}"""
 # 4. WORKFLOW ROLES — each one reads the case state and adds to it
 # =====================================================================
 class State(TypedDict, total=False):
-    message: str        # what the customer wrote
-    plan: str           # the Request Planner's plan
-    facts: list         # what the Case Investigator found (tool results)
-    proposal: dict      # what the Case Investigator proposes
-    review: dict        # the Policy Reviewer's verdict
-    rounds: int         # how many times the Policy Reviewer has reviewed a proposal
-    steps: list         # the flight recorder: every step, in order (used by the tests in LAB 7)
-    outcome: dict       # what actually happened
-    reply: str          # what the customer sees
+    message: str  # what the customer wrote
+    plan: str  # the Request Planner's plan
+    facts: list  # what the Case Investigator found (tool results)
+    proposal: dict  # what the Case Investigator proposes
+    review: dict  # the Policy Reviewer's verdict
+    rounds: int  # how many times the Policy Reviewer has reviewed a proposal
+    steps: (
+        list  # the flight recorder: every step, in order (used by the tests in LAB 7)
+    )
+    outcome: dict  # what actually happened
+    reply: str  # what the customer sees
 
 
 def request_planner(state: State) -> State:
@@ -210,14 +239,27 @@ def request_planner(state: State) -> State:
         model=config.LLM_MODEL,
         temperature=0,
         messages=[
-            {"role": "system", "content": REQUEST_PLANNER_PROMPT},
-            {"role": "user", "content": state["message"]},
+            {
+                "role": "system",
+                "content": REQUEST_PLANNER_PROMPT,
+            },
+            {
+                "role": "user",
+                "content": state["message"],
+            },
         ],
     )
     plan = config.clean(response.choices[0].message.content)
 
-    step = {"agent": "request_planner", "type": "plan", "content": plan}
-    return {"plan": plan, "steps": state["steps"] + [step]}
+    step = {
+        "agent": "request_planner",
+        "type": "plan",
+        "content": plan,
+    }
+    return {
+        "plan": plan,
+        "steps": state["steps"] + [step],
+    }
 
 
 def case_investigator(state: State) -> State:
@@ -245,12 +287,19 @@ def _investigate(state: State) -> State:
         brief += f"\n\nThe Policy Reviewer sent your last proposal back: {review['reason']}\nFix it."
 
     messages = [
-        {"role": "system", "content": CASE_INVESTIGATOR_PROMPT},
-        {"role": "user", "content": brief},
+        {
+            "role": "system",
+            "content": CASE_INVESTIGATOR_PROMPT,
+        },
+        {
+            "role": "user",
+            "content": brief,
+        },
     ]
 
     proposal = None
-    for _ in range(6):                                   # at most 6 tool calls per round
+    # A model turn can request several tools; their results inform the next turn.
+    for turn in range(6):  # at most 6 model requests per round
         response = client.chat.completions.create(
             model=config.LLM_MODEL,
             temperature=0,
@@ -261,15 +310,24 @@ def _investigate(state: State) -> State:
 
         # Answered in words, without a tool: no money moves.
         if not msg.tool_calls:
-            proposal = {"name": "reply", "args": {"message": config.clean(msg.content)}}
+            proposal = {
+                "name": "reply",
+                "args": {"message": config.clean(msg.content)},
+            }
             break
 
         # Remember what the model asked for, so it can see the results next turn.
-        messages.append({
-            "role": "assistant",
-            "content": msg.content or "",
-            "tool_calls": [tc.model_dump() for tc in msg.tool_calls],
-        })
+        tool_calls = []
+        for call in msg.tool_calls:
+            tool_calls.append(call.model_dump())
+
+        messages.append(
+            {
+                "role": "assistant",
+                "content": msg.content or "",
+                "tool_calls": tool_calls,
+            }
+        )
 
         for call in msg.tool_calls:
             name = call.function.name
@@ -277,39 +335,82 @@ def _investigate(state: State) -> State:
 
             # An action (refund / escalate): propose it, do not execute it yet.
             if name in ACTION_TOOLS:
-                proposal = {"name": name, "args": args}
+                proposal = {
+                    "name": name,
+                    "args": args,
+                }
                 break
 
-            steps.append({"agent": "case_investigator", "type": "tool_call", "name": name, "args": args})
+            steps.append(
+                {
+                    "agent": "case_investigator",
+                    "type": "tool_call",
+                    "name": name,
+                    "args": args,
+                }
+            )
 
             # A read tool: run it now. Report failures to the model instead of crashing.
             try:
                 if name in READ_TOOLS:
-                    result = READ_TOOLS[name](**args)
+                    tool_function = READ_TOOLS[name]
+                    # **args passes dictionary entries as named function arguments.
+                    result = tool_function(**args)
                 else:
                     result = f"unknown tool {name}"
             except Exception as err:
                 result = f"ERROR: {err}"
 
-            steps.append({"agent": "case_investigator", "type": "tool_result", "name": name, "content": result})
-            facts.append({"tool": name, "args": args, "result": result})
-            messages.append({
-                "role": "tool",
-                "tool_call_id": call.id,
-                "content": json.dumps(result, default=str),
-            })
+            steps.append(
+                {
+                    "agent": "case_investigator",
+                    "type": "tool_result",
+                    "name": name,
+                    "content": result,
+                }
+            )
+            facts.append(
+                {
+                    "tool": name,
+                    "args": args,
+                    "result": result,
+                }
+            )
+            messages.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": call.id,
+                    "content": json.dumps(result, default=str),
+                }
+            )
 
         if proposal:
             break
 
     # Too many tool calls and still no decision: let a human take over.
     if proposal is None:
-        proposal = {"name": "escalate_to_human", "args": {"order_id": "?", "reason": "too many steps"}}
+        proposal = {
+            "name": "escalate_to_human",
+            "args": {
+                "order_id": "?",
+                "reason": "too many steps",
+            },
+        }
 
-    steps.append({"agent": "case_investigator", "type": "proposal",
-                  "name": proposal["name"], "args": proposal["args"]})
-    _PREVIOUS_FACTS[:] = facts                       # only read by the planted bug "shared_memory"
-    return {"facts": facts, "proposal": proposal, "steps": steps}
+    steps.append(
+        {
+            "agent": "case_investigator",
+            "type": "proposal",
+            "name": proposal["name"],
+            "args": proposal["args"],
+        }
+    )
+    _PREVIOUS_FACTS[:] = facts  # only read by the planted bug "shared_memory"
+    return {
+        "facts": facts,
+        "proposal": proposal,
+        "steps": steps,
+    }
 
 
 def policy_reviewer(state: State) -> State:
@@ -322,7 +423,7 @@ def policy_reviewer(state: State) -> State:
 
     reviewer_input = (
         f"Customer message: {state['message']}\n\n"
-        f"Facts gathered:\n{json.dumps(facts, indent=1, default=str)}\n\n"
+        f"Facts gathered:\n{json.dumps(facts, indent=1, default=str,)}\n\n"
         f"Proposed action: {json.dumps(state['proposal'])}"
     )
 
@@ -331,8 +432,14 @@ def policy_reviewer(state: State) -> State:
         temperature=0,
         response_format={"type": "json_object"},
         messages=[
-            {"role": "system", "content": POLICY_REVIEWER_PROMPT},
-            {"role": "user", "content": reviewer_input},
+            {
+                "role": "system",
+                "content": POLICY_REVIEWER_PROMPT,
+            },
+            {
+                "role": "user",
+                "content": reviewer_input,
+            },
         ],
     )
     verdict = _parse_json(config.clean(response.choices[0].message.content))
@@ -343,10 +450,22 @@ def policy_reviewer(state: State) -> State:
 
     # Part 2 chaos: a Policy Reviewer that rejects everything
     if CHAOS == "reviewer_says_no":
-        review = {"approved": False, "reason": "chaos: the Policy Reviewer rejects everything"}
+        review = {
+            "approved": False,
+            "reason": "chaos: the Policy Reviewer rejects everything",
+        }
 
-    step = {"agent": "policy_reviewer", "type": "review", "input": reviewer_input, **review}
-    return {"review": review, "rounds": state.get("rounds", 0) + 1, "steps": state["steps"] + [step]}
+    step = {
+        "agent": "policy_reviewer",
+        "type": "review",
+        "input": reviewer_input,
+        **review,
+    }
+    return {
+        "review": review,
+        "rounds": state.get("rounds", 0) + 1,
+        "steps": state["steps"] + [step],
+    }
 
 
 def route_after_policy_review(state: State) -> str:
@@ -356,12 +475,15 @@ def route_after_policy_review(state: State) -> str:
         return "case_investigator"
 
     # TODO 2 · Right now EVERYTHING is executed, even what the Policy Reviewer rejected!
-    #   Replace the line below with:
-    #     if state["review"]["approved"]:
-    #         return "action_executor"     # approved: execute it
-    #     if state["rounds"] >= MAX_ROUNDS:
-    #         return "give_up"            # circuit breaker: stop looping, hand over to a human
-    #     return "case_investigator"      # rejected: send it back to be fixed
+    # BEGIN SOLUTION
+    # if state["review"]["approved"]:
+    #     return "action_executor"
+    #
+    # if state["rounds"] >= MAX_ROUNDS:
+    #     return "give_up"
+    #
+    # return "case_investigator"
+    # END SOLUTION
     return "action_executor"
 
 
@@ -375,12 +497,29 @@ def execute_action(state: State) -> State:
     for fact in state.get("facts", []):
         if fact["tool"] == "get_order":
             looked_up.append(fact["args"].get("order_id"))
-    order_id = str(args.get("order_id") or (looked_up[0] if looked_up else "?"))
+    order_id = args.get("order_id")
+
+    if not order_id:
+        if looked_up:
+            order_id = looked_up[0]
+        else:
+            order_id = "?"
+
+    order_id = str(order_id)
 
     # TODO 3 · The 200 EUR rule, in CODE: even if the model and the Policy Reviewer both say "refund",
-    #   big amounts must go to a human. Add these two lines:
-    #     if name == "issue_refund" and float(args.get("amount", 0)) > HUMAN_APPROVAL_LIMIT:
-    #         name, args = "escalate_to_human", {"order_id": order_id, "reason": "refund above 200 EUR (execution rule)"}
+    #   big amounts must go to a human.
+    # BEGIN SOLUTION
+    # if name == "issue_refund":
+    #     requested_amount = float(args.get("amount", 0))
+    #
+    #     if requested_amount > HUMAN_APPROVAL_LIMIT:
+    #         name = "escalate_to_human"
+    #         args = {
+    #             "order_id": order_id,
+    #             "reason": "refund above 200 EUR (execution rule)",
+    #         }
+    # END SOLUTION
 
     # Part 2 (LAB 7) mission bug: a bug in the payment step
     if name == "issue_refund" and planted_bugs.active("overpay"):
@@ -389,42 +528,75 @@ def execute_action(state: State) -> State:
     if name == "issue_refund":
         amount = float(args.get("amount", 0))
         result = issue_refund(order_id, amount)
-        outcome = {"action": "refund", "order_id": order_id, "amount": amount}
-        reply = (f"Done! I've refunded EUR {amount:.2f} for order {order_id}. "
-                 "It will reach your original payment method in 5-7 business days.")
+        outcome = {
+            "action": "refund",
+            "order_id": order_id,
+            "amount": amount,
+        }
+        reply = (
+            f"Done! I've refunded EUR {amount:.2f} for order {order_id}. "
+            "It will reach your original payment method in 5-7 business days."
+        )
 
     elif name == "escalate_to_human":
         result = escalate_to_human(order_id, args.get("reason", ""))
-        outcome = {"action": "escalate", "order_id": order_id, "amount": 0}
+        outcome = {
+            "action": "escalate",
+            "order_id": order_id,
+            "amount": 0,
+        }
         reply = "I've passed your case to a human specialist. You'll hear back within 2 business days."
 
     else:
         result = "no money moved"
-        outcome = {"action": "no_refund", "order_id": order_id, "amount": 0}
+        outcome = {
+            "action": "no_refund",
+            "order_id": order_id,
+            "amount": 0,
+        }
         reply = args.get("message") or "I'm sorry, I can't refund this order."
 
         # Part 2 bonus bug: the words don't match what happened
         if planted_bugs.active("false_promise"):
             reply = "Good news: your refund has been issued."
 
-    step = {"agent": "action_executor", "type": "action", "name": name, "args": args, "content": result}
-    return {"outcome": outcome, "reply": reply, "steps": state["steps"] + [step]}
+    step = {
+        "agent": "action_executor",
+        "type": "action",
+        "name": name,
+        "args": args,
+        "content": result,
+    }
+    return {
+        "outcome": outcome,
+        "reply": reply,
+        "steps": state["steps"] + [step],
+    }
 
 
 def give_up(state: State) -> State:
     """Circuit breaker tripped: stop looping and hand over to a human."""
     order_id = str(state["proposal"]["args"].get("order_id", "?"))
-    result = escalate_to_human(order_id, "Policy Reviewer rejected the proposal 3 times")
+    result = escalate_to_human(
+        order_id, "Policy Reviewer rejected the proposal 3 times"
+    )
 
     step = {
         "agent": "action_executor",
         "type": "action",
         "name": "escalate_to_human",
-        "args": {"order_id": order_id, "reason": "circuit breaker"},
+        "args": {
+            "order_id": order_id,
+            "reason": "circuit breaker",
+        },
         "content": result,
     }
     return {
-        "outcome": {"action": "escalate", "order_id": order_id, "amount": 0},
+        "outcome": {
+            "action": "escalate",
+            "order_id": order_id,
+            "amount": 0,
+        },
         "reply": "I've passed your case to a human specialist. You'll hear back within 2 business days.",
         "steps": state["steps"] + [step],
     }
@@ -452,7 +624,8 @@ def _parse_json(text) -> dict:
 
 def _proposal_first(steps: list, start: int) -> list:
     """PLANTED BUG 'skip_lookup' (LAB 7): the agent commits to its action BEFORE looking anything up.
-    The decision and the money are exactly the same, so only a test on the journey catches it."""
+    The decision and the money are exactly the same, so only a test on the journey catches it.
+    """
     new_steps = steps[start:]
 
     proposals = []
@@ -482,7 +655,11 @@ def build_crew():
     board.add_conditional_edges(
         "policy_reviewer",
         route_after_policy_review,
-        {"action_executor": "action_executor", "case_investigator": "case_investigator", "give_up": "give_up"},
+        {
+            "action_executor": "action_executor",
+            "case_investigator": "case_investigator",
+            "give_up": "give_up",
+        },
     )
     board.add_edge("action_executor", END)
     board.add_edge("give_up", END)
@@ -498,13 +675,24 @@ def run_agent(message: str, chaos: str | None = None) -> dict:
     CHAOS = chaos
     try:
         final = crew.invoke(
-            {"message": message, "steps": [], "facts": [], "rounds": 0},
+            {
+                "message": message,
+                "steps": [],
+                "facts": [],
+                "rounds": 0,
+            },
             {"recursion_limit": 25},
         )
-    except GraphRecursionError:                      # the crew looped until LangGraph's safety net stopped it
+    except (
+        GraphRecursionError
+    ):  # the crew looped until LangGraph's safety net stopped it
         return {
             "reply": "Something went wrong. A human will contact you.",
-            "outcome": {"action": "loop_limit", "order_id": "?", "amount": 0},
+            "outcome": {
+                "action": "loop_limit",
+                "order_id": "?",
+                "amount": 0,
+            },
             "steps": [],
         }
     finally:
@@ -518,17 +706,26 @@ def run_agent(message: str, chaos: str | None = None) -> dict:
 
 
 if __name__ == "__main__":
-    arg = sys.argv[1] if len(sys.argv) > 1 else "1043"
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+    else:
+        arg = "1043"
 
     if arg == "--graph":
         print(crew.get_graph().draw_mermaid())
         sys.exit()
 
-    order_ids = list(ORDERS) if arg == "all" else [arg]
+    if arg == "all":
+        order_ids = list(ORDERS)
+    else:
+        order_ids = [arg]
 
     for oid in order_ids:
         # A known order id uses its demo message; anything else is taken as the customer's own text.
-        message = ORDERS[oid]["demo_message"] if oid in ORDERS else " ".join(sys.argv[1:])
+        if oid in ORDERS:
+            message = ORDERS[oid]["demo_message"]
+        else:
+            message = " ".join(sys.argv[1:])
         print(f"\n=== {message}")
         result = run_agent(message)
 
@@ -539,7 +736,10 @@ if __name__ == "__main__":
                 detail += " " + json.dumps(s.get("args"))
 
             if s["type"] == "review":
-                verdict = "APPROVED: " if s["approved"] else "SENT BACK: "
+                if s["approved"]:
+                    verdict = "APPROVED: "
+                else:
+                    verdict = "SENT BACK: "
                 detail = verdict + s["reason"]
             elif s["type"] in ("plan", "tool_result"):
                 text = s.get("name", "") + " " + str(s["content"]).replace("\n", " ")

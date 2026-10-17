@@ -14,21 +14,26 @@ TRY IT (from this folder)
     python retrieval.py "Can I return shoes after 20 days?"
     python retrieval.py "Do you price-match?"          # notice: nothing about price matching exists
 """
+
 import math
 import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "shared"))   # find shared/config.py
+sys.path.insert(
+    0, str(Path(__file__).resolve().parents[2] / "shared")
+)  # find shared/config.py
 import config  # noqa: E402
 
 POLICY_DIR = config.DATA_DIR / "policies"
 
 # Small words that say nothing about the topic. We ignore them.
-STOPWORDS = set("""a an the and or but if of to in on at for from by with is are was were be been
+STOPWORDS = set(
+    """a an the and or but if of to in on at for from by with is are was were be been
 i you we my your our me it its this that these those can could do does did have has had will would
 should what when where which who how why not no yes please want like get got just so than then there
-here about into out up down over any all some more most other such own same too very""".split())
+here about into out up down over any all some more most other such own same too very""".split()
+)
 
 
 def _words(text: str) -> list[str]:
@@ -48,7 +53,12 @@ def load_pages() -> list[dict]:
     """Each policy file is one 'page': {"name": "returns.md", "text": "...the page..."}."""
     pages = []
     for file in sorted(POLICY_DIR.glob("*.md")):
-        pages.append({"name": file.name, "text": file.read_text(encoding="utf-8").strip()})
+        pages.append(
+            {
+                "name": file.name,
+                "text": file.read_text(encoding="utf-8").strip(),
+            }
+        )
     return pages
 
 
@@ -83,7 +93,10 @@ def retrieve(question: str, top_k: int = 3) -> list[dict]:
             scored.append((score, page))
 
     # Best score first, then keep only the top_k pages.
-    scored.sort(key=lambda pair: pair[0], reverse=True)
+    scored.sort(
+        key=lambda pair: pair[0],
+        reverse=True,
+    )
     best_pages = []
     for _score, page in scored[:top_k]:
         best_pages.append(page)

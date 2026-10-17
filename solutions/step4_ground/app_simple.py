@@ -34,15 +34,18 @@ from fastapi.responses import FileResponse
 from openai import OpenAI
 from pydantic import BaseModel
 
-load_dotenv()   # reads the .env file in the main project folder
+load_dotenv()  # reads the .env file in the main project folder
 
 
 # 1. Connect to the model (exactly like step 3)
 
-client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=os.getenv("LLM_API_KEY"))   # Groq
+client = OpenAI(
+    base_url="https://api.groq.com/openai/v1",
+    api_key=os.getenv("LLM_API_KEY"),
+)  # Groq
 # client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")                       # Ollama
 
-MODEL = os.getenv("LLM_MODEL")     # Groq: the model name comes from .env
+MODEL = os.getenv("LLM_MODEL")  # Groq: the model name comes from .env
 # MODEL = "qwen3:4b"               # Ollama
 
 
@@ -53,9 +56,10 @@ app = FastAPI()
 
 # 3. The JSON this API accepts (unchanged): the whole conversation so far.
 
+
 class Message(BaseModel):
-    role: str        # "user" (the customer) or "assistant" (the bot)
-    content: str     # the text
+    role: str  # "user" (the customer) or "assistant" (the bot)
+    content: str  # the text
 
 
 class ChatRequest(BaseModel):
@@ -70,13 +74,52 @@ POLICY_DIR = Path(__file__).resolve().parents[2] / "shared" / "data" / "policies
 # Read every policy file into a list. Each page looks like {"name": "returns.md", "text": "...the whole file..."}
 PAGES = []
 for file in sorted(POLICY_DIR.glob("*.md")):
-    PAGES.append({"name": file.name, "text": file.read_text(encoding="utf-8")})
+    PAGES.append(
+        {
+            "name": file.name,
+            "text": file.read_text(encoding="utf-8"),
+        }
+    )
 
 # Small words that say nothing about the topic. The librarian ignores them.
 STOPWORDS = {
-    "a", "an", "the", "and", "or", "of", "to", "in", "on", "at", "for", "with",
-    "is", "are", "was", "be", "i", "you", "we", "my", "your", "it", "this", "that",
-    "can", "do", "does", "did", "have", "will", "what", "when", "how", "after", "about", "get", "so",
+    "a",
+    "an",
+    "the",
+    "and",
+    "or",
+    "of",
+    "to",
+    "in",
+    "on",
+    "at",
+    "for",
+    "with",
+    "is",
+    "are",
+    "was",
+    "be",
+    "i",
+    "you",
+    "we",
+    "my",
+    "your",
+    "it",
+    "this",
+    "that",
+    "can",
+    "do",
+    "does",
+    "did",
+    "have",
+    "will",
+    "what",
+    "when",
+    "how",
+    "after",
+    "about",
+    "get",
+    "so",
 }
 
 
@@ -87,7 +130,9 @@ def get_words(text):
         if word in STOPWORDS:
             continue
         if len(word) > 4:
-            word = re.sub(r"(ing|ed|es|s)$", "", word)   # "returns" and "returned" both become "return"
+            word = re.sub(
+                r"(ing|ed|es|s)$", "", word
+            )  # "returns" and "returned" both become "return"
         important.add(word)
     return important
 
@@ -105,7 +150,10 @@ def retrieve(question, top_k=3):
             scored_pages.append((score, page))
 
     # Best score first, then keep only the top_k pages
-    scored_pages.sort(key=lambda item: item[0], reverse=True)
+    scored_pages.sort(
+        key=lambda item: item[0],
+        reverse=True,
+    )
     best_pages = []
     for score, page in scored_pages[:top_k]:
         best_pages.append(page)
@@ -123,9 +171,10 @@ If it isn't about ShopKart orders, returns or refunds, politely say you can only
 
 # 6. The endpoint: POST /chat. Question + conversation in, {"reply": "...", "sources": [...]} out.
 
+
 @app.post("/chat")
 def chat(req: ChatRequest):
-    question = req.messages[-1].content        # what the customer just asked
+    question = req.messages[-1].content  # what the customer just asked
 
     # The librarian brings the policy pages that match the question (open-book exam)
     pages = retrieve(question)
@@ -143,13 +192,22 @@ def chat(req: ChatRequest):
     if policy_text == "":
         policy_text = "(no policy pages found)"
 
-    conversation = [m.model_dump() for m in req.messages]   # turn each Message back into a plain dict
+    # Convert each validated Message object into a plain dictionary for the model.
+    conversation = []
+    for message in req.messages:
+        conversation.append(message.model_dump())
 
     # The job description now carries the policy pages too. Then comes the whole conversation.
-    system_message = {"role": "system", "content": SYSTEM_PROMPT + "\n\nPOLICY PAGES:\n" + policy_text}
+    system_message = {
+        "role": "system",
+        "content": SYSTEM_PROMPT + "\n\nPOLICY PAGES:\n" + policy_text,
+    }
     messages = [system_message] + conversation
 
-    response = client.chat.completions.create(model=MODEL, messages=messages)
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=messages,
+    )
     reply = response.choices[0].message.content
 
     # The evidence goes back too: which pages, and their text
@@ -158,10 +216,15 @@ def chat(req: ChatRequest):
     for page in pages:
         sources.append(page["name"])
         context.append(page["text"])
-    return {"reply": reply, "sources": sources, "context": context}
+    return {
+        "reply": reply,
+        "sources": sources,
+        "context": context,
+    }
 
 
 # 7. GET / hands the browser the chat page (from step 3).
+
 
 @app.get("/")
 def home():
@@ -171,6 +234,7 @@ def home():
 # 8. POST /agent switches on by itself in step 5, when agent_simple.py sits next to this file.
 #    You don't need to touch this in step 4.
 
+
 class AgentRequest(BaseModel):
     message: str
 
@@ -178,6 +242,12 @@ class AgentRequest(BaseModel):
 @app.post("/agent")
 def agent(req: AgentRequest):
     if not (Path(__file__).parent / "agent_simple.py").exists():
-        raise HTTPException(status_code=404, detail="Agent mode arrives in step 5 (agent_simple.py).")
-    from agent_simple import run_agent    # imported here so step 4 runs without agent_simple.py
+        raise HTTPException(
+            status_code=404,
+            detail="Agent mode arrives in step 5 (agent_simple.py).",
+        )
+    from agent_simple import (
+        run_agent,
+    )  # imported here so step 4 runs without agent_simple.py
+
     return run_agent(req.message)

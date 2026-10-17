@@ -18,7 +18,7 @@ Mac user? Use [COMMANDS_MAC.md](COMMANDS_MAC.md). Stuck? [TROUBLESHOOTING.md](TR
 
 A Codespace runs **Linux**, not Windows. Use [the Mac/Linux command guide](COMMANDS_MAC.md#using-the-tutorial) for activation and all tutorial commands; do not paste PowerShell commands from this page into its terminal. VS Code opens in your browser and prepares the environment automatically.
 
-When the bot starts, open forwarded port **8000** for the chat page. For the scoreboard, follow the [Mac/Linux scoreboard instructions](COMMANDS_MAC.md#github-codespaces-browser-users-including-windows-laptops): start the HTTP server from the project folder, open forwarded port **8080**, and click **report.html**.
+When the bot starts, open forwarded port **8000** for the chat page. Do not start the scoreboard during setup; follow the [Step 6 scoreboard instructions](COMMANDS_MAC.md#view-the-scoreboard-after-your-first-pytest-run) after your first pytest run.
 
 The browser fallback uses **Groq**, not Ollama on your laptop. Stop the Codespace when finished (bottom-left menu → **Stop Current Codespace**) to save free hours. Corporate accounts sometimes block Codespaces; use a personal laptop/account where permitted, or pair with a neighbour.
 
@@ -318,17 +318,49 @@ The same call behind a web address, so pages, tools and tests can use it. The te
 cd build\step2_api
 ```
 
-core. Open http://localhost:8000/docs > POST /chat > Try it out
+core: start the server and leave this terminal running
 
 ```powershell
 uvicorn app_simple:app --reload
 ```
 
-Ctrl+C to stop, then the stretch version (prints HOP 2/3/4 for every message):
+### Try POST /chat in the browser
+
+1. Wait for the terminal to show **Application startup complete**.
+2. Open http://localhost:8000/docs. **Codespaces:** use the [Mac/Linux Step 2 instructions](COMMANDS_MAC.md#step-2--wrap-it-in-an-api) instead of local Windows URLs and commands.
+3. Expand **POST /chat**, then click **Try it out**.
+4. Replace the entire **Request body** with this JSON:
+
+```json
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an expert test architect"
+    },
+    {
+      "role": "user",
+      "content": "Is testing an important part? Can we release software without testing?"
+    }
+  ]
+}
+```
+
+5. Click **Execute**. Wait for the model response, then scroll to **Server response**.
+6. Check that the response code is **200** and the **Response body** contains `{"reply": "..."}` with a real answer. The answer wording can vary.
+7. Change the user's question and click **Execute** again to try another request.
+
+**What this demonstrates:** `messages` carries roles and content into the API. The server also prepends its own ShopKart system instruction, so the test-architect message is a role experiment, not a guaranteed override. For a ShopKart-only request, remove the system-message object and use a single user message asking `Can I return shoes I bought 20 days ago?`.
+
+If you get **422**, check the JSON structure and required `messages`, `role` and `content` fields. If the request fails or keeps waiting, check the server terminal for errors; starting the server alone does not confirm the model call works.
+
+Back in the server terminal, press **Ctrl+C** to stop, then start the stretch version (prints HOP 2/3/4 for every message):
 
 ```powershell
 uvicorn app:app --reload
 ```
+
+Repeat the same browser steps with the stretch server and watch its terminal logs.
 
 Ctrl+C when done
 
@@ -350,11 +382,55 @@ core. Open http://localhost:8000 (after editing the HTML, just refresh)
 uvicorn app_simple:app --reload
 ```
 
+### Complete the two UI TODOs before chatting
+
+Leave the server running. In VS Code Explorer, open `build\step3_ui\index_simple.html` and find **TODO 1** and **TODO 2** near the start of the `<script>` section.
+
+**TODO 1:** uncomment only the code between `BEGIN SOLUTION` and `END SOLUTION` inside `sendToApi` using **Ctrl+/**. Keep the marker lines commented. No placeholder deletion is needed: the solution returns before the fallback. The working code looks like this:
+
+```javascript
+async function sendToApi(request) {
+  const res = await fetch("/chat", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(request)
+  });
+  if (!res.ok) throw new Error(res.statusText);
+  return await res.json();
+}
+```
+
+**TODO 2:** uncomment the solution block inside `showAnswer` so it replaces the raw JSON display with the answer text. The working code looks like this:
+
+```javascript
+function showAnswer(line, data) {
+  line.textContent = data.reply;
+}
+```
+
+**Save the file and refresh the browser.** Uncomment the code inside both solution blocks, not the TODO descriptions or marker lines. Keep the placeholders and leave the rest of the script unchanged.
+
+### Try these messages in the chat UI
+
+1. Leave the server running and open http://localhost:8000, **not `/docs`**. **Codespaces:** open forwarded port **8000** without `/docs`.
+2. Confirm you saved the TODO changes above and refreshed the browser. If you see a TODO placeholder instead of an answer, the page is not wired to the API yet.
+3. Type each message below into the chat box and click **Send**. Wait for each answer before sending the next message. Use the **same conversation** for all three:
+
+| Message to type (plain text, not JSON) | What to observe |
+|---|---|
+| Hi, I'm Sam. | The bot replies to your introduction. |
+| What's my name? | The answer should mention Sam: the UI sends the conversation history. |
+| Can I return shoes I bought 20 days ago? | The bot answers a ShopKart question through the UI. |
+
+These inputs exercise the chat and memory goals in the [Step 3 README](build/step3_ui/README.md#sample-messages-for-the-chat-ui). The bot does not use ShopKart policy documents yet, so do not treat its return-policy answer as verified; grounding comes in Step 4. Leave **Agent mode** unticked in this step.
+
 Ctrl+C to stop, then the full chat app (saved chats, Show JSON, Orders, ...):
 
 ```powershell
 uvicorn app:app --reload
 ```
+
+In `build\step3_ui\index.html`, uncomment the same two solution blocks instead (the full UI calls the display element `bubble`, not `line`). Do not add duplicate functions. Save, refresh the browser and repeat the messages above. Tick **Show JSON**, send another message, and identify `messages` in the request and `reply` in the response.
 
 Ctrl+C when done
 
@@ -365,6 +441,9 @@ cd ..\..
 **Done when:** you can chat in the browser and it remembers your name.
 
 ## Step 4 · Ground it
+
+Before trying the finished behavior, uncomment the code inside all three `BEGIN SOLUTION` / `END SOLUTION` blocks in `app_simple.py` (or `app.py` for the full version). Keep the markers commented and keep the placeholders. The code is already written; no replacement or rewriting is needed.
+
 The librarian finds the right ShopKart policy pages and the model answers only from them (RAG).
 ```powershell
 cd build\step4_ground
@@ -402,6 +481,9 @@ cd ..\..
 
 ## Step 5 · Let it act
 The bot gets tools (look up an order, issue a refund, escalate). Every step is recorded: the flight recorder that Part 2 tests.
+
+**First complete the exercise:** in `agent_simple.py`, uncomment only the code inside its three `BEGIN SOLUTION` / `END SOLUTION` blocks using **Ctrl+/**. Keep the indentation, marker comments and placeholders. If you use the full crew, also complete the three blocks in `agent.py`. The hard-rule and circuit-breaker behavior described below requires these blocks to be uncommented. Refunds are simulated.
+
 ```powershell
 cd build\step5_agent
 ```
@@ -423,6 +505,190 @@ all 10 seeded orders
 ```powershell
 python agent_simple.py all
 ```
+
+### Show the class: why is this an agent?
+
+**Not just because it has tool calls.** Tool calling is a capability. This file is agentic because the model controls a goal-directed loop:
+
+**Choose -> act -> observe -> choose again.**
+
+The goal is to handle a refund request. Our code provides the tools and boundaries, but the model chooses the next step based on what it learns.
+
+For example:
+
+```text
+Customer: "Refund order 1043."
+              |
+              v
+Model chooses: get_order("1043")
+              |
+              v
+Python executes it and returns the order details
+              |
+              v
+Model chooses: read_policy("damaged items")
+              |
+              v
+Python returns the policy
+              |
+              v
+Model chooses: issue_refund("1043", 49)
+              |
+              v
+Python checks the hard rule and runs the simulated refund
+```
+
+This sequence is an **example, not a hardcoded workflow**. The prompt guides the model to look up the order and policy first; the model generates the actual tool requests. A different order or policy can lead to a refusal or a human handover instead.
+
+| System | Who chooses the next step? |
+|---|---|
+| Chatbot without tools | The model generates an answer, without taking external actions. |
+| Fixed workflow using an LLM | The developer predefines the sequence; the model handles particular tasks within it. |
+| Tool-calling agent | The model chooses tools and subsequent steps using their results, within developer-defined limits. |
+
+What makes **this file** an agent?
+
+- **Goal:** handle the customer's refund request.
+- **Decisions:** the model chooses which tools to request.
+- **Feedback:** tool results go back into its conversation.
+- **Iteration:** it can decide again using those results.
+- **Bounded autonomy:** Python enforces the EUR 200 rule and the six-turn limit.
+
+**A single tool call does not automatically make something an agent.** The decision-making loop is what makes this implementation agentic. An agent does not need unrestricted freedom, multiple agents, LangGraph or long-term memory.
+
+**Presenter line:** "Tool calling gives the model hands. The agent loop lets it decide what to do next after seeing what happened."
+
+This is a **small teaching agent**: its refund tool simulates an action rather than moving real money.
+
+### Try two ownership-check demos
+
+Open the simple chat UI and tick **Agent mode**. Try each example in a fresh page with no previous conversation. These are demonstrations of a gap in the teaching agent, not examples of safe refund handling. No real money moves.
+
+**1. A visible name mismatch**
+
+Type:
+
+```text
+i am chloe and my order number is 1050 can you make a refund
+```
+
+Order **1050 belongs to Ben**, not Chloe. It is unused running shoes costing **EUR 89**, delivered **20 days ago**.
+
+- **What you may see:** the agent looks up the order, reads the policy and reports a refund. This was observed in our demo, but model responses can vary.
+- **What this exposes:** refund eligibility is not the same as permission to request it. The model can see the name mismatch, but may overlook it; Python currently does not block it.
+- **Safer behavior:** flag the mismatch, require ownership verification and do not refund before that check succeeds.
+
+**2. A matching name is still not proof**
+
+Type:
+
+```text
+i am ben and my order number is 1050 can you make a refund
+```
+
+You have only changed the name in your message. You have not signed in or proved that you are Ben.
+
+- **What you may see:** the agent reports a refund because the claimed name matches and the order appears eligible.
+- **What this exposes:** even if the model always compared names correctly, anyone could type the owner's name. A chat message is not authentication.
+- **Safer behavior:** verify the signed-in customer's trusted ID against the order's owner in Python, before returning private order details or allowing a refund.
+
+**Can the model catch example 1?** Yes. After the lookup, it sees both "I am Chloe" and the order's customer, "Ben". A prompt telling it to check names can help it flag this inconsistency, but it is not a reliable authorization boundary and cannot solve example 2.
+
+**Presenter line:** "The model can spot a suspicious request. The application must enforce who is allowed to act."
+
+### Show the class: what does the full LLM response look like?
+
+In [agent_simple.py](build/step5_agent/agent_simple.py), find this call inside `run_agent()`:
+
+```python
+response = client.chat.completions.create(
+    model=MODEL,
+    messages=messages,
+    tools=TOOLS,
+    temperature=0,
+)
+```
+
+`response` is an SDK object, not just the answer text. It contains the model's message, any tool requests, and information about token usage.
+
+To show the **actual response** during the demo, temporarily add this immediately after the call, before `answer = response.choices[0].message`:
+
+```python
+print(response.model_dump_json(indent=2))
+```
+
+Run `python agent_simple.py 1043` again. It prints one response for **each turn** of the loop. Remove the print statement after the demo if you only want the usual flight recorder output.
+
+**Illustrative full response:** the model asks our code to look up order 1043. This is a sample, not a captured Groq response. The model name, IDs, timestamp and token counts are examples; your provider may include additional fields.
+
+```json
+{
+  "id": "chatcmpl-example-001",
+  "object": "chat.completion",
+  "created": 1792152000,
+  "model": "example-model",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": null,
+        "refusal": null,
+        "tool_calls": [
+          {
+            "id": "call_example_001",
+            "type": "function",
+            "function": {
+              "name": "get_order",
+              "arguments": "{\"order_id\":\"1043\"}"
+            }
+          }
+        ]
+      },
+      "finish_reason": "tool_calls",
+      "logprobs": null
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 650,
+    "completion_tokens": 25,
+    "total_tokens": 675
+  },
+  "system_fingerprint": null
+}
+```
+
+Read it from the outside in:
+
+| Field | In plain English |
+|---|---|
+| `id`, `object`, `created`, `model` | Information about this response: its ID, type, creation time and model. |
+| `choices[0]` | The first answer option. Python lists start at **0**. |
+| `choices[0].message` | The assistant message. This is what our code stores in `answer`. |
+| `message.content` | The customer-facing text, if any. Here it is `null` because the model is requesting a tool instead. |
+| `message.tool_calls` | The tools the model wants **our Python code** to run. There can be more than one request. |
+| `function.name` | The requested tool: here, `get_order`. |
+| `function.arguments` | A **string containing JSON**, not a Python dictionary yet. The backslashes escape quotation marks inside the string. |
+| `finish_reason` | `tool_calls` means this turn ended with a tool request. A normal completed text reply usually has `stop`. |
+| `usage` | Input tokens, output tokens and their total. This is usage information, not the answer. |
+
+These lines in the agent unpack the response:
+
+```python
+answer = response.choices[0].message
+
+for call in answer.tool_calls:
+    name = call.function.name
+    args = json.loads(call.function.arguments)
+```
+
+For this example, `name` becomes `"get_order"` and `args` becomes the Python dictionary `{"order_id": "1043"}`.
+
+**Nothing has been looked up yet.** The model only requested it. Our code runs the tool and sends its result back in the next model request. Likewise, requesting `issue_refund` does not itself move money: `take_action()` checks our hard rule first.
+
+If the model answers in words instead, `answer.content` contains the text and `answer.tool_calls` is absent or empty. Our `if not answer.tool_calls:` branch handles that case.
+
+### Run the chat UI or the full crew
 
 open http://localhost:8000 and tick "Agent mode"
 

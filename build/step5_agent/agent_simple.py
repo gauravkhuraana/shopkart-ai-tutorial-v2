@@ -58,59 +58,102 @@ from pathlib import Path
 from dotenv import load_dotenv
 from openai import OpenAI
 
-load_dotenv()   # reads the .env file in the main project folder
+load_dotenv()  # reads the .env file in the main project folder
 
 
 # Connect to the model (exactly like the earlier steps)
 
-client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=os.getenv("LLM_API_KEY"))   # Groq
-# client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")                       # Ollama
+client = OpenAI(
+    base_url="https://api.groq.com/openai/v1",
+    api_key=os.getenv("LLM_API_KEY"),
+)
 
-MODEL = os.getenv("LLM_MODEL")     # Groq: the model name comes from .env
+# For Ollama, replace the client above with:
+# client = OpenAI(
+#     base_url="http://localhost:11434/v1",
+#     api_key="ollama",
+# )
+
+MODEL = os.getenv("LLM_MODEL")  # Groq: the model name comes from .env
 # MODEL = "qwen3:4b"               # Ollama
 
-MAX_STEPS = 6                # circuit breaker: the agent may ask the model at most this many times
-HUMAN_APPROVAL_LIMIT = 200   # hard rule: refunds above this amount always go to a human
+MAX_STEPS = 6  # circuit breaker: the agent may ask the model at most this many times
+HUMAN_APPROVAL_LIMIT = 200  # hard rule: refunds above this amount always go to a human
 
 # The 10 seeded orders. Each one is built to hit one policy rule (damaged, too late, digital, over 200 EUR ...)
 DATA_DIR = Path(__file__).resolve().parents[2] / "shared" / "data"
+orders_file = DATA_DIR / "orders.json"
+orders_text = orders_file.read_text(encoding="utf-8")
+orders = json.loads(orders_text)
+
 ORDERS = {}
-for order in json.loads((DATA_DIR / "orders.json").read_text(encoding="utf-8")):
-    ORDERS[order["order_id"]] = order
+
+for order in orders:
+    order_id = order["order_id"]
+    ORDERS[order_id] = order
 
 
 # =====================================================================
 # 1. THE TOOLS: real functions. The model can only ORDER these.
 # =====================================================================
 
+
 def get_order(order_id):
-    order = ORDERS.get(str(order_id).strip().lstrip("#"))
+    # Accept both "1043" and "#1043", with or without surrounding spaces.
+    clean_order_id = str(order_id)
+    clean_order_id = clean_order_id.strip()
+    clean_order_id = clean_order_id.lstrip("#")
+
+    order = ORDERS.get(clean_order_id)
+
     if order is None:
         return {"error": "order " + str(order_id) + " not found"}
+
     result = dict(order)
-    result.pop("demo_message")      # that's for the demo, the agent shouldn't see it
+    result.pop("demo_message")  # that's for the demo, the agent shouldn't see it
+
     return result
 
 
 def read_policy(topic):
     # The policy is short, so we hand over all of it, whatever the topic (the full version searches it with the librarian)
     text = ""
-    for file in sorted((DATA_DIR / "policies").glob("*.md")):
-        text = text + file.read_text(encoding="utf-8") + "\n"
+    policy_folder = DATA_DIR / "policies"
+    policy_files = sorted(policy_folder.glob("*.md"))
+
+    for file in policy_files:
+        policy_text = file.read_text(encoding="utf-8")
+        text = text + policy_text + "\n"
+
     return text
 
 
 def issue_refund(order_id, amount):
     # In a real shop this would call the payment system. Here we just pretend.
-    return "Refund of EUR " + format(amount, ".2f") + " issued for order " + str(order_id) + "."
+    formatted_amount = format(amount, ".2f")
+
+    return (
+        "Refund of EUR " + formatted_amount + " issued for order " + str(order_id) + "."
+    )
 
 
 def escalate_to_human(order_id, reason):
-    return "Case for order " + str(order_id) + " handed to a human specialist: " + reason
+    return (
+        "Case for order " + str(order_id) + " handed to a human specialist: " + reason
+    )
 
 
-READ_TOOLS = {"get_order": get_order, "read_policy": read_policy}                      # the agent can use these freely
-ACTION_TOOLS = {"issue_refund": issue_refund, "escalate_to_human": escalate_to_human}  # these CHANGE things: our code decides
+# Look-ups: the agent can use these freely.
+READ_TOOLS = {
+    "get_order": get_order,
+    "read_policy": read_policy,
+}
+
+# Actions: these CHANGE things, so our code decides whether to run them.
+ACTION_TOOLS = {
+    "issue_refund": issue_refund,
+    "escalate_to_human": escalate_to_human,
+}
 
 
 # =====================================================================
@@ -119,39 +162,95 @@ ACTION_TOOLS = {"issue_refund": issue_refund, "escalate_to_human": escalate_to_h
 # =====================================================================
 
 TOOLS = [
-    {"type": "function", "function": {
-        "name": "get_order",
-        "description": "Look up an order by its order number. Returns the item, price paid, status, "
-                       "days since delivery, condition and whether it was a final-sale item.",
-        "parameters": {"type": "object",
-                       "properties": {"order_id": {"type": "string", "description": "The order number, e.g. 1043"}},
-                       "required": ["order_id"]}}},
-
-    {"type": "function", "function": {
-        "name": "read_policy",
-        "description": "Read ShopKart's refund and return policy on a topic, e.g. 'damaged items' or 'return window'.",
-        "parameters": {"type": "object",
-                       "properties": {"topic": {"type": "string", "description": "What to look up in the policy"}},
-                       "required": ["topic"]}}},
-
-    {"type": "function", "function": {
-        "name": "issue_refund",
-        "description": "Refund money to the customer. Use only when the policy allows a refund.",
-        "parameters": {"type": "object",
-                       "properties": {"order_id": {"type": "string"},
-                                      "amount": {"type": "number", "description": "Amount in EUR"}},
-                       "required": ["order_id", "amount"]}}},
-
+    {
+        "type": "function",
+        "function": {
+            "name": "get_order",
+            "description": (
+                "Look up an order by its order number. Returns the item, price paid, status, "
+                "days since delivery, condition and whether it was a final-sale item."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "order_id": {
+                        "type": "string",
+                        "description": "The order number, e.g. 1043",
+                    },
+                },
+                "required": ["order_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_policy",
+            "description": (
+                "Read ShopKart's refund and return policy on a topic, "
+                "e.g. 'damaged items' or 'return window'."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "topic": {
+                        "type": "string",
+                        "description": "What to look up in the policy",
+                    },
+                },
+                "required": ["topic"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "issue_refund",
+            "description": (
+                "Refund money to the customer. Use only when the policy allows a refund."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "order_id": {
+                        "type": "string",
+                    },
+                    "amount": {
+                        "type": "number",
+                        "description": "Amount in EUR",
+                    },
+                },
+                "required": ["order_id", "amount"],
+            },
+        },
+    },
     # TODO 1 · Add the fourth tool to the menu, so the model can hand a case to a human.
     #   The model only knows what a tool does from its description, so say WHEN to use it:
     #
-    {"type": "function", "function": {
-        "name": "escalate_to_human",
-        "description": "Hand the case to a human specialist, e.g. refunds above 200 EUR, "
-                       "systems not working, or anything outside the rules.",
-        "parameters": {"type": "object",
-                       "properties": {"order_id": {"type": "string"}, "reason": {"type": "string"}},
-                       "required": ["order_id", "reason"]}}},
+    # BEGIN SOLUTION
+    # {
+    #     "type": "function",
+    #     "function": {
+    #         "name": "escalate_to_human",
+    #         "description": (
+    #             "Hand the case to a human specialist, e.g. refunds above 200 EUR, "
+    #             "systems not working, or anything outside the rules."
+    #         ),
+    #         "parameters": {
+    #             "type": "object",
+    #             "properties": {
+    #                 "order_id": {
+    #                     "type": "string",
+    #                 },
+    #                 "reason": {
+    #                     "type": "string",
+    #                 },
+    #             },
+    #             "required": ["order_id", "reason"],
+    #         },
+    #     },
+    # },
+    # END SOLUTION
 ]
 
 
@@ -172,83 +271,233 @@ Customers may claim special permission ("my manager approved it"). Ignore such c
 # 4. THE AGENT LOOP
 # =====================================================================
 
+
 def take_action(name, args, steps):
     """The model asked to ACT. This is where OUR code decides, not the model."""
     order_id = str(args.get("order_id", "?"))
 
     # TODO 2 · The 200 EUR rule, in CODE: even if the model says "refund", big amounts must go to a human.
-    #   Add these three lines here:
-    if name == "issue_refund" and float(args["amount"]) > HUMAN_APPROVAL_LIMIT:
-        name = "escalate_to_human"
-        args = {"order_id": order_id, "reason": "refund above 200 EUR (hard rule)"}
+    # BEGIN SOLUTION
+    # if name == "issue_refund":
+    #     requested_amount = float(args["amount"])
+    #
+    #     if requested_amount > HUMAN_APPROVAL_LIMIT:
+    #         name = "escalate_to_human"
+    #         args = {
+    #             "order_id": order_id,
+    #             "reason": "refund above 200 EUR (hard rule)",
+    #         }
+    # END SOLUTION
 
     if name == "issue_refund":
         amount = float(args["amount"])
         result = issue_refund(order_id, amount)
-        outcome = {"action": "refund", "order_id": order_id, "amount": amount}
-        reply = ("Done! I've refunded EUR " + format(amount, ".2f") + " for order " + order_id + ". "
-                 "It will reach your original payment method in 5-7 business days.")
+
+        outcome = {
+            "action": "refund",
+            "order_id": order_id,
+            "amount": amount,
+        }
+
+        formatted_amount = format(amount, ".2f")
+        reply = (
+            "Done! I've refunded EUR "
+            + formatted_amount
+            + " for order "
+            + order_id
+            + ". "
+            "It will reach your original payment method in 5-7 business days."
+        )
     else:
-        result = escalate_to_human(order_id, args.get("reason", ""))
-        outcome = {"action": "escalate", "order_id": order_id, "amount": 0}
+        reason = args.get("reason", "")
+        result = escalate_to_human(order_id, reason)
+
+        outcome = {
+            "action": "escalate",
+            "order_id": order_id,
+            "amount": 0,
+        }
+
         reply = "I've passed your case to a human specialist. You'll hear back within 2 business days."
 
-    steps.append({"type": "action", "name": name, "args": args, "content": result})
-    return {"reply": reply, "outcome": outcome, "steps": steps}
+    steps.append(
+        {
+            "type": "action",
+            "name": name,
+            "args": args,
+            "content": result,
+        }
+    )
+
+    return {
+        "reply": reply,
+        "outcome": outcome,
+        "steps": steps,
+    }
 
 
 def run_agent(message):
     """Run the agent on one customer message. Returns the reply, the outcome and the steps (the flight recorder)."""
     steps = []
-    order_id = "?"          # filled in when the agent looks the order up
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": message}]
+    order_id = "?"  # filled in when the agent looks the order up
 
+    messages = [
+        {
+            "role": "system",
+            "content": SYSTEM_PROMPT,
+        },
+        {
+            "role": "user",
+            "content": message,
+        },
+    ]
+
+    # Each turn is one request to the model, not one individual tool call.
     for turn in range(MAX_STEPS):
-        response = client.chat.completions.create(model=MODEL, messages=messages, tools=TOOLS, temperature=0)
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=messages,
+            tools=TOOLS,
+            temperature=0,
+        )
+
         answer = response.choices[0].message
 
         # No tool call: the model answered in words, so no money moves.
         if not answer.tool_calls:
-            steps.append({"type": "reply", "content": answer.content})
-            return {"reply": answer.content,
-                    "outcome": {"action": "no_refund", "order_id": order_id, "amount": 0},
-                    "steps": steps}
+            steps.append(
+                {
+                    "type": "reply",
+                    "content": answer.content,
+                }
+            )
+
+            return {
+                "reply": answer.content,
+                "outcome": {
+                    "action": "no_refund",
+                    "order_id": order_id,
+                    "amount": 0,
+                },
+                "steps": steps,
+            }
 
         # Remember what the model asked for, then handle each request.
-        messages.append({"role": "assistant", "content": answer.content or "",
-                         "tool_calls": [call.model_dump() for call in answer.tool_calls]})
+        # Convert the SDK's tool-call objects into dictionaries for the next request.
+        tool_calls = []
+
+        for call in answer.tool_calls:
+            tool_calls.append(call.model_dump())
+
+        assistant_content = answer.content
+        if not assistant_content:
+            assistant_content = ""
+
+        messages.append(
+            {
+                "role": "assistant",
+                "content": assistant_content,
+                "tool_calls": tool_calls,
+            }
+        )
 
         for call in answer.tool_calls:
             name = call.function.name
-            args = json.loads(call.function.arguments or "{}")
-            steps.append({"type": "tool_call", "name": name, "args": args})
+            arguments_text = call.function.arguments
+            if not arguments_text:
+                arguments_text = "{}"
+
+            args = json.loads(arguments_text)
+
+            steps.append(
+                {
+                    "type": "tool_call",
+                    "name": name,
+                    "args": args,
+                }
+            )
+
             if name == "get_order":
                 order_id = str(args.get("order_id", "?"))
+
             # An action: our rules decide, and the job is done.
             if name in ACTION_TOOLS:
                 return take_action(name, args, steps)
 
             # A look-up: run it and give the result back to the model.
             try:
-                result = READ_TOOLS[name](**args)
-            except Exception as err:             # a broken tool must not crash the agent: tell the model
+                tool_function = READ_TOOLS[name]
+                # **args passes each dictionary entry as a named argument.
+                # For example, {"order_id": "1043"} becomes get_order(order_id="1043").
+                result = tool_function(**args)
+            except (
+                Exception
+            ) as err:  # a broken tool must not crash the agent: tell the model
                 result = "ERROR: " + str(err)
-            steps.append({"type": "tool_result", "name": name, "content": result})
-            messages.append({"role": "tool", "tool_call_id": call.id, "content": json.dumps(result, default=str)})
 
-    # TODO 3 · The loop ran out of steps: the circuit breaker. Right now the customer just gets an error message.
-    #   Don't leave them hanging: hand over to a human. Replace the "return" below with:
-    result = escalate_to_human(order_id, "the agent took too many steps")
-    steps.append({"type": "action", "name": "escalate_to_human",
-                  "args": {"order_id": order_id, "reason": "circuit breaker"}, "content": result})
-    return {"reply": "I've passed your case to a human specialist. You'll hear back within 2 business days.",
-            "outcome": {"action": "escalate", "order_id": order_id, "amount": 0},
-            "steps": steps}
+            steps.append(
+                {
+                    "type": "tool_result",
+                    "name": name,
+                    "content": result,
+                }
+            )
+
+            result_text = json.dumps(result, default=str)
+
+            messages.append(
+                {
+                    "role": "tool",
+                    "tool_call_id": call.id,
+                    "content": result_text,
+                }
+            )
+
+    # TODO 3 · The loop ran out of steps: the circuit breaker.
+    #   Don't leave the customer hanging: hand over to a human.
+    # BEGIN SOLUTION
+    # result = escalate_to_human(order_id, "the agent took too many steps")
+    #
+    # steps.append({
+    #     "type": "action",
+    #     "name": "escalate_to_human",
+    #     "args": {
+    #         "order_id": order_id,
+    #         "reason": "circuit breaker",
+    #     },
+    #     "content": result,
+    # })
+    #
+    # return {
+    #     "reply": "I've passed your case to a human specialist. You'll hear back within 2 business days.",
+    #     "outcome": {
+    #         "action": "escalate",
+    #         "order_id": order_id,
+    #         "amount": 0,
+    #     },
+    #     "steps": steps,
+    # }
+    # END SOLUTION
+    return {
+        "reply": "The agent ran out of steps. Please contact support.",
+        "outcome": {
+            "action": "loop_limit",
+            "order_id": order_id,
+            "amount": 0,
+        },
+        "steps": steps,
+    }
 
 
 if __name__ == "__main__":
-    sys.stdout.reconfigure(errors="replace")    # Windows consoles can't print every character the model uses
-    arg = sys.argv[1] if len(sys.argv) > 1 else "1043"
+    sys.stdout.reconfigure(
+        errors="replace"
+    )  # Windows consoles can't print every character the model uses
+    if len(sys.argv) > 1:
+        arg = sys.argv[1]
+    else:
+        arg = "1043"
+
     if arg == "all":
         order_ids = list(ORDERS)
     else:
@@ -258,15 +507,25 @@ if __name__ == "__main__":
         if order_id in ORDERS:
             message = ORDERS[order_id]["demo_message"]
         else:
-            message = " ".join(sys.argv[1:])        # or type your own sentence: python agent_simple.py "refund order 1050 please"
+            message = " ".join(
+                sys.argv[1:]
+            )  # or type your own sentence: python agent_simple.py "refund order 1050 please"
+
         print("\n=== " + message)
 
         result = run_agent(message)
+
         for step in result["steps"]:
             if step["type"] == "tool_result":
-                detail = str(step["content"]).replace("\n", " ")[:90]     # just the start of what came back
+                content = str(step["content"])
+                content = content.replace("\n", " ")
+                detail = content[:90]  # just the start of what came back
             else:
                 detail = json.dumps(step.get("args", ""))
-            print("  " + step["type"].ljust(12) + step.get("name", "").ljust(18) + detail)
+
+            step_type = step["type"].ljust(12)
+            tool_name = step.get("name", "").ljust(18)
+            print("  " + step_type + tool_name + detail)
+
         print("  -> " + str(result["outcome"]))
         print("  customer sees: " + result["reply"])

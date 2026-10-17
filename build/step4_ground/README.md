@@ -145,6 +145,9 @@ python retrieval.py "Do you price-match?"
 ```
 
 ## CORE (everyone) · your TODOs in `app_simple.py` (or `app.py`)
+
+Each answer is already written between `BEGIN SOLUTION` and `END SOLUTION`. Uncomment only the code inside each block with **Ctrl+/** (Windows/Linux) or **Cmd+/** (Mac). Leave the markers commented and keep the placeholder assignments/returns: the uncommented code overrides them or returns first.
+
 | TODO | What you do |
 |---|---|
 | 1 | Call the librarian: `pages = retrieve(question)` (full version: `retrieve(question, top_k=TOP_K)`). In the simple version `retrieve` is the function already in the file |

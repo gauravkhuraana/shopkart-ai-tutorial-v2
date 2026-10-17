@@ -18,6 +18,21 @@ step 5   ... + Tools: the crew                     agent.py       Planner → Im
 - has a **STRETCH** section for fast finishers;
 - has a `README.md`: what you build, how to run it, how you know you're done.
 
+## Complete a TODO by uncommenting
+
+The answer code is already written, but commented out between `BEGIN SOLUTION` and `END SOLUTION`.
+
+1. Find the numbered TODO in the current step's exercise file.
+2. Select only the commented **code inside** those markers. Leave the marker lines as comments.
+3. Press **Ctrl+/** on Windows/Linux or **Cmd+/** on Mac to uncomment it. Keep its indentation.
+4. Save. Refresh the browser for HTML changes; Uvicorn reloads Python changes automatically.
+
+You do not need to delete the placeholders. Each solution either replaces a value set earlier or returns before the fallback below it. In step 3's display exercise, the solution replaces the raw JSON with the reply text.
+
+Before you uncomment, the exercise intentionally lacks the new feature. In step 5, the refund guard and review/circuit-breaker exercises are **not active yet**. Refunds are simulated; do not use these unfinished examples with real payments.
+
+Later steps already contain the completed earlier features. Only the numbered TODOs for the current step are commented out.
+
 Run each step's commands **inside its folder**, with your virtual environment active. For example, from the project folder:
 
 ```bash

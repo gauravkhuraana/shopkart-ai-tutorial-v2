@@ -141,9 +141,49 @@ Open **http://localhost:8000**. After editing the HTML file, just refresh the br
 | 1 | page → API | `fetch("/chat", ...)`: POST the request JSON and return the JSON answer |
 | 2 | API → page | Show only `data.reply`, not the raw JSON |
 
+With the simple server running, open `build/step3_ui/index_simple.html` in VS Code. Find **TODO 1** and **TODO 2** near the start of `<script>`. The solutions are already written: uncomment only the code between each `BEGIN SOLUTION` and `END SOLUTION` marker using **Ctrl+/** (Windows/Linux) or **Cmd+/** (Mac). Leave the marker lines commented and keep the placeholders; you do not need to rewrite the functions.
+
+The uncommented code sends the request and displays the reply, like this:
+
+```javascript
+async function sendToApi(request) {
+  const res = await fetch("/chat", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(request)
+  });
+  if (!res.ok) throw new Error(res.statusText);
+  return await res.json();
+}
+
+function showAnswer(line, data) {
+  line.textContent = data.reply;
+}
+```
+
+**Save and refresh the browser before trying the sample messages.** Uncomment the solution code, not just the TODO description. The solution returns before the placeholder reply and replaces the raw-JSON display with the reply text. Leave the rest of the script unchanged.
+
+For the full UI, uncomment the two solution blocks in `index.html` instead. Its display function uses `bubble` rather than `line`. Do not add duplicate functions.
+
 ## Done when…
 - You can chat in the browser, and it remembers your name.
 - Full version: with **Show JSON** ticked, you can point at the request, the response and the `reply` field.
+
+## Sample messages for the chat UI
+
+After completing the two TODOs, refresh http://localhost:8000 (not `/docs`). In Codespaces, use forwarded port **8000** without `/docs`. Leave **Agent mode** unticked.
+
+Type these as **plain text**, not JSON. Click **Send** for each message, wait for the answer, and keep all three in the **same conversation**:
+
+| Message to type | What to observe |
+|---|---|
+| Hi, I'm Sam. | The bot replies to your introduction. |
+| What's my name? | The answer should mention Sam: the UI sends the conversation history. |
+| Can I return shoes I bought 20 days ago? | The bot answers a ShopKart question through the UI. |
+
+The bot does not use ShopKart policy documents yet, so its return-policy answer is not verified; Step 4 adds grounding. If the page shows a TODO placeholder instead of an answer, finish wiring the UI to the API first.
+
+In the full version, complete the same TODOs in `index.html`, refresh the browser and repeat these messages. Tick **Show JSON**, send another message, and identify `messages` in the request and `reply` in the response.
 
 ## Follow one message: five hops
 1. The page packs your message into JSON and fetches `/chat`.
