@@ -2,6 +2,17 @@
 
 The 5 Bs: Brain → Bridge → Browser → **Book** → Body
 
+## Table of contents
+
+- [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
+- [What's in this folder](#whats-in-this-folder)
+- [How `index_simple.html` + `app_simple.py` work](#how-index_simplehtml--app_simplepy-work)
+- [Run it](#run-it)
+- [CORE (everyone) · your TODOs in `app_simple.py` (or `app.py`)](#core-everyone--your-todos-in-app_simplepy-or-apppy)
+- [Done when…](#done-when)
+- [STRETCH · debug like a tester](#stretch--debug-like-a-tester)
+- [Stuck?](#stuck)
+
 ## ▶ Copy-paste: run this step
 **Needs:** virtual environment active · internet for Groq (or Ollama running) · this step **is** the server (the terminal stays busy). Stop any earlier `uvicorn` first (Ctrl+C). Run `retrieval.py` in a **second** terminal, or before you start the server.
 > Terminal already shows `(.venv)` and you are in the project folder? Skip the first two commands.

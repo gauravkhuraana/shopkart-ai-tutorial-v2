@@ -22,7 +22,6 @@ We test the path, not just the landing.
 """
 import json
 import os
-from functools import lru_cache
 
 import httpx
 import pytest
@@ -59,9 +58,8 @@ else:
     ORDERS_TO_RUN = ["1043", "1061", "2001"]
 
 
-@lru_cache(maxsize=None)
 def run_crew(message: str, chaos: str | None = None) -> dict:
-    """Send one customer message to the bot's /agent endpoint. Cached, so repeated checks cost one run."""
+    """Send one customer message to /agent, starting a fresh crew run on every call."""
     response = httpx.post(
         f"{config.SHOPKART_URL}/agent",
         json={"message": message, "chaos": chaos},

@@ -2,6 +2,13 @@
 
 Finished code for every step. Each folder here mirrors the folder of the same name in `build/` (steps 1-5) or `evaluate/` (steps 6-9).
 
+## Table of contents
+
+- [Finished files by step](#finished-files-by-step)
+- [Use the solutions](#use-the-solutions)
+
+## Finished files by step
+
 | Folder | Finished file(s) |
 |---|---|
 | `step1_model/` | `ask.py` (+ `ask_simple.py`) |
@@ -14,7 +21,7 @@ Finished code for every step. Each folder here mirrors the folder of the same na
 | `step8_agent/` | `agent_check_simple.py`, `test_agents.py` |
 | `step9_trial/` | `trial_simple.py` (+ `judge_the_judge.py`) |
 
-**Use them:**
+## Use the solutions
 - **Compare.** Open your file and the solution side by side. Only the TODO parts differ.
 - **Copy into place.** From the repo root (replace `step3` with `step1` through `step9`). Your own version is kept as `<name>.mine`:
 

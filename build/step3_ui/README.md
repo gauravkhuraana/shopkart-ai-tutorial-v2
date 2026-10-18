@@ -2,6 +2,20 @@
 
 The 5 Bs: Brain → Bridge → **Browser** → Book → Body
 
+## Table of contents
+
+- [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
+- [What's in this folder](#whats-in-this-folder)
+  - [The extra endpoints in `app.py` (open http://localhost:8000/docs to try them)](#the-extra-endpoints-in-apppy-open-httplocalhost8000docs-to-try-them)
+- [How `index_simple.html` + `app_simple.py` work](#how-index_simplehtml--app_simplepy-work)
+- [Run it](#run-it)
+- [CORE (everyone) · your TODOs in `index_simple.html` (or `index.html`), top of the `<script>` section](#core-everyone--your-todos-in-index_simplehtml-or-indexhtml-top-of-the-script-section)
+- [Done when…](#done-when)
+- [Sample messages for the chat UI](#sample-messages-for-the-chat-ui)
+- [Follow one message: five hops](#follow-one-message-five-hops)
+- [STRETCH](#stretch)
+- [Stuck?](#stuck)
+
 ## ▶ Copy-paste: run this step
 **Needs:** virtual environment active · internet for Groq (or Ollama running) · this step **is** the server (the terminal stays busy). Stop any earlier `uvicorn` first (Ctrl+C), because only one thing can use port 8000.
 > Terminal already shows `(.venv)` and you are in the project folder? Skip the first two commands.

@@ -16,6 +16,24 @@ Everything is free and runs on your own laptop (or in your browser).
 
 ---
 
+## Table of contents
+
+- [Before the tutorial: set up your laptop (about 20 minutes)](#before-the-tutorial-set-up-your-laptop-about-20-minutes)
+  - [Step 1 · Install Python and VS Code; get Git if needed](#step-1--install-python-and-vs-code-get-git-if-needed)
+  - [Step 2 · Install and test Ollama (required on local laptops)](#step-2--install-and-test-ollama-required-on-local-laptops)
+  - [Step 3 · Get the code and install execution libraries](#step-3--get-the-code-and-install-execution-libraries)
+  - [Step 4 · Create your settings file and get a free Groq key](#step-4--create-your-settings-file-and-get-a-free-groq-key)
+  - [Step 5 · Check that everything works](#step-5--check-that-everything-works)
+- [On the day: the terminal windows you need](#on-the-day-the-terminal-windows-you-need)
+- [Part 1 · BUILD the bot (5 steps)](#part-1--build-the-bot-5-steps)
+- [Part 2 · TEST the bot (4 steps)](#part-2--test-the-bot-4-steps)
+- [All steps at a glance](#all-steps-at-a-glance)
+- [Cheat sheet: the other commands](#cheat-sheet-the-other-commands)
+- [Stuck?](#stuck)
+- [What's in this project](#whats-in-this-project)
+- [Want to build it again later? The 9 ideas](#want-to-build-it-again-later-the-9-ideas)
+- [Credits & licence](#credits--licence)
+
 ## Before the tutorial: set up your laptop (about 20 minutes)
 
 Please do this **at home**, before the day. The Python libraries are about 150 MB. Local attendees must also download the Ollama model (about 2.5 GB) so we can demo it if the session allows.
@@ -28,32 +46,13 @@ Please do this **at home**, before the day. The Python libraries are about 150 M
 
 | Program | Where to get it | Note |
 |---|---|---|
-| **Python** 3.12.x (stable; required for the workshop) | https://www.python.org/downloads/ | Keep other versions installed; select 3.12 explicitly below |
+| **CPython 3.12.13** (recommended installation; stable 3.12.x required) | [Exact Windows/Mac installation commands](PRE_CONFERENCE.md#1--install-python-one-time) | Uses pinned uv; no release-page choices or Python PATH changes |
 | **VS Code** | https://code.visualstudio.com/download | Install the **Python** extension published by **Microsoft** |
 | **Git** | https://git-scm.com/downloads | Or skip Git and download this project as a ZIP |
 
-**Test Python immediately after installing it**, before downloading the project. Open a **new terminal** so it picks up PATH changes.
-Already have another Python version? Install 3.12 alongside it; do not uninstall it or change your system-wide default. The version-specific commands below avoid PATH ambiguity.
+**First complete [preconference step 1](PRE_CONFERENCE.md#1--install-python-one-time), including its version and execution tests.** It installs **CPython 3.12.13 with uv 0.11.7** without changing your default Python. Do not choose "the latest Python" from python.org: newer 3.12 security releases are source-only, and the old Windows PATH-checkbox instructions do not apply to every installer. Keep other Python versions installed.
 
-**Windows**
-```powershell
-py -3.12 --version
-```
-
-```powershell
-py -3.12 -c "print('Python is working')"
-```
-
-**Mac / Linux**
-```bash
-python3.12 --version
-```
-
-```bash
-python3.12 -c "print('Python is working')"
-```
-
-Expect **Python 3.12.x**, then **Python is working**. These tests run with base Python before a venv exists. If either fails, fix [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) before continuing.
+Expect **Python 3.12.13**, then **Python is working** from that guide's managed-interpreter commands. If a command fails, fix [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) before continuing. Linux/Codespaces with Python 3.12 already provided can keep using `python3.12`.
 
 > **What is a terminal?** A window where you type commands.
 > Windows: press Start, type **PowerShell**, press Enter. Mac: press Cmd+Space, type **Terminal**, press Enter.
@@ -109,7 +108,7 @@ cd shopkart-ai-tutorial-v2
 **In VS Code's terminal, inside the project folder:**
 
 ```powershell
-py -3.12 setup_env.py
+& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) setup_env.py
 ```
 
 ```powershell
@@ -128,12 +127,14 @@ cd shopkart-ai-tutorial-v2
 **In VS Code's terminal, inside the project folder:**
 
 ```bash
-python3.12 setup_env.py
+"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" setup_env.py
 ```
 
 ```bash
 source .venv/bin/activate
 ```
+
+On Linux/Codespaces with Python 3.12 already provided, replace the Mac setup command with `python3.12 setup_env.py`. You do not need the desktop uv installer there.
 
 You now see `(.venv)` at the start of the line. That means it worked.
 Run `python --version`: it must show **3.12.x**. Once activated, normal `python` commands use this environment's 3.12, regardless of your system default. Setup rejects an existing environment that uses another version; follow [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) to recreate it without deleting your settings.
@@ -261,14 +262,16 @@ These are **independent shortcuts**, not a sequence to run top to bottom. Except
 **Initial setup, from the project folder (Windows):** creates `.venv`, installs execution libraries and creates `.env`.
 
 ```powershell
-py -3.12 setup_env.py
+& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) setup_env.py
 ```
 
-**Initial setup, from the project folder (Mac/Linux):**
+**Initial setup, from the project folder (Mac):**
 
 ```bash
-python3.12 setup_env.py
+"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" setup_env.py
 ```
+
+For Linux/Codespaces with Python 3.12 already provided, use `python3.12 setup_env.py`.
 
 **Readiness check, from the project folder with `.venv` active:**
 
@@ -346,7 +349,7 @@ Then open `evaluate/report.html` in your browser.
 | `shared/config.py` | reads your settings from `.env` (which model, which judge) |
 | `shared/data/policies/` | ShopKart's 10 rule pages (refunds, returns...) |
 | `shared/data/orders.json` | 10 example orders to test with |
-| `plant_bug.py` | switch bugs on and off for Part 2 |
+| [plant_bug.py](plant_bug.py) | switch bugs on and off for Part 2; [visual guide, code locations, and demo commands](plant_bug_README.md) |
 | `checkpoint.py` | copy in the finished code if you fall behind |
 | `check_setup.py` | checks if your laptop is ready |
 | `setup_env.py` | one-command setup: virtual environment, packages, `.env` |

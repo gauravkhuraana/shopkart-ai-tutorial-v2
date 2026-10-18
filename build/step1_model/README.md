@@ -2,6 +2,15 @@
 
 The 5 Bs: **Brain** → Bridge → Browser → Book → Body
 
+## Table of contents
+
+- [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
+- [What's in this folder](#whats-in-this-folder)
+- [How `ask_simple.py` works](#how-ask_simplepy-works)
+- [CORE (everyone) · `ask_simple.py`](#core-everyone--ask_simplepy)
+- [STRETCH (if you finish early) · experiments in `ask.py`](#stretch-if-you-finish-early--experiments-in-askpy)
+- [Stuck?](#stuck)
+
 ## ▶ Copy-paste: run this step
 **Needs:** virtual environment active · internet for Groq (or Ollama running) · the bot is **not** needed.
 > Terminal already shows `(.venv)` and you are in the project folder? Skip the first two commands.

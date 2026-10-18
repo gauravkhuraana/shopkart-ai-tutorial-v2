@@ -1,8 +1,8 @@
 """
 One-command setup for the ShopKart tutorial. Works on Windows, Mac and Linux. Needs stable Python 3.12.x.
 
-    Windows:   py -3.12 setup_env.py
-    Mac/Linux: python3.12 setup_env.py
+    Windows/Mac: use the exact managed-interpreter commands in PRE_CONFERENCE.md, step 4.
+    Linux/Codespaces with Python 3.12 provided: python3.12 setup_env.py
 
 What it does (safe to run again; it skips what is already done):
     1. checks your Python version
@@ -11,9 +11,10 @@ What it does (safe to run again; it skips what is already done):
     4. creates your settings file  .env  (from .env.example) if you don't have one
     5. runs check_setup.py so you see what is still missing (usually: your Groq key)
 
-    python3.12 setup_env.py --skip-check  # don't run check_setup.py at the end
+    Add --skip-check to the setup command to skip check_setup.py at the end.
 """
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -73,18 +74,19 @@ version_pair = (version.major, version.minor)
 print(f"      You have Python {version.major}.{version.minor}.{version.micro}.")
 print("      Required for this workshop: Python 3.12.x.")
 
-if IS_WINDOWS:
-    setup_command = "py -3.12 setup_env.py"
-else:
-    setup_command = "python3.12 setup_env.py"
-
 if version_pair != (3, 12) or version.releaselevel != "final":
     fail(
         "A stable Python 3.12.x is required for the workshop.\n"
         "      Install it alongside your existing Python; no uninstall or default-version change is needed.\n"
-        f"      Then run: {setup_command}\n"
-        "      See TROUBLESHOOTING.md #1."
+        "      Use PRE_CONFERENCE.md step 1 to install CPython 3.12.13, then its step 4 setup command.\n"
+        "      See TROUBLESHOOTING.md #1. Do not retry with the same incompatible interpreter."
     )
+
+if IS_WINDOWS:
+    executable = sys.executable.replace("'", "''")
+    setup_command = f"& '{executable}' setup_env.py"
+else:
+    setup_command = f"{shlex.quote(sys.executable)} setup_env.py"
 
 # ---------------------------------------------------------------
 # Step 2: Virtual environment

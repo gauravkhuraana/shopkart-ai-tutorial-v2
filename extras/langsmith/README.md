@@ -4,6 +4,15 @@
 
 LangGraph builds the Step 5 workflow. LangSmith is the optional cloud UI that shows its traces, datasets and evaluation results. Steps 6-9 (DeepEval + pytest) work without it.
 
+## Table of contents
+
+- [Before you enable it](#before-you-enable-it)
+- [1. Configure LangSmith](#1-configure-langsmith)
+- [2. See a LangGraph trace](#2-see-a-langgraph-trace)
+- [3. Run a dataset experiment](#3-run-a-dataset-experiment)
+- [4. Plant a bug and compare experiments](#4-plant-a-bug-and-compare-experiments)
+- [Local versus UI evaluation](#local-versus-ui-evaluation)
+
 ## Before you enable it
 
 LangSmith receives the prompts, model replies, retrieved policy text and agent state for traced runs. Do not use real customer data or secrets. Leave `LANGSMITH_TRACING=false` if you want all runs to stay local.

@@ -18,6 +18,10 @@ step 5   ... + Tools: the crew                     agent.py       Planner → Im
 - has a **STRETCH** section for fast finishers;
 - has a `README.md`: what you build, how to run it, how you know you're done.
 
+## Table of contents
+
+- [Complete a TODO by uncommenting](#complete-a-todo-by-uncommenting)
+
 ## Complete a TODO by uncommenting
 
 The answer code is already written, but commented out between `BEGIN SOLUTION` and `END SOLUTION`.

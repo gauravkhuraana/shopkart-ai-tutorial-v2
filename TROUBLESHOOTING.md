@@ -19,38 +19,48 @@ Or simply open the next `build/stepN` folder: it already contains the finished c
 
 ---
 
+## Table of contents
+
+- [#1 · Wrong Python version](#1--wrong-python-version)
+- [#2 · Library installation fails](#2--library-installation-fails)
+- [#3 · Model server not reachable](#3--model-server-not-reachable)
+- [#3b · `ModuleNotFoundError: No module named 'config'`](#3b--modulenotfounderror-no-module-named-config)
+- [#4 · Windows won't activate the virtual environment](#4--windows-wont-activate-the-virtual-environment)
+- [#5 · No admin rights on a company laptop](#5--no-admin-rights-on-a-company-laptop)
+- [#6 · Switching between Groq and Ollama](#6--switching-between-groq-and-ollama)
+- [#7 · `.env` missing or Groq key missing](#7--env-missing-or-groq-key-missing)
+- [#8 · Port 8000 already in use](#8--port-8000-already-in-use)
+- [#9 · Model not found](#9--model-not-found)
+- [#10 · The bot ignores the policy documents](#10--the-bot-ignores-the-policy-documents)
+- [#11 · The model doesn't call tools](#11--the-model-doesnt-call-tools)
+- [#12 · The agent loops, or takes very long](#12--the-agent-loops-or-takes-very-long)
+- [#13 · Judge error: "invalid JSON" / "could not parse"](#13--judge-error-invalid-json--could-not-parse)
+- [#14 · Error 429 / "rate limit"](#14--error-429--rate-limit)
+- [#15 · The tests are very slow](#15--the-tests-are-very-slow)
+- [#16 · Agent mode / `/agent` shows an error, or the step log is empty](#16--agent-mode--agent-shows-an-error-or-the-step-log-is-empty)
+- [#17 · SSL / certificate errors on a company network](#17--ssl--certificate-errors-on-a-company-network)
+- [#18 · Using the hosted ShopKart bot instead of your own](#18--using-the-hosted-shopkart-bot-instead-of-your-own)
+- [#19 · Tests are red for no reason / the bot says strange things](#19--tests-are-red-for-no-reason--the-bot-says-strange-things)
+
 ### #1 · Wrong Python version
-Use a stable **Python 3.12.x**, the required workshop version. Other versions can work, but we standardize on 3.12 to reduce conference-day compatibility problems. Both setup scripts flag a different version.
+Use a stable **Python 3.12.x**, the required workshop series. The recommended clean installation is **CPython 3.12.13 with uv 0.11.7**. Both setup scripts flag a different series or prerelease.
 
-**Keep other Python versions installed.** Install 3.12 alongside them, without changing your system-wide default, and explicitly select it:
+**Keep other Python versions installed.** Follow the [exact Windows/Mac installation commands](PRE_CONFERENCE.md#1--install-python-one-time). Do not select a source archive from the generic Python downloads page: 3.12.10 was the last official binary installer, while newer 3.12 security releases are source-only. The guide uses Astral's prebuilt Python instead and does not require a PATH checkbox.
 
-- Check on **Windows**:
+Check the managed installation on **Windows**:
 
-  ```powershell
-  py -3.12 --version
-  ```
-
-- Check on **Mac/Linux**:
-
-  ```bash
-  python3.12 --version
-  ```
-
-- Install: https://www.python.org/downloads/ (Windows: tick "Add python.exe to PATH")
-
-Immediately after installation, open a **new terminal** so it picks up PATH changes. Before creating a venv, test that base Python can execute code:
-
-**Windows**
 ```powershell
-py -3.12 -c "print('Python is working')"
+& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) --version
 ```
 
-**Mac / Linux**
+**Mac**
 ```bash
-python3.12 -c "print('Python is working')"
+"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" --version
 ```
 
-Expect **Python 3.12.x** and **Python is working**. If `py` is missing on Windows, install the Python launcher/install manager using the official Python installation instructions. If the version-specific command cannot find 3.12, install it and reopen the terminal; do not substitute plain `python` or `python3`, which might pick another version.
+On Linux/Codespaces with Python 3.12 already provided, use `python3.12 --version` instead. On Windows/Mac expect **Python 3.12.13**, then run the execution/SSL smoke test in the installation guide. `python` or `py -3.12` outside `.venv` may still select an older installation; that is not evidence that the managed installation failed.
+
+**uv executable missing?** Complete the platform-specific uv installation in the guide. **"No interpreter found"?** Run its exact `python install 3.12.13` command. Full paths work in new terminals without a PATH update. Do not replace the failing command with plain `python`. If company policy blocks downloads or scripts, use [the browser fallback](PRE_CONFERENCE.md#path-b--in-the-browser-github-codespaces); do not disable certificate verification or corporate controls.
 
 **Already have `.venv` from another Python?** Activating it or installing another Python does not change its interpreter. Setup prints the environment's version and stops before package installation when it is incompatible.
 
@@ -65,18 +75,20 @@ Rename-Item -LiteralPath .venv -NewName .venv-before-python312
 ```
 
 ```powershell
-py -3.12 setup_env.py
+& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) setup_env.py
 ```
 
-**Mac / Linux**
+**Mac**
 
 ```bash
 mv .venv .venv-before-python312
 ```
 
 ```bash
-python3.12 setup_env.py
+"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" setup_env.py
 ```
+
+On Linux/Codespaces with Python 3.12 already provided, use `python3.12 setup_env.py` instead.
 
 Activate the new `.venv` using your platform's command in the setup guide. Then `python --version` must show **3.12.x** and normal `python` commands use it, even if your system default is another version. Run `python check_setup.py` inside that environment.
 
@@ -86,16 +98,16 @@ VS Code is installed separately from [its official download page](https://code.v
 - Easiest fix on **Windows**:
 
   ```powershell
-  py -3.12 setup_env.py
+  & (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) setup_env.py
   ```
 
-- On **Mac/Linux**:
+- On **Mac**:
 
   ```bash
-  python3.12 setup_env.py
+  "$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" setup_env.py
   ```
 
-The setup script creates the virtual environment and installs the libraries. You can run it again after a failure.
+On Linux/Codespaces with Python 3.12 already provided, use `python3.12 setup_env.py`. The setup script creates the virtual environment and installs the libraries. You can run it again after a failure. If the managed interpreter is missing, complete [preconference step 1](PRE_CONFERENCE.md#1--install-python-one-time) first.
 
 - Use a virtual environment (see README, step 3) so you don't need admin rights. The setup script installs execution libraries into `.venv`; it does not install Python or VS Code.
 - Behind a company proxy:
@@ -150,7 +162,7 @@ Or use Command Prompt instead:
 ```
 
 ### #5 · No admin rights on a company laptop
-- Python: the python.org installer works without admin ("Install for me only").
+- Python: the [pinned uv/Python installation](PRE_CONFERENCE.md#1--install-python-one-time) uses your own account without administrator/root access or PATH changes. Corporate policy can still block it; do not try to bypass those restrictions.
 - Ollama is required preparation for local attendees, but may need admin. If installation is blocked, contact Gaurav and use the documented Codespaces/Groq fallback in [PRE_CONFERENCE.md](PRE_CONFERENCE.md); Groq remains the default provider.
 - Company firewall blocks sign-ups or downloads: pair with a neighbour for Part 1, then point your tests at the hosted bot for Part 2 (#18).
 

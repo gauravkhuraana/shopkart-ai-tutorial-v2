@@ -2,6 +2,16 @@
 
 Part 2: Rules → **AI judge** → Agent → Judge on trial
 
+## Table of contents
+
+- [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
+- [Is it TRUE?](#is-it-true)
+- [What's in this folder](#whats-in-this-folder)
+- [How `judge_simple.py` works](#how-judge_simplepy-works)
+- [CORE (everyone) · `judge_simple.py`](#core-everyone--judge_simplepy)
+- [STRETCH (if you finish early) · `test_judge.py`](#stretch-if-you-finish-early--test_judgepy)
+- [Stuck?](#stuck)
+
 ## ▶ Copy-paste: run this step
 **Needs:** virtual environment active · **the step 5 bot running (window 2)** · internet for the bot's model **and** for the judge (Groq, `JUDGE_*` in `.env`).
 

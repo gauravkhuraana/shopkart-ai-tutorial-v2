@@ -36,7 +36,7 @@ from deepeval.models import LocalModel
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from dotenv import load_dotenv
 
-load_dotenv()                      # reads the .env file in the main project folder
+load_dotenv()  # reads the .env file in the main project folder
 warnings.filterwarnings("ignore")
 os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")
 
@@ -48,7 +48,9 @@ os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")
 question = "Can I return shoes I bought 20 days ago? I haven't worn them."
 
 # The answer key: what we KNOW is right
-expected = "Yes. Unused items can be returned within 30 days of delivery for a full refund."
+expected = (
+    "Yes. Unused items can be returned within 30 days of delivery for a full refund."
+)
 
 # What a bot said (it invents a fee, so it is NOT fully right)
 answer = "Yes, within 30 days, but there is a 5 EUR restocking fee."
@@ -89,7 +91,11 @@ RUBRIC = (
 # 3. Score the SAME answer 3 times
 # ---------------------------------------------------------------------------
 
-test_case = LLMTestCase(input=question, actual_output=answer, expected_output=expected)
+test_case = LLMTestCase(
+    input=question,
+    actual_output=answer,
+    expected_output=expected,
+)
 
 scores = []
 started = time.time()
@@ -100,9 +106,12 @@ for run in range(1, 4):
         model=judge,
         criteria=RUBRIC,
         async_mode=False,
-        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT, SingleTurnParams.EXPECTED_OUTPUT],
+        evaluation_params=[
+            SingleTurnParams.ACTUAL_OUTPUT,
+            SingleTurnParams.EXPECTED_OUTPUT,
+        ],
     )
-    metric.measure(test_case)      # one judge verdict (G-Eval makes 1-2 model calls)
+    metric.measure(test_case)  # one judge verdict (G-Eval makes 1-2 model calls)
     scores.append(metric.score)
     print(f"run {run}: {metric.score:.2f}   {metric.reason}")
 
@@ -122,14 +131,24 @@ print(f"Answer on trial: {answer}")
 print("============================================")
 
 # C · Consistent?  A small range = the judge gives the same score each time
-print(f"C · Consistent?  scores {', '.join(f'{s:.2f}' for s in scores)}  ->  range {score_range:.2f}")
+formatted_scores = []
+
+for score in scores:
+    formatted_scores.append(f"{score:.2f}")
+
+scores_text = ", ".join(formatted_scores)
+print(f"C · Consistent?  scores {scores_text}  ->  range {score_range:.2f}")
 
 # A · Agrees?  A small distance = the judge marks like you
 if MY_SCORE is None:
     print("A · Agrees?      TODO 1: fill in MY_SCORE at the top first")
 else:
     distance = abs(average - MY_SCORE)
-    print(f"A · Agrees?      judge average {average:.2f} vs YOUR {MY_SCORE}  ->  distance {distance:.2f}  (lower = agrees more)")
+    print(
+        f"A · Agrees?      judge average {average:.2f} vs YOUR {MY_SCORE}  ->  distance {distance:.2f}  (lower = agrees more)"
+    )
 
 # P · Price?  Time grows fast with more questions and metrics
-print(f"P · Price?       3 verdicts took {seconds:.1f} s. Now imagine 100 questions x 5 metrics, on every commit.")
+print(
+    f"P · Price?       3 verdicts took {seconds:.1f} s. Now imagine 100 questions x 5 metrics, on every commit."
+)

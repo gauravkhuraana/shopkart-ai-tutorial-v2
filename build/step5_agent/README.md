@@ -2,6 +2,19 @@
 
 The 5 Bs: Brain → Bridge → Browser → Book → **Body** (hands that act)
 
+## Table of contents
+
+- [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
+- [What's in this folder](#whats-in-this-folder)
+- [The simple version: one agent, one loop](#the-simple-version-one-agent-one-loop)
+- [The full version: a crew](#the-full-version-a-crew)
+- [Run it](#run-it)
+  - [Sample questions for demos and later debugging](#sample-questions-for-demos-and-later-debugging)
+- [CORE (everyone) · your TODOs in `agent_simple.py`](#core-everyone--your-todos-in-agent_simplepy)
+- [Done when…](#done-when)
+- [STRETCH](#stretch)
+- [Stuck?](#stuck)
+
 ## ▶ Copy-paste: run this step
 **Needs:** virtual environment active · internet for Groq (or Ollama running). `agent_simple.py` / `agent.py` run once and finish. `uvicorn` is the server and keeps the terminal busy: stop any earlier `uvicorn` first (Ctrl+C).
 > Terminal already shows `(.venv)` and you are in the project folder? Skip the first two commands.

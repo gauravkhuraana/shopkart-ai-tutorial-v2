@@ -41,7 +41,7 @@ from deepeval.models import LocalModel
 from deepeval.test_case import LLMTestCase, ToolCall
 from dotenv import load_dotenv
 
-load_dotenv()   # reads the .env file in the main project folder
+load_dotenv()  # reads the .env file in the main project folder
 warnings.filterwarnings("ignore")
 os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")
 BOT = os.getenv("SHOPKART_URL", "http://localhost:8000")
@@ -50,7 +50,7 @@ BOT = os.getenv("SHOPKART_URL", "http://localhost:8000")
 # 1. Send one customer message to the crew
 
 message = "My headphones from order 1043 arrived broken, refund please."
-PRICE_PAID = 49.0          # what the customer paid for order 1043 (shared/data/orders.json)
+PRICE_PAID = 49.0  # what the customer paid for order 1043 (shared/data/orders.json)
 
 request_body = {
     "message": message,
@@ -102,7 +102,9 @@ for review in reviews:
     review_input = review["input"]
     has_order_number = "1043" in review_input
     has_order_details = "price_paid" in review_input
-    reviewer_saw_the_facts = reviewer_saw_the_facts and has_order_number and has_order_details
+    reviewer_saw_the_facts = (
+        reviewer_saw_the_facts and has_order_number and has_order_details
+    )
 
 checks["reviewer saw the facts"] = reviewer_saw_the_facts
 
@@ -118,17 +120,34 @@ checks["no overpayment"] = amount_refunded <= PRICE_PAID
 # Check E · The journey again, with a ready-made DeepEval agent metric: ToolCorrectnessMetric.
 # Same question as check C ("right tools, right order?"), but DeepEval gives you the score AND the reason.
 # It only compares two lists, so there is no AI call and no API key needed.
+tools_called = []
+
+for name in tools:
+    tools_called.append(ToolCall(name=name))
+
+expected_tools = [
+    ToolCall(name="get_order"),
+    ToolCall(name="issue_refund"),
+]
+
 test_case = LLMTestCase(
     input=message,
     actual_output=result["reply"],
-    tools_called=[ToolCall(name=name) for name in tools],                 # what the crew really did
-    expected_tools=[ToolCall(name="get_order"), ToolCall(name="issue_refund")],   # what a good journey does
+    tools_called=tools_called,  # what the crew really did
+    expected_tools=expected_tools,  # what a good journey does
+)
+
+# This metric compares tool lists locally; its required model object is not called.
+unused_model = LocalModel(
+    model="not-used",
+    base_url="http://localhost",
+    api_key="not-used",
 )
 
 metric = ToolCorrectnessMetric(
-    threshold=1.0,                       # 1.0 = every expected tool was called, in the right order
-    should_consider_ordering=True,       # the order matters: look up BEFORE paying
-    model=LocalModel(model="not-used", base_url="http://localhost", api_key="not-used"),   # required by the class, never called here
+    threshold=1.0,  # 1.0 = every expected tool was called, in the right order
+    should_consider_ordering=True,  # the order matters: look up BEFORE paying
+    model=unused_model,
     async_mode=False,
 )
 metric.measure(test_case)
@@ -138,7 +157,12 @@ checks["DeepEval tool correctness"] = metric.is_successful()
 # Results
 
 for name, ok in checks.items():
-    print(f"{'PASS' if ok else 'FAIL'}  {name}")
+    if ok:
+        verdict = "PASS"
+    else:
+        verdict = "FAIL"
+
+    print(f"{verdict}  {name}")
 
 print()
 print(f"DeepEval ToolCorrectnessMetric: score {metric.score:.2f}")

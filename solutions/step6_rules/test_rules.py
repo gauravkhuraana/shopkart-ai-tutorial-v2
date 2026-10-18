@@ -12,8 +12,6 @@ Run it (from this folder, with the step 5 bot running):
 
 Finished version (solutions/step6_rules).  Copy it in place:  python ../../checkpoint.py step6
 """
-from functools import lru_cache
-
 import httpx
 import pytest
 import yaml
@@ -23,9 +21,8 @@ import config     # shared/config.py: reads .env (SHOPKART_URL = where the bot l
 GOLDEN = yaml.safe_load((config.ROOT / "evaluate" / "golden_questions.yaml").read_text(encoding="utf-8"))   # the answer key
 
 
-@lru_cache(maxsize=None)
 def ask_bot(question: str) -> dict:
-    """Ask the bot over HTTP, exactly like the chat page does. Cached: each question is asked once per run."""
+    """Ask the bot over HTTP, getting a fresh response on every call."""
     response = httpx.post(f"{config.SHOPKART_URL}/chat",
                           json={"messages": [{"role": "user", "content": question}]}, timeout=180)
     response.raise_for_status()

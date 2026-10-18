@@ -29,8 +29,8 @@ from deepeval.models import LocalModel
 from deepeval.test_case import LLMTestCase
 from dotenv import load_dotenv
 
-load_dotenv()                                     # reads the .env file in the main project folder
-warnings.filterwarnings("ignore")                 # keep the output readable
+load_dotenv()  # reads the .env file in the main project folder
+warnings.filterwarnings("ignore")  # keep the output readable
 os.environ.setdefault("DEEPEVAL_TELEMETRY_OPT_OUT", "YES")
 os.environ.setdefault("DEEPEVAL_RETRY_MAX_ATTEMPTS", "6")
 os.environ.setdefault("DEEPEVAL_RETRY_CAP_SECONDS", "10")
@@ -40,11 +40,32 @@ BOT = os.getenv("SHOPKART_URL", "http://localhost:8000")
 # 1. Get an answer from your bot (the same POST /chat the chat page uses)
 
 question = "Do you price-match if I find the same item cheaper somewhere else?"
-truth = "ShopKart has no price-matching policy."          # what we KNOW is true (our answer key)
+truth = (
+    "ShopKart has no price-matching policy."  # what we KNOW is true (our answer key)
+)
 
-result = httpx.post(f"{BOT}/chat", json={"messages": [{"role": "user", "content": question}]}, timeout=180).json()
-answer = result["reply"]                                  # what the bot said
-pages = result["context"] or ["(no policy pages)"]        # the policy pages the librarian brought (step 4)
+message = {
+    "role": "user",
+    "content": question,
+}
+
+request_body = {
+    "messages": [message],
+}
+
+response = httpx.post(
+    f"{BOT}/chat",
+    json=request_body,
+    timeout=180,
+)
+
+result = response.json()
+answer = result["reply"]  # what the bot said
+
+# The judge still needs context text when the librarian found no pages.
+pages = result["context"]
+if not pages:
+    pages = ["(no policy pages)"]
 
 # EXPERIMENT 1 · The liar: pretend the bot said this (remove the # from the next line)
 # answer = "Yes, we price-match! Send us the cheaper link and we'll refund the difference."
@@ -60,17 +81,26 @@ print("--------------------------------------------")
 
 # 2. Hire the judge: a bigger model than your bot, on any OpenAI-compatible server (same plug as step 1)
 
-judge = LocalModel(model=os.getenv("JUDGE_MODEL"),
-                   base_url=os.getenv("JUDGE_BASE_URL", "https://api.groq.com/openai/v1"),
-                   api_key=os.getenv("JUDGE_API_KEY"))
+judge = LocalModel(
+    model=os.getenv("JUDGE_MODEL"),
+    base_url=os.getenv("JUDGE_BASE_URL", "https://api.groq.com/openai/v1"),
+    api_key=os.getenv("JUDGE_API_KEY"),
+)
 
 # Each metric is a ready-made rubric. Score 0-1, and it passes when the score is AT LEAST the threshold.
 metrics = [
     # T · Truthful?  Does the answer contradict what we know is true?  (1 = no contradictions)
-    HallucinationMetric(model=judge, threshold=0.5, async_mode=False),
-
+    HallucinationMetric(
+        model=judge,
+        threshold=0.5,
+        async_mode=False,
+    ),
     # TODO 1 · U · Uses the source?  Add the Faithfulness metric: is every claim backed by the policy PAGES?
-    FaithfulnessMetric(model=judge, threshold=0.7, async_mode=False),
+    FaithfulnessMetric(
+        model=judge,
+        threshold=0.7,
+        async_mode=False,
+    ),
 ]
 
 
@@ -79,13 +109,19 @@ metrics = [
 test_case = LLMTestCase(
     input=question,
     actual_output=answer,
-    context=[truth],                 # what we know is true       -> used by Hallucination
-    retrieval_context=pages,         # what the bot read          -> used by Faithfulness
+    context=[truth],  # what we know is true       -> used by Hallucination
+    retrieval_context=pages,  # what the bot read          -> used by Faithfulness
 )
 
 for metric in metrics:
-    metric.measure(test_case)        # this is where the judge model is called
-    verdict = "PASS" if metric.is_successful() else "FAIL"
-    print(f"{metric.__name__:<14} score {metric.score:.2f}  (pass mark {metric.threshold})  {verdict}")
+    metric.measure(test_case)  # this is where the judge model is called
+    if metric.is_successful():
+        verdict = "PASS"
+    else:
+        verdict = "FAIL"
+
+    print(
+        f"{metric.__name__:<14} score {metric.score:.2f}  (pass mark {metric.threshold})  {verdict}"
+    )
     print(f"{'':<14} reason: {metric.reason}")
     print()

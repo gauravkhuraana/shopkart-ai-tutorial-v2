@@ -7,6 +7,47 @@ Can't message on LinkedIn? Email: **gaurav [dot] khuraana [at] gmail [dot] com**
 One page, steps 1 to 9, in order. **Copy a block, paste it, read the one-line explanation.**
 Windows user? Use [COMMANDS_WINDOWS.md](COMMANDS_WINDOWS.md). Stuck? [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
+## Table of contents
+
+- [Using the tutorial](#using-the-tutorial)
+  - [GitHub Codespaces (browser users, including Windows laptops)](#github-codespaces-browser-users-including-windows-laptops)
+- [0 · Common commands](#0--common-commands)
+  - [Open a terminal in the project folder](#open-a-terminal-in-the-project-folder)
+  - [Set up (one time)](#set-up-one-time)
+  - [Activate the virtual environment (EVERY new terminal)](#activate-the-virtual-environment-every-new-terminal)
+  - [Is my laptop ready?](#is-my-laptop-ready)
+  - [The three terminal windows (on the day)](#the-three-terminal-windows-on-the-day)
+  - [Start the bot (window 2)](#start-the-bot-window-2)
+  - [Fell behind? Jump to a working step](#fell-behind-jump-to-a-working-step)
+  - [Break the bot on purpose (Part 2), and ALWAYS fix it after](#break-the-bot-on-purpose-part-2-and-always-fix-it-after)
+  - [The scoreboard and "run everything"](#the-scoreboard-and-run-everything)
+  - [Run without the real model (practice, or bad internet)](#run-without-the-real-model-practice-or-bad-internet)
+  - [Ollama (required preparation on local laptops)](#ollama-required-preparation-on-local-laptops)
+- [Which step needs what](#which-step-needs-what)
+- [Part 1 · BUILD the bot](#part-1--build-the-bot)
+  - [Step 1 · Talk to the model](#step-1--talk-to-the-model)
+  - [Step 2 · Wrap it in an API](#step-2--wrap-it-in-an-api)
+    - [Try POST /chat in the browser](#try-post-chat-in-the-browser)
+  - [Step 3 · Give it a face](#step-3--give-it-a-face)
+    - [Complete the two UI TODOs before chatting](#complete-the-two-ui-todos-before-chatting)
+    - [Try these messages in the chat UI](#try-these-messages-in-the-chat-ui)
+  - [Step 4 · Ground it](#step-4--ground-it)
+  - [Step 5 · Let it act](#step-5--let-it-act)
+    - [Show the class: why is this an agent?](#show-the-class-why-is-this-an-agent)
+    - [Try two ownership-check demos](#try-two-ownership-check-demos)
+    - [Show the class: what does the full LLM response look like?](#show-the-class-what-does-the-full-llm-response-look-like)
+    - [Run the chat UI or the full crew](#run-the-chat-ui-or-the-full-crew)
+- [Part 2 · TEST the bot](#part-2--test-the-bot)
+  - [1 · Start the app again if you stopped it after step 5](#1--start-the-app-again-if-you-stopped-it-after-step-5)
+  - [2 · Open a new terminal for the tests](#2--open-a-new-terminal-for-the-tests)
+  - [Step 6 · Rules first](#step-6--rules-first)
+    - [View the scoreboard after your first pytest run](#view-the-scoreboard-after-your-first-pytest-run)
+  - [Step 7 · AI tests AI: the judge](#step-7--ai-tests-ai-the-judge)
+  - [Step 8 · Test the agent](#step-8--test-the-agent)
+  - [Step 9 · Put the judge on trial](#step-9--put-the-judge-on-trial)
+  - [Bonus](#bonus)
+  - [Quick fixes](#quick-fixes)
+
 ## Using the tutorial
 
 - **Local laptop:** install and test Python, VS Code and Ollama using [PRE_CONFERENCE.md](PRE_CONFERENCE.md). Open the project with **File → Open Folder**, then **Terminal → New Terminal** in VS Code.
@@ -32,13 +73,7 @@ This browser fallback uses **Groq**, not Ollama on your own laptop. **Save your 
   ```
 
 - Each code block contains one command. Read the explanation beside it before copying the next command.
-- On Mac/Linux, setup and creating the venv use **`python3.12`**. Once `(.venv)` is active, plain `python` uses that environment's 3.12.
-
-**Contents**
-[0 · Common commands](#0--common-commands) · [Which step needs what](#which-step-needs-what) ·
-[1](#step-1--talk-to-the-model) · [2](#step-2--wrap-it-in-an-api) · [3](#step-3--give-it-a-face) · [4](#step-4--ground-it) · [5](#step-5--let-it-act) ·
-[6](#step-6--rules-first) · [7](#step-7--ai-tests-ai-the-judge) · [8](#step-8--test-the-agent) · [9](#step-9--put-the-judge-on-trial) ·
-[Bonus](#bonus) · [Quick fixes](#quick-fixes)
+- On Mac, setup and creating the venv use the **uv-managed CPython 3.12.13** selected below. Linux/Codespaces with Python 3.12 already provided can use `python3.12` instead. Once `(.venv)` is active, plain `python` uses that environment's 3.12.
 
 ---
 
@@ -64,22 +99,22 @@ ls check_setup.py
 ```
 
 ### Set up (one time)
-Install stable **Python 3.12.x** for this workshop. Keep other Python versions installed; this command explicitly selects 3.12 (including on Linux):
+On Mac, first run the [Mac installation commands](PRE_CONFERENCE.md#mac-install-with-terminal) for **uv 0.11.7 and CPython 3.12.13**. Keep other Python versions installed; no Homebrew, `sudo`, or PATH changes are needed. This full-path lookup works in a fresh terminal:
 
 ```bash
-python3.12 --version
+"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" --version
 ```
 
-Before creating the venv, confirm Python runs and PATH works. Expect **Python is working**:
+Before creating the venv, expect **Python 3.12.13** above, then **Python is working** below. If uv or the interpreter is missing, stop and finish the installation guide:
 
 ```bash
-python3.12 -c "print('Python is working')"
+"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" -c "print('Python is working')"
 ```
 
 Create `.venv`, install execution libraries, create `.env`, and run the initial setup check:
 
 ```bash
-python3.12 setup_env.py
+"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" setup_env.py
 ```
 
 The setup script installs execution libraries (FastAPI, Uvicorn, OpenAI SDK, LangGraph, DeepEval and pytest) into `.venv`, not Python or VS Code. Its initial check uses the venv interpreter; finish the Groq settings before checking again.
@@ -87,7 +122,7 @@ If an existing `.venv` uses another Python version, setup stops without changing
 
 Prefer to do it by hand? Run these four commands individually:
 ```bash
-python3.12 -m venv .venv
+"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" -m venv .venv
 ```
 
 ```bash
@@ -721,39 +756,53 @@ uvicorn app:app --reload
 
 # Part 2 · TEST the bot
 
-> **Window 2** keeps the step 5 bot running. Do all the commands below in **window 3**: a NEW terminal where you activate the venv again.
-> Window 2 (skip if it is already running):
-> ```bash
-> cd ~/Downloads/shopkart-ai-tutorial-v2
-> ```
->
->
-> ```bash
-> source .venv/bin/activate
-> ```
->
->
-> ```bash
-> cd build/step5_agent
-> ```
->
->
-> ```bash
-> uvicorn app:app --reload
-> ```
->
->
-> Window 3 (every Part 2 step starts like this):
-> ```bash
-> cd ~/Downloads/shopkart-ai-tutorial-v2
-> ```
->
->
-> ```bash
-> source .venv/bin/activate
-> ```
->
->
+### 1 · Start the app again if you stopped it after step 5
+
+The tests need the **full app** running. If `uvicorn app:app --reload` is still running from step 5, leave it running and go straight to section 2 below.
+
+Otherwise, in a terminal, go to your project folder (replace the example path with your own; in Codespaces, use the workspace folder):
+
+```bash
+cd ~/Downloads/shopkart-ai-tutorial-v2
+```
+
+Activate the virtual environment:
+
+```bash
+source .venv/bin/activate
+```
+
+Go to the step 5 folder:
+
+```bash
+cd build/step5_agent
+```
+
+Start the full app:
+
+```bash
+uvicorn app:app --reload
+```
+
+**Leave this terminal open and the app running.** This is the bot terminal (**window 2**); do not type test commands here.
+
+### 2 · Open a new terminal for the tests
+
+In VS Code, choose **Terminal → New Terminal**. This separate terminal is **window 3**.
+
+Go to your project folder:
+
+```bash
+cd ~/Downloads/shopkart-ai-tutorial-v2
+```
+
+Activate the virtual environment **in this new terminal too**:
+
+```bash
+source .venv/bin/activate
+```
+
+You should see **`(.venv)`**. Run the step 6 commands below in this test terminal, while the app keeps running in the other terminal. Repeat this project-folder and activation setup whenever you open a new terminal for Part 2.
 
 ## Step 6 · Rules first
 Plain Python rules: words the answer must say or must never say. No AI, free, instant.

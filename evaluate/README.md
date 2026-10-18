@@ -11,6 +11,13 @@ step 9   Judge on trial   the judge is AI too: put a CAP on it         trial_sim
 
 **Airport security, bottom-up:** the metal detector (step 6: plain rules, free, on every question) → the officer (step 7: the AI judge, only where judgement is needed) → the supervisor (step 9: a human checks the judge).
 
+## Table of contents
+
+- [Before you start: keep the step 5 bot running](#before-you-start-keep-the-step-5-bot-running)
+- [Every folder](#every-folder)
+- [The scoreboard: see your bot scored in your browser](#the-scoreboard-see-your-bot-scored-in-your-browser)
+- [Want to break the real bot? (full files only)](#want-to-break-the-real-bot-full-files-only)
+
 ## Before you start: keep the step 5 bot running
 Steps 6, 7 and 8 test your step 5 bot over HTTP, so it must be running. **Window 2**, leave it open:
 
@@ -55,6 +62,8 @@ uvicorn app:app --reload
 Then do your work in **window 3** (a new terminal: activate the venv again, then `cd` into the step folder). Step 9 does not need the bot.
 Every test talks to the bot over HTTP, exactly like the chat page. Laptop can't run it? Put the hosted bot's address in `.env` as `SHOPKART_URL` (TROUBLESHOOTING.md #18).
 
+Bot responses are not cached: every call makes a fresh request, even for a repeated question or order. Separate tests can therefore receive different LLM responses. In step 8, checking the same order in several tests means several crew runs, which takes more time and can increase API costs. Multiple checks or judge metrics within one test still use the response that test received.
+
 | Step | Bot running? | Judge (internet)? | Copy-paste commands |
 |---|---|---|---|
 | 6 · Rules | yes | no | [step6_rules](step6_rules/README.md) |
@@ -65,6 +74,9 @@ Every test talks to the bot over HTTP, exactly like the chat page. Laptop can't 
 Everything in one place: [COMMANDS_WINDOWS.md](../COMMANDS_WINDOWS.md) · [COMMANDS_MAC.md](../COMMANDS_MAC.md)
 
 ## Every folder
+
+The Python examples use ordinary loops, descriptive intermediate variables and spacing between logical steps. Read each file from top to bottom: prepare the request, call the bot or judge, then check the result. Request dictionaries and metric settings are spread over multiple lines so you can inspect each field separately.
+
 - `…_simple.py`: a plain Python script in 2–3 numbered parts. We walk through it together, you run it, and it **prints** what happened. It has 1–2 `TODO`s (the **CORE**) and a few `EXPERIMENT` lines: remove the `#` (Ctrl+/), run, see a bug get caught, put the `#` back.
 - the full file (`test_….py`): the same idea as a real pytest suite, on many questions, with pass marks and clear failure messages. That's the **STRETCH**.
 - `README.md`: what you do, how to run it, how you know you're done.
@@ -105,3 +117,5 @@ python ../../plant_bug.py off
 ```
 
 The running bot reads the switch on every request: no restart needed.
+
+For diagrams, explanations of all eight bugs, code locations, and focused demo commands, see the [planted-bug walkthrough](../plant_bug_README.md).

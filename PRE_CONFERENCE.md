@@ -18,35 +18,133 @@ Whichever you pick, the final setup check in step 6 must show **OK on every line
 
 ---
 
+## Table of contents
+
+- [Path A · My own laptop](#path-a--my-own-laptop)
+  - [1 · Install Python (one time)](#1--install-python-one-time)
+    - [Windows: install with PowerShell](#windows-install-with-powershell)
+    - [Mac: install with Terminal](#mac-install-with-terminal)
+    - [Installation validation status](#installation-validation-status)
+  - [2 · Get the project](#2--get-the-project)
+  - [3 · Open the project in VS Code](#3--open-the-project-in-vs-code)
+  - [4 · Install the Python libraries needed for execution](#4--install-the-python-libraries-needed-for-execution)
+  - [5 · Get your free Groq key and put it in `.env`](#5--get-your-free-groq-key-and-put-it-in-env)
+  - [6 · Check it](#6--check-it)
+  - [7 · Install and test Ollama (required on local laptops)](#7--install-and-test-ollama-required-on-local-laptops)
+- [Path B · In the browser (GitHub Codespaces)](#path-b--in-the-browser-github-codespaces)
+- [Checklist](#checklist)
+- [If something goes wrong](#if-something-goes-wrong)
+
 ## Path A · My own laptop
 
 ### 1 · Install Python (one time)
-Install a stable **Python 3.12.x**, the required workshop version: https://www.python.org/downloads/
-Already have 3.11, 3.13, 3.14 or 3.15? **Keep it installed and add 3.12 alongside it.** You do not need to uninstall another version or change the system-wide default. The commands below explicitly select 3.12.
-- **Windows:** on the first installer screen, tick **"Add python.exe to PATH"**. No admin rights? Choose "Install for me only".
-- **Mac:** use the installer from the same page.
+**Install CPython 3.12.13 using the commands below. Do not choose a release from the generic Python downloads page.** The workshop supports stable 3.12.x, but **3.12.13 is our exact clean-install version**, not 3.12.0 or whichever release the download button suggests.
 
-**Test Python now, before downloading the project.** Open a **new** terminal after installation so it picks up PATH changes: Windows → Start → PowerShell; Mac → Cmd+Space → Terminal.
+**Why does python.org mention a newer version?** Python 3.12 is in its security-fixes-only stage. Newer feature releases can be stable too, but they are not the workshop target. The [official 3.12.13 release notes](https://www.python.org/downloads/release/python-31213/) explain that newer 3.12 releases are source-only; **3.12.10 was the last official Windows/Mac binary installer**, and does not include the later security fixes. You do not need to build Python from source.
 
-**Windows**
+We use [uv](https://docs.astral.sh/uv/guides/install-python/), a third-party tool from Astral, to download a prebuilt CPython 3.12.13 from Astral's `python-build-standalone` project. We pin the installer tool to **uv 0.11.7** too. These are reproducible version choices, not a claim that they will always be the newest releases.
+
+**Keep other Python versions installed.** These commands install tools in your own account, do not require administrator/root access, and do not change PATH, shell profiles, the Windows Python registry, or your default Python. There is **no PATH checkbox to find**. We invoke the workshop tools by their full paths instead.
+
+**Stop if any command fails.** Do not continue using an unversioned `python`, disable certificate verification, or uninstall another Python to work around it. If company policy blocks Astral/GitHub downloads or script execution, contact Gaurav and use [Path B](#path-b--in-the-browser-github-codespaces).
+
+#### Windows: install with PowerShell
+
+Open **Start → PowerShell** (not Command Prompt). Run each block in order. The first two settings apply only to this terminal; they tell the uv installer where to put the tool and not to modify PATH.
+
 ```powershell
-py -3.12 --version
+$env:UV_INSTALL_DIR = "$HOME\.shopkart-tools\bin"
 ```
 
 ```powershell
-py -3.12 -c "print('Python is working')"
+$env:UV_NO_MODIFY_PATH = "1"
 ```
 
-**Mac**
+The following downloads and executes Astral's pinned uv installer. Only run it if your organization's policy permits it.
+
+```powershell
+Invoke-RestMethod https://astral.sh/uv/0.11.7/install.ps1 | Invoke-Expression
+```
+
+```powershell
+& "$HOME\.shopkart-tools\bin\uv.exe" --version
+```
+
+Expect **uv 0.11.7** (additional build details are normal). Install the exact interpreter without executable aliases or Windows launcher registration:
+
+```powershell
+& "$HOME\.shopkart-tools\bin\uv.exe" python install 3.12.13 --no-bin --no-registry
+```
+
+**Test it now, before downloading the project.** These commands select only uv-managed 3.12.13, not an older Python that an existing `py` launcher might find:
+
+```powershell
+& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) --version
+```
+
+```powershell
+& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) -c "import sys, ssl, venv, ensurepip; assert sys.version_info[:3] == (3, 12, 13); print(sys.executable); print(ssl.OPENSSL_VERSION); print('Python is working')"
+```
+
+Expect **Python 3.12.13**, then an absolute executable path inside uv's Python installation directory, an OpenSSL version, and **Python is working**. A plain `python --version` or `py -3.12 --version` may still show your old Python: that is intentional.
+
+#### Mac: install with Terminal
+
+Open **Cmd+Space → Terminal**. These commands work with the usual zsh/bash shells. They use a dedicated tool directory and disable the installer's PATH/profile changes; no Homebrew or `sudo` is required.
+
 ```bash
-python3.12 --version
+uv_installer="$(mktemp)"
+```
+
+Run the following blocks in that same terminal so `uv_installer` still names your temporary file:
+
+```bash
+curl --fail --show-error --silent --location https://astral.sh/uv/0.11.7/install.sh -o "$uv_installer"
+```
+
+The following executes the downloaded Astral installer. Do not run it if the download failed.
+
+```bash
+env UV_INSTALL_DIR="$HOME/.shopkart-tools/bin" UV_NO_MODIFY_PATH=1 sh "$uv_installer"
 ```
 
 ```bash
-python3.12 -c "print('Python is working')"
+rm "$uv_installer"
 ```
 
-Expect **Python 3.12.x**, then **Python is working**. These tests select the base interpreter before a virtual environment exists. If `py` is unavailable, install the Windows Python launcher/install manager using the official Python installation instructions. If 3.12 cannot be found, finish installing it and reopen the terminal; do not substitute an unversioned `python` command. See [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version).
+```bash
+"$HOME/.shopkart-tools/bin/uv" --version
+```
+
+Expect **uv 0.11.7**. Install the exact interpreter without executable aliases:
+
+```bash
+"$HOME/.shopkart-tools/bin/uv" python install 3.12.13 --no-bin
+```
+
+**Test it now, before downloading the project:**
+
+```bash
+"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" --version
+```
+
+```bash
+"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" -c "import sys, ssl, venv, ensurepip; assert sys.version_info[:3] == (3, 12, 13); print(sys.executable); print(ssl.OPENSSL_VERSION); print('Python is working')"
+```
+
+Expect **Python 3.12.13**, then an absolute executable path inside uv's Python installation directory, an OpenSSL version, and **Python is working**. Your system's `python3` and any existing `python3.12` stay unchanged.
+
+**New VS Code terminal later?** The full-path selection commands work there too; they do not depend on an earlier shell variable or PATH update. Follow the platform-specific setup command in step 4.
+
+#### Installation validation status
+
+| Platform | Status |
+|---|---|
+| Windows x64 | **Passed in an isolated workspace:** pinned uv/Python download and install, exact setup command from a path containing spaces, requirements installation, required imports, `pip check`, and repeat setup without changing settings or default Python/PATH/registry |
+| Mac Apple Silicon | CPython 3.12.13 build listed by uv; **native installation/setup validation pending** |
+| Mac Intel | CPython 3.12.13 build listed by uv; **native installation/setup validation pending** |
+
+For native Mac validation, run the commands above, then step 4 and step 6 in fresh VS Code terminals. Check `.venv`'s version, run `python -m pip check`, and repeat setup to verify it reuses the environment. Until someone performs that run on a Mac, these instructions are not Mac-tested.
 
 **Install VS Code too:** download and install [Visual Studio Code](https://code.visualstudio.com/download). Open it, choose **Extensions**, search for **Python**, and install the extension published by **Microsoft**. Python and VS Code are separate installations; step 4 does not install either of them.
 
@@ -78,15 +176,17 @@ This installs the libraries used to run the tutorial: **FastAPI** (API framework
 
 **Windows**
 ```powershell
-py -3.12 setup_env.py
+& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) setup_env.py
 ```
 
 **Mac**
 ```bash
-python3.12 setup_env.py
+"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" setup_env.py
 ```
 
-These commands select an **already installed** Python 3.12; they do not install Python itself. Setup creates a private Python 3.12 environment (`.venv`), installs the libraries from `requirements.txt` **inside it**, and creates your settings file `.env`. It also runs the setup check using **the Python inside `.venv`**. Groq/key checks can fail until you complete step 5; check again in step 6. If library installation stops with an error, **run the same setup command again**: it reuses a compatible environment.
+These commands select the **already installed, uv-managed Python 3.12.13**; they do not install Python itself. If uv or that Python is missing, stop and complete step 1. Setup creates a private Python 3.12 environment (`.venv`), installs the libraries from `requirements.txt` **inside it**, and creates your settings file `.env`. It also runs the setup check using **the Python inside `.venv`**. Groq/key checks can fail until you complete step 5; check again in step 6. If library installation stops with an error, **run the same setup command again**: it reuses a compatible environment.
+
+**Linux/Codespaces with Python 3.12 already provided:** use `python3.12 setup_env.py` instead. Path B prepares this automatically; it does not need the desktop uv installation.
 
 **Already created `.venv` with another Python version?** Setup stops before installing packages and tells you which version it found. It does not convert or delete the environment. Follow [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) to rename it and create a fresh one with 3.12.
 

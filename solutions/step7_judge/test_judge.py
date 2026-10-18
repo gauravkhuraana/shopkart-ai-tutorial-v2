@@ -20,8 +20,6 @@ Finished version (solutions/step7_judge).  Copy it in place:  python ../../check
                    E  Even?              GEval "Coherence"       clear, no self-contradiction?
     + Correct?                           GEval "Correctness"     same answer as our answer key?
 """
-from functools import lru_cache
-
 import httpx
 import pytest
 import yaml
@@ -44,9 +42,8 @@ TRUTHFUL_PASS = 0.7       # T · Hallucination: 1 = no contradictions with the f
 GROUNDED_PASS = 0.7       # U · Faithfulness:  1 = every claim is backed by the policy pages
 
 
-@lru_cache(maxsize=None)
 def ask_bot(question: str) -> dict:
-    """Ask the bot over HTTP, exactly like the chat page does. Cached: each question is asked once per run."""
+    """Ask the bot over HTTP, getting a fresh response on every call."""
     response = httpx.post(f"{config.SHOPKART_URL}/chat",
                           json={"messages": [{"role": "user", "content": question}]}, timeout=180)
     response.raise_for_status()

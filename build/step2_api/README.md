@@ -2,6 +2,20 @@
 
 The 5 Bs: Brain → **Bridge** → Browser → Book → Body
 
+## Table of contents
+
+- [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
+- [Try POST /chat in the browser](#try-post-chat-in-the-browser)
+- [What's in this folder](#whats-in-this-folder)
+- [How `app_simple.py` works](#how-app_simplepy-works)
+- [The 3 new tools: uvicorn, FastAPI, Pydantic](#the-3-new-tools-uvicorn-fastapi-pydantic)
+  - [Pydantic: describe the shape of your data](#pydantic-describe-the-shape-of-your-data)
+  - [FastAPI: turn a Python function into a web endpoint](#fastapi-turn-a-python-function-into-a-web-endpoint)
+  - [uvicorn: the web server that runs your app](#uvicorn-the-web-server-that-runs-your-app)
+- [CORE (everyone) · `app_simple.py`](#core-everyone--app_simplepy)
+- [STRETCH (if you finish early) · experiments in `app.py`](#stretch-if-you-finish-early--experiments-in-apppy)
+- [Stuck?](#stuck)
+
 ## ▶ Copy-paste: run this step
 **Needs:** virtual environment active · internet for Groq (or Ollama running) · this step **is** the server, so the terminal stays busy. Do anything else in a second terminal.
 > Terminal already shows `(.venv)` and you are in the project folder? Skip the first two commands.

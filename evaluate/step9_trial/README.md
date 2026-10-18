@@ -2,6 +2,16 @@
 
 Part 2: Rules → AI judge → Agent → **Judge on trial**
 
+## Table of contents
+
+- [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
+- [What's in this folder](#whats-in-this-folder)
+- [How `trial_simple.py` works](#how-trial_simplepy-works)
+- [CORE (everyone) · `trial_simple.py`](#core-everyone--trial_simplepy)
+- [STRETCH (if you finish early) · `judge_the_judge.py`](#stretch-if-you-finish-early--judge_the_judgepy)
+- [Boss level](#boss-level)
+- [Stuck?](#stuck)
+
 ## ▶ Copy-paste: run this step
 **Needs:** virtual environment active · internet for the judge (Groq, `JUDGE_*` in `.env`) · the bot is **not** needed (we judge fixed answers).
 

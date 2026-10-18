@@ -2,6 +2,17 @@
 
 Part 2: Rules → AI judge → **Agent** → Judge on trial
 
+## Table of contents
+
+- [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
+- [What's in this folder](#whats-in-this-folder)
+- [How `agent_check_simple.py` works](#how-agent_check_simplepy-works)
+  - [DeepEval has ready-made assertions for agents too](#deepeval-has-ready-made-assertions-for-agents-too)
+- [CORE (everyone) · `agent_check_simple.py`](#core-everyone--agent_check_simplepy)
+- [STRETCH (if you finish early) · `test_agents.py`](#stretch-if-you-finish-early--test_agentspy)
+  - [Bonus · the five layers of agent testing (ready-made, bottom of `test_agents.py`)](#bonus--the-five-layers-of-agent-testing-ready-made-bottom-of-test_agentspy)
+- [Stuck?](#stuck)
+
 ## ▶ Copy-paste: run this step
 **Needs:** virtual environment active · **the step 5 bot running (window 2)** · internet for the bot's model. The judge is only used by `test_task_completion` (skip it with `-k "not task_completion"`).
 
