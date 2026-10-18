@@ -16,11 +16,18 @@ Part 2: Rules → AI judge → Agent → **Judge on trial**
 **Needs:** virtual environment active · internet for the judge (Groq, `JUDGE_*` in `.env`) · the bot is **not** needed (we judge fixed answers).
 
 **Windows (PowerShell)**
-Open a terminal and paste this whole block at once. Change the first line to the folder that contains check_setup.py (VS Code's built-in terminal already starts there, so you can delete that line). **The bot is not needed here**: if it is still running from steps 6 to 8, leave it alone and open a NEW terminal for this step
+Open a terminal. **The bot is not needed here**: if it is still running from steps 6 to 8, leave it alone and open a NEW terminal for this step.
+
+**a)** Go to the project folder (the one that contains check_setup.py) and activate the venv. Change the path on the first line to where **you** saved the project. VS Code's built-in terminal already starts in the project folder, so there you can delete the first line:
 
 ```powershell
 cd path\to\shopkart-ai-tutorial-v2
 .venv\Scripts\Activate.ps1
+```
+
+**b)** Go to this step's folder:
+
+```powershell
 cd evaluate\step9_trial
 ```
 
@@ -37,11 +44,18 @@ python judge_the_judge.py --runs 2
 ```
 
 **Mac / Linux**
-Open a terminal and paste this whole block at once. Change the first line to the folder that contains check_setup.py (VS Code's built-in terminal already starts there, so you can delete that line). **The bot is not needed here**: if it is still running from steps 6 to 8, leave it alone and open a NEW terminal for this step
+Open a terminal. **The bot is not needed here**: if it is still running from steps 6 to 8, leave it alone and open a NEW terminal for this step.
+
+**a)** Go to the project folder (the one that contains check_setup.py) and activate the venv. Change the path on the first line to where **you** saved the project. VS Code's built-in terminal already starts in the project folder, so there you can delete the first line:
 
 ```bash
 cd path/to/shopkart-ai-tutorial-v2
 source .venv/bin/activate
+```
+
+**b)** Go to this step's folder:
+
+```bash
 cd evaluate/step9_trial
 ```
 

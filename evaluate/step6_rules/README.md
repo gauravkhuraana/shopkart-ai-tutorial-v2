@@ -15,20 +15,32 @@ Part 2: **Rules** → AI judge → Agent → Judge on trial
 **Needs:** virtual environment active · **the step 5 bot running (window 2)** · internet for the bot's model (Groq). No judge needed in this step.
 
 **Windows (PowerShell)**
-WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running). Paste this whole block at once. Change the first line to the folder that contains check_setup.py (VS Code's built-in terminal already starts there, so you can delete that line)
+WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running).
+
+**a)** Go to the project folder (the one that contains check_setup.py) and activate the venv. Change the path on the first line to where **you** saved the project. VS Code's built-in terminal already starts in the project folder, so there you can delete the first line:
 
 ```powershell
 cd path\to\shopkart-ai-tutorial-v2
 .venv\Scripts\Activate.ps1
+```
+
+**b)** Start the bot:
+
+```powershell
 cd build\step5_agent
 uvicorn app:app --reload
 ```
 
-WINDOW 3: a NEW terminal, for your tests. Paste this whole block at once, with the same first line
+WINDOW 3: a NEW terminal, for your tests. Do **a)** again in it (project folder and venv):
 
 ```powershell
 cd path\to\shopkart-ai-tutorial-v2
 .venv\Scripts\Activate.ps1
+```
+
+then go to this step's folder:
+
+```powershell
 cd evaluate\step6_rules
 ```
 
@@ -45,20 +57,32 @@ python -m pytest test_rules.py -v
 ```
 
 **Mac / Linux**
-WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running). Paste this whole block at once. Change the first line to the folder that contains check_setup.py (VS Code's built-in terminal already starts there, so you can delete that line)
+WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running).
+
+**a)** Go to the project folder (the one that contains check_setup.py) and activate the venv. Change the path on the first line to where **you** saved the project. VS Code's built-in terminal already starts in the project folder, so there you can delete the first line:
 
 ```bash
 cd path/to/shopkart-ai-tutorial-v2
 source .venv/bin/activate
+```
+
+**b)** Start the bot:
+
+```bash
 cd build/step5_agent
 uvicorn app:app --reload
 ```
 
-WINDOW 3: a NEW terminal, for your tests. Paste this whole block at once, with the same first line
+WINDOW 3: a NEW terminal, for your tests. Do **a)** again in it (project folder and venv):
 
 ```bash
 cd path/to/shopkart-ai-tutorial-v2
 source .venv/bin/activate
+```
+
+then go to this step's folder:
+
+```bash
 cd evaluate/step6_rules
 ```
 

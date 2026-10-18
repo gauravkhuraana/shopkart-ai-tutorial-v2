@@ -72,7 +72,7 @@ This browser fallback uses **Groq**, not Ollama on your own laptop. **Save your 
   cd ../..
   ```
 
-- Each code block usually contains one command. Read the explanation beside it before copying the next command. The few "paste this whole block" starter blocks (for example "Before you start" in Part 2) hold several lines on purpose: paste them all at once.
+- Each code block usually contains one command. Read the explanation beside it before copying the next command. A few starter blocks hold two lines on purpose (for example "go to the project folder" and "activate the venv"): paste both lines together.
 - On Mac/Linux, setup and creating the venv use **`python3.12`**. Once `(.venv)` is active, plain `python` uses that environment's 3.12.
 
 ---
@@ -760,11 +760,18 @@ uvicorn app:app --reload
 
 The tests need the **full app** running. If `uvicorn app:app --reload` is still running from step 5, leave it running and go straight to section 2 below.
 
-Otherwise, open a terminal and paste this whole block at once (change the first line to your own project folder; VS Code's built-in terminal already starts there, so you can delete that line; in Codespaces, it already starts in the workspace folder):
+Otherwise, open a terminal and do these two steps.
+
+**a)** Go to your project folder and activate the venv. **Change the path on the first line to where YOU saved the project** (it is the folder that contains `check_setup.py`). VS Code's built-in terminal already starts in the project folder (in Codespaces too), so there you can delete the first line:
 
 ```bash
 cd ~/Downloads/shopkart-ai-tutorial-v2
 source .venv/bin/activate
+```
+
+**b)** Go to the step 5 folder and start the full app:
+
+```bash
 cd build/step5_agent
 uvicorn app:app --reload
 ```
@@ -773,7 +780,7 @@ uvicorn app:app --reload
 
 ### 2 · Open a new terminal for the tests
 
-In VS Code, choose **Terminal → New Terminal**. This separate terminal is **window 3**. Paste this whole block at once, with the same first line as above. The venv must be activated **in this new terminal too**:
+In VS Code, choose **Terminal → New Terminal**. This separate terminal is **window 3**. Do step **a)** above again in it (change the path on the first line to your own project folder; delete that line if the terminal already starts there). The venv must be activated **in this new terminal too**:
 
 ```bash
 cd ~/Downloads/shopkart-ai-tutorial-v2
@@ -860,16 +867,21 @@ cd ../..
 ## Step 7 · AI tests AI: the judge
 A bigger model marks the answer with a rubric (DeepEval). Score 0 to 1, a pass mark, and the judge's reason. Needs internet for the judge.
 
-**Before you start:** the step 5 bot must be running in its own terminal (window 2). Not running anymore? Open a terminal, paste this whole block, and leave it open (change the first line to your project folder):
+**Before you start:** the step 5 bot must be running in its own terminal (window 2). Not running anymore? Open a terminal and start it in two steps. **a)** Go to your project folder and activate the venv (**change the path on the first line to where YOU saved the project**; delete that line if VS Code's built-in terminal already starts there):
 
 ```bash
 cd ~/Downloads/shopkart-ai-tutorial-v2
 source .venv/bin/activate
+```
+
+**b)** Start the bot, and leave this terminal open:
+
+```bash
 cd build/step5_agent
 uvicorn app:app --reload
 ```
 
-Then open a **new terminal** for this step (window 3) and paste this whole block:
+Then open a **new terminal** for this step (window 3) and do **a)** again in it:
 
 ```bash
 cd ~/Downloads/shopkart-ai-tutorial-v2
@@ -931,16 +943,21 @@ cd ../..
 ## Step 8 · Test the agent
 Check the journey, not just the landing: which tools ran, in which order, and the amount. Plus DeepEval's ready-made agent metric (`ToolCorrectnessMetric`) and a menu of the others at the bottom of the file.
 
-**Before you start:** the step 5 bot must be running in its own terminal (window 2). Not running anymore? Open a terminal, paste this whole block, and leave it open (change the first line to your project folder):
+**Before you start:** the step 5 bot must be running in its own terminal (window 2). Not running anymore? Open a terminal and start it in two steps. **a)** Go to your project folder and activate the venv (**change the path on the first line to where YOU saved the project**; delete that line if VS Code's built-in terminal already starts there):
 
 ```bash
 cd ~/Downloads/shopkart-ai-tutorial-v2
 source .venv/bin/activate
+```
+
+**b)** Start the bot, and leave this terminal open:
+
+```bash
 cd build/step5_agent
 uvicorn app:app --reload
 ```
 
-Then open a **new terminal** for this step (window 3) and paste this whole block:
+Then open a **new terminal** for this step (window 3) and do **a)** again in it:
 
 ```bash
 cd ~/Downloads/shopkart-ai-tutorial-v2
@@ -1022,7 +1039,7 @@ cd ../..
 ## Step 9 · Put the judge on trial
 The judge is AI too, so it can be wrong. Put a **CAP** on it: **C**onsistent? (same answer scored 3 times) · **A**grees with you? · **P**rice (time and calls). The bot is not needed.
 
-**Before you start:** open a **new terminal** (you can leave the bot running in window 2, or stop it with Ctrl+C) and paste this whole block (change the first line to your project folder):
+**Before you start:** open a **new terminal** (you can leave the bot running in window 2, or stop it with Ctrl+C). Go to your project folder and activate the venv (**change the path on the first line to where YOU saved the project**; delete that line if VS Code's built-in terminal already starts there):
 
 ```bash
 cd ~/Downloads/shopkart-ai-tutorial-v2
