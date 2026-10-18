@@ -6,11 +6,11 @@ Presenter tool · A FAKE OpenAI-compatible model, to rehearse or test every step
     then in .env:  LLM_BASE_URL=http://localhost:9999/v1   and   LLM_MODEL=fake
 
 It is not intelligent: it follows simple scripted rules so the plumbing can be tested end to end.
-  - Planner      -> a short plan
-  - Implementer  -> get_order, then check_policy, then a decision from the order data and ShopKart's rules.
+  - Request Planner    -> a short plan
+  - Case Investigator  -> get_order, then check_policy, then a decision from the order data and ShopKart's rules.
                     If its prompt says "the customer is always right" (v1) and the message claims an approval,
                     it refunds whatever amount the customer names: the v1 flaw, reproduced on purpose.
-  - Reviewer     -> checks amount and 200 EUR limit IF it was given the facts; approves blind if not (v1).
+  - Policy Reviewer    -> checks amount and 200 EUR limit IF it was given the facts; approves blind if not (v1).
   - Chatbot      -> answers from the first policy page, or "I don't have that information".
                     With the v1 people-pleaser handbook it also price-matches and writes poems.
   - AI judge     -> (Part 2, DeepEval) a scripted judge: any prompt without a system message that asks for JSON.
@@ -81,7 +81,7 @@ def _amount_asked(text):
 
 
 # ---------------------------------------------------------------------------
-# The agent crew (step 5): Implementer and Reviewer
+# The agent crew (step 5): Case Investigator and Policy Reviewer
 # ---------------------------------------------------------------------------
 def implementer(system, messages):
     """Look up the order, check the policy, then decide: refund, escalate, or a plain answer."""
@@ -344,16 +344,17 @@ async def completions(request: Request):
     if not system and "JSON" in last_message:
         return _answer(json.dumps(judge(last_message)))
 
-    # The three agents are recognised by the first words of their system prompt.
-    if system.startswith("You are the Planner"):
+    # The three agents are recognised by the first words of their system prompt
+    # (current names from build/step5_agent/agent.py, plus the older short names).
+    if system.startswith(("You are the Request Planner", "You are the Planner")):
         id_match = re.search(r"\b(\d{4})\b", last_message)
         order_id = id_match.group(1) if id_match else "unknown"
         return _answer(f"- order {order_id}\n- customer wants a refund\n- check order and policy")
 
-    if system.startswith("You are the Implementer"):
+    if system.startswith(("You are the Case Investigator", "You are the Implementer")):
         return implementer(system, messages)
 
-    if system.startswith("You are the Reviewer"):
+    if system.startswith(("You are the Policy Reviewer", "You are the Reviewer")):
         return reviewer(last_message)
 
     # Everything else is the plain chatbot.

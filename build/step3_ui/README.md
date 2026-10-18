@@ -155,7 +155,7 @@ Open **http://localhost:8000**. After editing the HTML file, just refresh the br
 | 1 | page → API | `fetch("/chat", ...)`: POST the request JSON and return the JSON answer |
 | 2 | API → page | Show only `data.reply`, not the raw JSON |
 
-With the simple server running, open `build/step3_ui/index_simple.html` in VS Code. Find **TODO 1** and **TODO 2** near the start of `<script>`. The solutions are already written: uncomment only the code between each `BEGIN SOLUTION` and `END SOLUTION` marker using **Ctrl+/** (Windows/Linux) or **Cmd+/** (Mac). Leave the marker lines commented and keep the placeholders; you do not need to rewrite the functions.
+With the simple server running, open `build/step3_ui/index_simple.html` in VS Code. Find **TODO 1** and **TODO 2** near the start of `<script>`. The solutions are already written: uncomment only the code between each `BEGIN SOLUTION` and `END SOLUTION` marker using **Ctrl+/** (Windows/Linux) or **Cmd+/** (Mac) (or the menu **Edit → Toggle Line Comment**, which works on every keyboard layout). Leave the marker lines commented and keep the placeholders; you do not need to rewrite the functions.
 
 The uncommented code sends the request and displays the reply, like this:
 

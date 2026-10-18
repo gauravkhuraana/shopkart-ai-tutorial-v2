@@ -302,8 +302,8 @@ def test_full_trial_scores_both_judges_and_handles_failed_runs():
     ):
         module["main"]()
         assert len(journal["measurements"]) == 30
-        assert "LOCAL judge" in output.getvalue()
-        assert "HOSTED judge" in output.getvalue()
+        assert "SMALL judge" in output.getvalue()
+        assert "BIG judge" in output.getvalue()
 
     with evaluation_module("step9_trial/judge_the_judge.py") as (
         module,

@@ -157,7 +157,7 @@ python retrieval.py "Do you price-match?"
 
 ## CORE (everyone) · your TODOs in `app_simple.py` (or `app.py`)
 
-Each answer is already written between `BEGIN SOLUTION` and `END SOLUTION`. Uncomment only the code inside each block with **Ctrl+/** (Windows/Linux) or **Cmd+/** (Mac). Leave the markers commented and keep the placeholder assignments/returns: the uncommented code overrides them or returns first.
+Each answer is already written between `BEGIN SOLUTION` and `END SOLUTION`. Uncomment only the code inside each block with **Ctrl+/** (Windows/Linux) or **Cmd+/** (Mac) (or the menu **Edit → Toggle Line Comment**, which works on every keyboard layout). Leave the markers commented and keep the placeholder assignments/returns: the uncommented code overrides them or returns first.
 
 | TODO | What you do |
 |---|---|

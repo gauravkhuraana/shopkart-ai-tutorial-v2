@@ -23,15 +23,18 @@ from fastapi.responses import FileResponse
 from openai import OpenAI
 from pydantic import BaseModel
 
-load_dotenv()   # reads the .env file in the main project folder
+load_dotenv()  # reads the .env file in the main project folder
 
 
 # 1. Connect to the model (exactly like step 1)
 
-client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=os.getenv("LLM_API_KEY"))   # Groq
+client = OpenAI(
+    base_url="https://api.groq.com/openai/v1",
+    api_key=os.getenv("LLM_API_KEY"),
+)  # Groq
 # client = OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")                       # Ollama
 
-MODEL = os.getenv("LLM_MODEL")     # Groq: the model name comes from .env
+MODEL = os.getenv("LLM_MODEL")  # Groq: the model name comes from .env
 # MODEL = "qwen3:4b"               # Ollama
 
 
@@ -43,9 +46,10 @@ app = FastAPI()
 # 3. Describe the JSON this API accepts: the whole conversation so far.
 #    Every message must have a role and a content, or FastAPI says no (422) before our code runs.
 
+
 class Message(BaseModel):
-    role: str        # "user" (the customer) or "assistant" (the bot)
-    content: str     # the text
+    role: str  # "user" (the customer) or "assistant" (the bot)
+    content: str  # the text
 
 
 class ChatRequest(BaseModel):
@@ -54,9 +58,13 @@ class ChatRequest(BaseModel):
 
 # 4. The endpoint: POST /chat. Job description + conversation in, {"reply": "..."} out.
 
+
 @app.post("/chat")
 def chat(req: ChatRequest):
-    conversation = [m.model_dump() for m in req.messages]   # turn each Message back into a plain dict
+    # Convert each validated Message object into a plain dictionary for the model.
+    conversation = []
+    for message in req.messages:
+        conversation.append(message.model_dump())
 
     job_description = {
         "role": "system",
@@ -64,13 +72,16 @@ def chat(req: ChatRequest):
     }
     messages = [job_description] + conversation
 
-    response = client.chat.completions.create(model=MODEL, messages=messages)
+    response = client.chat.completions.create(
+        model=MODEL,
+        messages=messages,
+    )
 
-    return response.choices[0].message.content
-    #return {"reply": response.choices[0].message.content}
+    return {"reply": response.choices[0].message.content}
 
 
 # 5. NEW in step 3: GET / hands the browser the chat page.
+
 
 @app.get("/")
 def home():

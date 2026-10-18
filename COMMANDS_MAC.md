@@ -33,13 +33,10 @@ Windows user? Use [COMMANDS_WINDOWS.md](COMMANDS_WINDOWS.md). Stuck? [TROUBLESHO
     - [Try these messages in the chat UI](#try-these-messages-in-the-chat-ui)
   - [Step 4 · Ground it](#step-4--ground-it)
   - [Step 5 · Let it act](#step-5--let-it-act)
-    - [Show the class: why is this an agent?](#show-the-class-why-is-this-an-agent)
-    - [Try two ownership-check demos](#try-two-ownership-check-demos)
-    - [Show the class: what does the full LLM response look like?](#show-the-class-what-does-the-full-llm-response-look-like)
-    - [Run the chat UI or the full crew](#run-the-chat-ui-or-the-full-crew)
+    - [Chat with the agent in the browser](#chat-with-the-agent-in-the-browser)
+    - [Run the full crew](#run-the-full-crew)
 - [Part 2 · TEST the bot](#part-2--test-the-bot)
-  - [1 · Start the app again if you stopped it after step 5](#1--start-the-app-again-if-you-stopped-it-after-step-5)
-  - [2 · Open a new terminal for the tests](#2--open-a-new-terminal-for-the-tests)
+  - [Before step 6: two terminals and the finished crew](#before-step-6-two-terminals-and-the-finished-crew)
   - [Step 6 · Rules first](#step-6--rules-first)
     - [View the scoreboard after your first pytest run](#view-the-scoreboard-after-your-first-pytest-run)
   - [Step 7 · AI tests AI: the judge](#step-7--ai-tests-ai-the-judge)
@@ -72,7 +69,8 @@ This browser fallback uses **Groq**, not Ollama on your own laptop. **Save your 
   cd ../..
   ```
 
-- Each code block usually contains one command. Read the explanation beside it before copying the next command. A few starter blocks hold two lines on purpose (for example "go to the project folder" and "activate the venv"): paste both lines together.
+- Each code block contains one command. Read the explanation beside it before copying the next command.
+- **Uncommenting code** (the exercises): select the lines and press **Cmd+/** (Mac) or **Ctrl+/** (Linux/Codespaces). On a keyboard where that shortcut does nothing (for example Belgian AZERTY or German QWERTZ), use the menu **Edit → Toggle Line Comment** instead.
 - On Mac/Linux, setup and creating the venv use **`python3.12`**. Once `(.venv)` is active, plain `python` uses that environment's 3.12.
 
 ---
@@ -189,7 +187,7 @@ Ctrl+C stops it
 Port 8000 busy ("address already in use")? A port is a numbered door, and only one program can use it at a time. The bot and the setup check both use port **8000**, so free that one (no output means it worked; only Codespaces users with a busy scoreboard server on port 8080 should use `8080` instead):
 
 ```bash
-lsof -ti :8000 | xargs kill
+kill $(lsof -ti :8000) 2>/dev/null
 ```
 
 or use another port, and tell the tests (window 3):
@@ -201,10 +199,10 @@ uvicorn app:app --reload --port 8001
 For the **simple app** in steps 2 to 5, run this instead from the current step's folder:
 
 ```bash
-uvicorn app_simple:app --reload --host 0.0.0.0 --port 8001
+uvicorn app_simple:app --reload --port 8001
 ```
 
-Open http://localhost:8001 (`/docs` for step 2; `/` for the chat UI in steps 3 to 5). **Codespaces:** open forwarded port **8001** from the **Ports** panel, not the old port 8000 tab. If switching from the fancy UI to the simple UI, hard-refresh the page (Cmd+Shift+R on Mac; Ctrl+Shift+R on Windows/Linux).
+Open http://localhost:8001 (`/docs` for step 2; `/` for the chat UI in steps 3 to 5). **Codespaces:** open forwarded port **8001** from the **Ports** panel, not the old port 8000 tab. If switching from the full UI to the simple UI, hard-refresh the page (Cmd+Shift+R on Mac; Ctrl+Shift+R on Windows/Linux).
 
 If running tests against either server on port 8001, set this in window 3:
 
@@ -268,7 +266,9 @@ a pretend model and a pretend judge. Not smart, but the plumbing works
 uvicorn fake_llm:app --port 9999
 ```
 
-then, in .env:  LLM_BASE_URL=http://localhost:9999/v1   LLM_MODEL=fake   JUDGE_BASE_URL=http://localhost:9999/v1   JUDGE_MODEL=fake
+Leave it running. Then, in `.env`, set: `LLM_BASE_URL=http://localhost:9999/v1`, `LLM_MODEL=fake`, `JUDGE_BASE_URL=http://localhost:9999/v1` and `JUDGE_MODEL=fake` (the keys can stay as they are).
+
+This reaches the full versions from step 4 on (`app.py`, `agent.py`) and all of Part 2. Steps 1 to 3 and the simple files (`app_simple.py`, `agent_simple.py`) have the Groq address written in the file itself: switch it there, as described in [FAQ #6](TROUBLESHOOTING.md#6--switching-between-groq-and-ollama).
 
 ### Ollama (only if you chose Path A)
 Ollama is a small AI that runs on your own laptop. Install [Ollama](https://ollama.com/download), launch the app, and open a new terminal. Do this before the event for a possible demo; Groq stays the default. Using Path B (browser)? Skip this.
@@ -426,7 +426,7 @@ uvicorn app_simple:app --reload
 
 Leave the server running. In VS Code Explorer, open `build/step3_ui/index_simple.html` and find **TODO 1** and **TODO 2** near the start of the `<script>` section.
 
-**TODO 1:** uncomment only the code between `BEGIN SOLUTION` and `END SOLUTION` inside `sendToApi` using **Cmd+/** (Mac) or **Ctrl+/** (Linux/Codespaces). Keep the marker lines commented. No placeholder deletion is needed: the solution returns before the fallback. The working code looks like this:
+**TODO 1:** uncomment only the code between `BEGIN SOLUTION` and `END SOLUTION` inside `sendToApi` using **Cmd+/** (Mac) or **Ctrl+/** (Linux/Codespaces) (or the menu **Edit → Toggle Line Comment**, which works on every keyboard layout). Keep the marker lines commented. No placeholder deletion is needed: the solution returns before the fallback. The working code looks like this:
 
 ```javascript
 async function sendToApi(request) {
@@ -522,7 +522,12 @@ cd ../..
 ## Step 5 · Let it act
 The bot gets tools (look up an order, issue a refund, escalate). Every step is recorded: the flight recorder that Part 2 tests.
 
-**First complete the exercise:** in `agent_simple.py`, uncomment only the code inside its three `BEGIN SOLUTION` / `END SOLUTION` blocks using **Cmd+/** (Mac) or **Ctrl+/** (Linux/Codespaces). Keep the indentation, marker comments and placeholders. If you use the full crew, also complete the three blocks in `agent.py`. The hard-rule and circuit-breaker behavior described below requires these blocks to be uncommented. Refunds are simulated.
+**First complete the exercises.** Uncomment only the code between `BEGIN SOLUTION` and `END SOLUTION` using **Cmd+/** (Mac) or **Ctrl+/** (Linux/Codespaces), or the menu **Edit → Toggle Line Comment**. Keep the marker lines, the indentation and the placeholders. Refunds are simulated: no real money moves.
+
+| File | Blocks | Why |
+|---|---|---|
+| `agent_simple.py` | 3 | the single agent you run below |
+| `agent.py` | 3 | the full crew. **Part 2 tests this file**, so do it too. Short on time? Part 2 starts with a one-line catch-up |
 
 ```bash
 cd build/step5_agent
@@ -546,205 +551,36 @@ all 10 seeded orders
 python agent_simple.py all
 ```
 
-### Show the class: why is this an agent?
+### Chat with the agent in the browser
 
-**Not just because it has tool calls.** Tool calling is a capability. This file is agentic because the model controls a goal-directed loop:
-
-**Choose -> act -> observe -> choose again.**
-
-The goal is to handle a refund request. Our code provides the tools and boundaries, but the model chooses the next step based on what it learns.
-
-For example:
-
-```text
-Customer: "Refund order 1043."
-              |
-              v
-Model chooses: get_order("1043")
-              |
-              v
-Python executes it and returns the order details
-              |
-              v
-Model chooses: read_policy("damaged items")
-              |
-              v
-Python returns the policy
-              |
-              v
-Model chooses: issue_refund("1043", 49)
-              |
-              v
-Python checks the hard rule and runs the simulated refund
-```
-
-This sequence is an **example, not a hardcoded workflow**. The prompt guides the model to look up the order and policy first; the model generates the actual tool requests. A different order or policy can lead to a refusal or a human handover instead.
-
-| System | Who chooses the next step? |
-|---|---|
-| Chatbot without tools | The model generates an answer, without taking external actions. |
-| Fixed workflow using an LLM | The developer predefines the sequence; the model handles particular tasks within it. |
-| Tool-calling agent | The model chooses tools and subsequent steps using their results, within developer-defined limits. |
-
-What makes **this file** an agent?
-
-- **Goal:** handle the customer's refund request.
-- **Decisions:** the model chooses which tools to request.
-- **Feedback:** tool results go back into its conversation.
-- **Iteration:** it can decide again using those results.
-- **Bounded autonomy:** Python enforces the EUR 200 rule and the six-turn limit.
-
-**A single tool call does not automatically make something an agent.** The decision-making loop is what makes this implementation agentic. An agent does not need unrestricted freedom, multiple agents, LangGraph or long-term memory.
-
-**Presenter line:** "Tool calling gives the model hands. The agent loop lets it decide what to do next after seeing what happened."
-
-This is a **small teaching agent**: its refund tool simulates an action rather than moving real money.
-
-### Try two ownership-check demos
-
-Open the simple chat UI and tick **Agent mode**. Try each example in a fresh page with no previous conversation. These are demonstrations of a gap in the teaching agent, not examples of safe refund handling. No real money moves.
-
-**1. A visible name mismatch**
-
-Type:
-
-```text
-i am chloe and my order number is 1050 can you make a refund
-```
-
-Order **1050 belongs to Ben**, not Chloe. It is unused running shoes costing **EUR 89**, delivered **20 days ago**.
-
-- **What you may see:** the agent looks up the order, reads the policy and reports a refund. This was observed in our demo, but model responses can vary.
-- **What this exposes:** refund eligibility is not the same as permission to request it. The model can see the name mismatch, but may overlook it; Python currently does not block it.
-- **Safer behavior:** flag the mismatch, require ownership verification and do not refund before that check succeeds.
-
-**2. A matching name is still not proof**
-
-Type:
-
-```text
-i am ben and my order number is 1050 can you make a refund
-```
-
-You have only changed the name in your message. You have not signed in or proved that you are Ben.
-
-- **What you may see:** the agent reports a refund because the claimed name matches and the order appears eligible.
-- **What this exposes:** even if the model always compared names correctly, anyone could type the owner's name. A chat message is not authentication.
-- **Safer behavior:** verify the signed-in customer's trusted ID against the order's owner in Python, before returning private order details or allowing a refund.
-
-**Can the model catch example 1?** Yes. After the lookup, it sees both "I am Chloe" and the order's customer, "Ben". A prompt telling it to check names can help it flag this inconsistency, but it is not a reliable authorization boundary and cannot solve example 2.
-
-**Presenter line:** "The model can spot a suspicious request. The application must enforce who is allowed to act."
-
-### Show the class: what does the full LLM response look like?
-
-In [agent_simple.py](build/step5_agent/agent_simple.py), find this call inside `run_agent()`:
-
-```python
-response = client.chat.completions.create(
-    model=MODEL,
-    messages=messages,
-    tools=TOOLS,
-    temperature=0,
-)
-```
-
-`response` is an SDK object, not just the answer text. It contains the model's message, any tool requests, and information about token usage.
-
-To show the **actual response** during the demo, temporarily add this immediately after the call, before `answer = response.choices[0].message`:
-
-```python
-print(response.model_dump_json(indent=2))
-```
-
-Run `python agent_simple.py 1043` again. It prints one response for **each turn** of the loop. Remove the print statement after the demo if you only want the usual flight recorder output.
-
-**Illustrative full response:** the model asks our code to look up order 1043. This is a sample, not a captured Groq response. The model name, IDs, timestamp and token counts are examples; your provider may include additional fields.
-
-```json
-{
-  "id": "chatcmpl-example-001",
-  "object": "chat.completion",
-  "created": 1792152000,
-  "model": "example-model",
-  "choices": [
-    {
-      "index": 0,
-      "message": {
-        "role": "assistant",
-        "content": null,
-        "refusal": null,
-        "tool_calls": [
-          {
-            "id": "call_example_001",
-            "type": "function",
-            "function": {
-              "name": "get_order",
-              "arguments": "{\"order_id\":\"1043\"}"
-            }
-          }
-        ]
-      },
-      "finish_reason": "tool_calls",
-      "logprobs": null
-    }
-  ],
-  "usage": {
-    "prompt_tokens": 650,
-    "completion_tokens": 25,
-    "total_tokens": 675
-  },
-  "system_fingerprint": null
-}
-```
-
-Read it from the outside in:
-
-| Field | In plain English |
-|---|---|
-| `id`, `object`, `created`, `model` | Information about this response: its ID, type, creation time and model. |
-| `choices[0]` | The first answer option. Python lists start at **0**. |
-| `choices[0].message` | The assistant message. This is what our code stores in `answer`. |
-| `message.content` | The customer-facing text, if any. Here it is `null` because the model is requesting a tool instead. |
-| `message.tool_calls` | The tools the model wants **our Python code** to run. There can be more than one request. |
-| `function.name` | The requested tool: here, `get_order`. |
-| `function.arguments` | A **string containing JSON**, not a Python dictionary yet. The backslashes escape quotation marks inside the string. |
-| `finish_reason` | `tool_calls` means this turn ended with a tool request. A normal completed text reply usually has `stop`. |
-| `usage` | Input tokens, output tokens and their total. This is usage information, not the answer. |
-
-These lines in the agent unpack the response:
-
-```python
-answer = response.choices[0].message
-
-for call in answer.tool_calls:
-    name = call.function.name
-    args = json.loads(call.function.arguments)
-```
-
-For this example, `name` becomes `"get_order"` and `args` becomes the Python dictionary `{"order_id": "1043"}`.
-
-**Nothing has been looked up yet.** The model only requested it. Our code runs the tool and sends its result back in the next model request. Likewise, requesting `issue_refund` does not itself move money: `take_action()` checks our hard rule first.
-
-If the model answers in words instead, `answer.content` contains the text and `answer.tool_calls` is absent or empty. Our `if not answer.tool_calls:` branch handles that case.
-
-### Run the chat UI or the full crew
-
-open http://localhost:8000 and tick "Agent mode"
+Start the simple chat app, open http://localhost:8000 and tick **Agent mode**. **Codespaces:** open forwarded port **8000** from the **Ports** panel.
 
 ```bash
 uvicorn app_simple:app --reload
 ```
 
-Ctrl+C to stop, then the full crew (Planner > Implementer > Reviewer):
+Type `Refund my damaged headphones from order 1043.` and watch the steps appear under the answer.
 
-also: 2001, all, --graph
+**Ownership demo.** Open a fresh page for each message:
+
+| Type this | What it shows |
+|---|---|
+| `i am chloe and my order number is 1050 can you make a refund` | Order 1050 belongs to **Ben**. The agent may still refund: the model *can* spot the mismatch, but nothing in Python stops it. |
+| `i am ben and my order number is 1050 can you make a refund` | Typing the owner's name is not proof. A real shop checks the signed-in customer's ID **in code** before it acts. |
+
+The model can spot a suspicious request. The application must enforce who is allowed to act.
+
+Curious why this counts as an agent, or what the raw model response looks like? See [Under the hood in the Step 5 README](build/step5_agent/README.md#under-the-hood-for-the-curious).
+
+### Run the full crew
+
+Press **Ctrl+C** to stop the simple app. Then run the full crew (Request Planner > Case Investigator > Policy Reviewer). Also try `2001`, `all` and `--graph`:
 
 ```bash
 python agent.py 1043
 ```
 
-LEAVE THIS RUNNING. Steps 6 to 8 test this bot
+Start the full bot. **Leave this running:** steps 6 to 8 test this bot.
 
 ```bash
 uvicorn app:app --reload
@@ -756,38 +592,43 @@ uvicorn app:app --reload
 
 # Part 2 · TEST the bot
 
-### 1 · Start the app again if you stopped it after step 5
+### Before step 6: two terminals and the finished crew
 
-The tests need the **full app** running. If `uvicorn app:app --reload` is still running from step 5, leave it running and go straight to section 2 below.
-
-Otherwise, open a terminal and do these two steps.
-
-**a)** Go to your project folder and activate the venv. **Change the path on the first line to where YOU saved the project** (it is the folder that contains `check_setup.py`). VS Code's built-in terminal already starts in the project folder (in Codespaces too), so there you can delete the first line:
+**Window 2 · the bot.** Is `uvicorn app:app --reload` from step 5 still running? Leave it. Otherwise open a terminal in the project folder (the one with `check_setup.py`), activate the venv and start it:
 
 ```bash
-cd ~/Downloads/shopkart-ai-tutorial-v2
 source .venv/bin/activate
 ```
-
-**b)** Go to the step 5 folder and start the full app:
 
 ```bash
 cd build/step5_agent
+```
+
+```bash
 uvicorn app:app --reload
 ```
 
-**Leave this terminal open and the app running.** This is the bot terminal (**window 2**); do not type test commands here.
+Leave this terminal open and do not type test commands in it.
 
-### 2 · Open a new terminal for the tests
-
-In VS Code, choose **Terminal → New Terminal**. This separate terminal is **window 3**. Do step **a)** above again in it (change the path on the first line to your own project folder; delete that line if the terminal already starts there). The venv must be activated **in this new terminal too**:
+**Window 3 · the tests.** In VS Code choose **Terminal → New Terminal** (it opens in the project folder) and activate the venv there too. You should see **`(.venv)`**:
 
 ```bash
-cd ~/Downloads/shopkart-ai-tutorial-v2
 source .venv/bin/activate
 ```
 
-You should see **`(.venv)`**. Run the step 6 commands below in this test terminal, while the app keeps running in the other terminal. Repeat this project-folder and activation setup whenever you open a new terminal for Part 2.
+Using a terminal outside VS Code? First go to your project folder (change the path to yours):
+
+```bash
+cd ~/Downloads/shopkart-ai-tutorial-v2
+```
+
+**Make sure the crew is finished.** Part 2 tests the full crew in `build/step5_agent/agent.py`. Did you skip its three blocks in step 5, or are you unsure? Run this in window 3, from the project folder. Your own files are kept as `.mine`, and the running bot reloads by itself:
+
+```bash
+python checkpoint.py step5
+```
+
+Window 3 stays your test terminal for steps 6 to 9.
 
 ## Step 6 · Rules first
 Plain Python rules: words the answer must say or must never say. No AI, free, instant.
@@ -867,28 +708,7 @@ cd ../..
 ## Step 7 · AI tests AI: the judge
 A bigger model marks the answer with a rubric (DeepEval). Score 0 to 1, a pass mark, and the judge's reason. Needs internet for the judge.
 
-**Before you start:** the step 5 bot must be running in its own terminal (window 2). Not running anymore? Open a terminal and start it in two steps. **a)** Go to your project folder and activate the venv (**change the path on the first line to where YOU saved the project**; delete that line if VS Code's built-in terminal already starts there):
-
-```bash
-cd ~/Downloads/shopkart-ai-tutorial-v2
-source .venv/bin/activate
-```
-
-**b)** Start the bot, and leave this terminal open:
-
-```bash
-cd build/step5_agent
-uvicorn app:app --reload
-```
-
-Then open a **new terminal** for this step (window 3) and do **a)** again in it:
-
-```bash
-cd ~/Downloads/shopkart-ai-tutorial-v2
-source .venv/bin/activate
-```
-
-Now run the step 7 commands in window 3:
+**Before you start:** the step 5 bot is running in window 2, and window 3 shows `(.venv)`. Not sure? Repeat [Before step 6](#before-step-6-two-terminals-and-the-finished-crew).
 
 ```bash
 cd evaluate/step7_judge
@@ -943,28 +763,7 @@ cd ../..
 ## Step 8 · Test the agent
 Check the journey, not just the landing: which tools ran, in which order, and the amount. Plus DeepEval's ready-made agent metric (`ToolCorrectnessMetric`) and a menu of the others at the bottom of the file.
 
-**Before you start:** the step 5 bot must be running in its own terminal (window 2). Not running anymore? Open a terminal and start it in two steps. **a)** Go to your project folder and activate the venv (**change the path on the first line to where YOU saved the project**; delete that line if VS Code's built-in terminal already starts there):
-
-```bash
-cd ~/Downloads/shopkart-ai-tutorial-v2
-source .venv/bin/activate
-```
-
-**b)** Start the bot, and leave this terminal open:
-
-```bash
-cd build/step5_agent
-uvicorn app:app --reload
-```
-
-Then open a **new terminal** for this step (window 3) and do **a)** again in it:
-
-```bash
-cd ~/Downloads/shopkart-ai-tutorial-v2
-source .venv/bin/activate
-```
-
-Now run the step 8 commands in window 3:
+**Before you start:** the step 5 bot is running in window 2, and window 3 shows `(.venv)`. Not sure? Repeat [Before step 6](#before-step-6-two-terminals-and-the-finished-crew).
 
 ```bash
 cd evaluate/step8_agent
@@ -1039,14 +838,7 @@ cd ../..
 ## Step 9 · Put the judge on trial
 The judge is AI too, so it can be wrong. Put a **CAP** on it: **C**onsistent? (same answer scored 3 times) · **A**grees with you? · **P**rice (time and calls). The bot is not needed.
 
-**Before you start:** open a **new terminal** (you can leave the bot running in window 2, or stop it with Ctrl+C). Go to your project folder and activate the venv (**change the path on the first line to where YOU saved the project**; delete that line if VS Code's built-in terminal already starts there):
-
-```bash
-cd ~/Downloads/shopkart-ai-tutorial-v2
-source .venv/bin/activate
-```
-
-Now run the step 9 commands in that terminal:
+**Before you start:** the bot is not needed (leave it running or stop it with Ctrl+C). Use window 3 with `(.venv)` active, from the project folder.
 
 ```bash
 cd evaluate/step9_trial
@@ -1062,7 +854,7 @@ python trial_simple.py
 
 For the stretch, FIRST score the 5 answers in my_scores.yaml yourself, then:
 
-both judges (small local vs big hosted) against YOUR scores. `--runs 2` = score each answer 2 times per judge (default 3): fewer calls, so fewer rate-limit problems
+both judges (the small model your bot runs on vs the big judge) against YOUR scores. `--runs 2` = score each answer 2 times per judge (default 3): fewer calls, so fewer rate-limit problems
 
 ```bash
 python judge_the_judge.py --runs 2
@@ -1094,7 +886,7 @@ python tools/check_steps.py
 | Problem | Fix |
 |---|---|
 | No `(.venv)` at the start of the line | **Command 1** (from the project folder) |
-| `python: command not found` | use `python3` to create the venv; once `(.venv)` is active, `python` works |
+| `python: command not found` | use `python3.12` to create the venv (plain `python3` can be an older version); once `(.venv)` is active, `python` works |
 | `ModuleNotFoundError` | the venv is not active, or run **Command 2** |
 | Tests say "connection refused" | the bot is not running: start it in window 2 (see above) |
 | "address already in use" | **Command 3** |
@@ -1118,7 +910,7 @@ pip install -r requirements.txt
 **Command 3** (stops whatever uses port **8000**, the bot's port; a different port such as 8080 will not fix a "Port 8000" error)
 
 ```bash
-lsof -ti :8000 | xargs kill
+kill $(lsof -ti :8000) 2>/dev/null
 ```
 
 **Command 4** (`--runs 1` = score each answer once per judge: the fewest calls)

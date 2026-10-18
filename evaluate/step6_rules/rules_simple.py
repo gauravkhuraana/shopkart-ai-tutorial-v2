@@ -43,9 +43,9 @@ MUST_NEVER_SAY = [
 ]  # ...but it must never promise this
 
 # EXPERIMENT 2 · A rule it MUST say (remove the # from these 3 lines)
-QUESTION = "Can I return shoes I bought 20 days ago? I haven't worn them."
-MUST_SAY_ONE_OF = ["30"]
-MUST_NEVER_SAY = []
+# QUESTION = "Can I return shoes I bought 20 days ago? I haven't worn them."
+# MUST_SAY_ONE_OF = ["30"]
+# MUST_NEVER_SAY = []
 
 message = {
     "role": "user",

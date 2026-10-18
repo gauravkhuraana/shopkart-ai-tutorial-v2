@@ -140,7 +140,7 @@ python rules_simple.py
 
 1. It already runs: it prints the question, the bot's answer and a verdict. Rule B isn't there yet.
 2. **TODO 1:** write Rule B: for every phrase in `MUST_NEVER_SAY` found in the answer, add a line to `problems`. Copy the shape of Rule A.
-3. Now catch a liar, one experiment at a time: find the line marked `EXPERIMENT n`, remove its `#` (Ctrl+/), save, run, then put the `#` back.
+3. Now catch a liar, one experiment at a time: find the line marked `EXPERIMENT n`, remove its `#` (Ctrl+/, or **Edit → Toggle Line Comment**), save, run, then put the `#` back.
 
 | # | Experiment | The change | What to look for |
 |---|---|---|---|

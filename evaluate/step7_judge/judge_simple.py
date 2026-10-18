@@ -97,11 +97,8 @@ metrics = [
         async_mode=False,
     ),
     # TODO 1 · U · Uses the source?  Add the Faithfulness metric: is every claim backed by the policy PAGES?
-    FaithfulnessMetric(
-        model=judge,
-        threshold=0.7,
-        async_mode=False,
-    ),
+    #          Uncomment the next line (Ctrl+/, or Edit -> Toggle Line Comment), save and run again.
+    # FaithfulnessMetric(model=judge, threshold=0.7, async_mode=False),
 ]
 
 

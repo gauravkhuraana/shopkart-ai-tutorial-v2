@@ -54,6 +54,12 @@ uvicorn app:app --reload
 ```
 
 Then do your work in **window 3** (a new terminal: activate the venv again, then `cd` into the step folder). Step 9 does not need the bot.
+
+**Make sure the full crew is finished.** Part 2 tests `build/step5_agent/agent.py`, not `agent_simple.py`. If you did not uncomment the three blocks in `agent.py` during step 5, run this once in window 3, from the project folder (your own files are kept as `.mine`, and the running bot reloads by itself):
+
+```bash
+python checkpoint.py step5
+```
 Every test talks to the bot over HTTP, exactly like the chat page. Laptop can't run it? Put the hosted bot's address in `.env` as `SHOPKART_URL` (TROUBLESHOOTING.md #18).
 
 Bot responses are not cached: every call makes a fresh request, even for a repeated question or order. Separate tests can therefore receive different LLM responses. In step 8, checking the same order in several tests means several crew runs, which takes more time and can increase API costs. Multiple checks or judge metrics within one test still use the response that test received.
@@ -71,7 +77,7 @@ Everything in one place: [COMMANDS_WINDOWS.md](../COMMANDS_WINDOWS.md) · [COMMA
 
 The Python examples use ordinary loops, descriptive intermediate variables and spacing between logical steps. Read each file from top to bottom: prepare the request, call the bot or judge, then check the result. Request dictionaries and metric settings are spread over multiple lines so you can inspect each field separately.
 
-- `…_simple.py`: a plain Python script in 2–3 numbered parts. We walk through it together, you run it, and it **prints** what happened. It has 1–2 `TODO`s (the **CORE**) and a few `EXPERIMENT` lines: remove the `#` (Ctrl+/), run, see a bug get caught, put the `#` back.
+- `…_simple.py`: a plain Python script in 2–3 numbered parts. We walk through it together, you run it, and it **prints** what happened. It has 1–2 `TODO`s (the **CORE**) and a few `EXPERIMENT` lines: remove the `#` (Ctrl+/ or Cmd+/, or the menu **Edit → Toggle Line Comment** on any keyboard layout), run, see a bug get caught, put the `#` back.
 - the full file (`test_….py`): the same idea as a real pytest suite, on many questions, with pass marks and clear failure messages. That's the **STRETCH**.
 - `README.md`: what you do, how to run it, how you know you're done.
 
