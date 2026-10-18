@@ -192,12 +192,13 @@ uvicorn app:app --reload
 
 Ctrl+C stops it
 
-Port 8000 busy ("address already in use")?
-stop whatever uses it
+Port 8000 busy ("address already in use")? A port is a numbered door, and only one program can use it at a time. The bot and the setup check both use port **8000**, so free that one (no output means it worked; only Codespaces users with a busy scoreboard server on port 8080 should use `8080` instead):
 
 ```powershell
-Get-NetTCPConnection -LocalPort 8000 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess }
+Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Get-CimInstance Win32_Process -Filter "ParentProcessId=$($_.OwningProcess)" | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
 ```
+
+(It also stops a leftover helper process of an old bot. Without that, Windows can say "Cannot find a process with the process identifier…" while the port stays busy.)
 
 or use another port, and tell the tests (window 3):
 
@@ -1045,10 +1046,10 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 pip install -r requirements.txt
 ```
 
-**Command 4**
+**Command 4** (stops whatever uses port **8000**, the bot's port; a different port such as 8080 will not fix a "Port 8000" error. It also stops a leftover helper process of an old bot, which Windows can keep running after you close the terminal)
 
 ```powershell
-Get-NetTCPConnection -LocalPort 8000 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess }
+Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Get-CimInstance Win32_Process -Filter "ParentProcessId=$($_.OwningProcess)" | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
 ```
 
 **Command 5** (`--runs 1` = score each answer once per judge: the fewest calls)

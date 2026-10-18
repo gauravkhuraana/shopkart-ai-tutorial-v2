@@ -206,8 +206,27 @@ Or use Command Prompt instead:
 Never commit `.env`: it's in `.gitignore`.
 
 ### #8 · Port 8000 already in use
-Something else is running on 8000 (maybe an earlier copy of your bot: close that terminal).
-Or use another port and set `SHOPKART_URL=http://localhost:8001` in `.env`:
+A **port** is a numbered door on your computer, and only one program can use a door at a time. Something else (often an earlier copy of your bot) is already using port 8000, so the new one cannot start.
+
+Easiest fix: **close the terminal** that is running the old bot (or press **Ctrl+C** in it). Not sure which one it is? This command stops whatever is using port 8000:
+
+**Windows (PowerShell)**
+```powershell
+Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Get-CimInstance Win32_Process -Filter "ParentProcessId=$($_.OwningProcess)" | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
+```
+
+**Mac / Linux**
+```bash
+lsof -ti :8000 | xargs kill
+```
+
+No output means it worked (or nothing was using the port). Now start your bot again.
+
+**Windows said "Cannot find a process with the process identifier…" and the port is still busy?** Windows reports the number of the old bot's main process, which has already closed, while a leftover helper process of that bot still holds the port. The Windows command above also stops that helper. Run it again, then run `python check_setup.py`.
+
+**Free the right port.** The setup check (`check_setup.py`) looks at port **8000**, and the bot uses 8000. Freeing a different port (for example 8080) will not fix a "Port 8000" error. Only if you started the scoreboard server in Codespaces (Step 6) and it says port 8080 is busy, use the same command with `8080` instead.
+
+Or leave the old program alone, use another port, and set `SHOPKART_URL=http://localhost:8001` in `.env`:
 
 ```bash
 uvicorn app:app --reload --port 8001

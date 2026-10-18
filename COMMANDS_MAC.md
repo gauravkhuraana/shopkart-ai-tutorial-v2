@@ -186,8 +186,7 @@ uvicorn app:app --reload
 
 Ctrl+C stops it
 
-Port 8000 busy ("address already in use")?
-stop whatever uses port 8000
+Port 8000 busy ("address already in use")? A port is a numbered door, and only one program can use it at a time. The bot and the setup check both use port **8000**, so free that one (no output means it worked; only Codespaces users with a busy scoreboard server on port 8080 should use `8080` instead):
 
 ```bash
 lsof -ti :8000 | xargs kill
@@ -1073,7 +1072,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**Command 3**
+**Command 3** (stops whatever uses port **8000**, the bot's port; a different port such as 8080 will not fix a "Port 8000" error)
 
 ```bash
 lsof -ti :8000 | xargs kill

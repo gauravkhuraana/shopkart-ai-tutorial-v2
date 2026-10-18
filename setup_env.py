@@ -187,40 +187,70 @@ else:
 # ---------------------------------------------------------------
 step(5, "Checking your setup")
 
+all_checks_passed = False
+
 if "--skip-check" in sys.argv:
     print("      skipped")
 else:
-    run([VENV_PYTHON, "check_setup.py"])
+    all_checks_passed = run([VENV_PYTHON, "check_setup.py"]) == 0
 
 
 # ---------------------------------------------------------------
 # Final message: what is still left for the user to do
 # ---------------------------------------------------------------
-# The Groq key may already be set in the environment; then there is nothing to paste.
-key_from_environment = True
-for name in ("LLM_API_KEY", "JUDGE_API_KEY"):
-    if not os.environ.get(name, "").startswith("gsk_"):
-        key_from_environment = False
+def read_env_file_values():
+    """Return the active NAME=value lines of .env (commented lines are ignored)."""
+    values = {}
+    if not env_file.exists():
+        return values
+    for line in env_file.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        name, value = line.split("=", 1)
+        values[name.strip()] = value.split(" #", 1)[0].strip().strip("\"'")
+    return values
 
-if key_from_environment:
-    key_instruction = (
-        "  1. Your Groq key is already set (from the environment). Nothing to paste.\n"
-    )
-else:
-    key_instruction = (
-        "  1. Put your free Groq key (https://console.groq.com/keys) into the file  .env\n"
+
+# A real environment variable wins over .env, the same way shared/config.py reads them.
+env_file_values = read_env_file_values()
+keys_ready = True
+for name in ("LLM_API_KEY", "JUDGE_API_KEY"):
+    value = os.environ.get(name) or env_file_values.get(name, "")
+    if not value or "your_key" in value:
+        keys_ready = False
+
+# If every check above said OK, the keys work: never ask for them again.
+if all_checks_passed:
+    keys_ready = True
+
+steps_left = []
+if not keys_ready:
+    steps_left.append(
+        "Put your free Groq key (https://console.groq.com/keys) into the file  .env\n"
         "     in BOTH places that say gsk_your_key_here  (LLM_API_KEY and JUDGE_API_KEY).\n"
-        "     (check_setup.py will keep saying FAIL for the key until you do.)\n"
+        "     (check_setup.py will keep saying FAIL for the key until you do.)"
     )
+steps_left.append(
+    "In EVERY new terminal, activate the virtual environment first:\n"
+    f"         {ACTIVATE}\n"
+    "     You then see (.venv) at the start of the line."
+)
+
+if all_checks_passed:
+    headline = "Packages are installed and every check passed. One thing to remember:"
+elif keys_ready:
+    headline = "Packages are installed and your Groq key is already set. One thing to remember:"
+else:
+    headline = f"Packages are installed. {'Two things are' if len(steps_left) == 2 else 'One thing is'} left for YOU:"
+
+numbered_steps = "\n\n".join(f"  {number}. {text}" for number, text in enumerate(steps_left, start=1))
 
 print(f"""
 -----------------------------------------------------------------
-Packages are installed. Two things are left for YOU:
+{headline}
 
-{key_instruction}
-  2. In EVERY new terminal, activate the virtual environment first:
-         {ACTIVATE}
-     You then see (.venv) at the start of the line.
+{numbered_steps}
 
 Check again at any time:   python check_setup.py
 All commands, step by step: {COMMANDS_FILE}

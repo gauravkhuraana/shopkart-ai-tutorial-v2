@@ -175,6 +175,16 @@ with socket.socket() as s:
 check("Port 8000 free for the chatbot (uvicorn)", port_free, faq=8,
       detail="" if port_free else "something is already running there (maybe your bot? then it's fine)")
 
+if not port_free:
+    print("       To free port 8000 (not 8080: this check looks at 8000), run:")
+    if sys.platform.startswith("win"):
+        print("       Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | "
+              "ForEach-Object { Get-CimInstance Win32_Process -Filter \"ParentProcessId=$($_.OwningProcess)\" | "
+              "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; "
+              "Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }")
+    else:
+        print("       lsof -ti :8000 | xargs kill")
+
 
 # ---------------------------------------------------------------
 # Summary
@@ -183,3 +193,6 @@ if all(results):
     print("\nAll green: you're ready!\n")
 else:
     print("\nSome checks failed. Fix them with the FAQ, or pair with a neighbour. Nobody gets left behind.\n")
+
+# setup_env.py reads this exit code: 0 means every line above said OK.
+sys.exit(0 if all(results) else 1)

@@ -235,7 +235,7 @@ Nothing to install. You need a free GitHub account. **You must be signed in to G
 2. Open https://github.com/gauravkhuraana/shopkart-ai-tutorial-v2 in a new tab. Check that your profile picture is in the top-right corner: that means you are signed in. If you see **Sign in** there instead, sign in first.
 3. Click the green **Code** button → **Codespaces** tab → **Create codespace on main**. No **Codespaces** tab? You are probably not signed in, so go back to step 1.
 4. It asks for two secrets, `LLM_API_KEY` and `JUDGE_API_KEY`. Paste your free Groq key (https://console.groq.com/keys) in **both**.
-5. Wait a few minutes. VS Code opens in your browser and installs everything by itself.
+5. **Wait a few minutes.** Do not close the page: VS Code opens in your browser and installs everything by itself, and this takes time.
 6. In its terminal (it already shows `(.venv)`):
    ```bash
    python check_setup.py

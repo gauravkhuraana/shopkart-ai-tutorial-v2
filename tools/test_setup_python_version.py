@@ -2,6 +2,7 @@
 
 import ast
 import json
+import os
 import re
 import subprocess
 import sys
@@ -214,6 +215,82 @@ def test_environment_probe_rejects_incompatible_interpreters(
             namespace,
         )
     assert result.value.code == (0 if accepted else 1)
+
+
+def final_message(tmp_path, env_text, environ=None, all_checks_passed=False):
+    source = (ROOT / "setup_env.py").read_text(encoding="utf-8")
+    section = source.split("# Final message: what is still left for the user to do", 1)[1]
+    env_file = tmp_path / ".env"
+    if env_text is not None:
+        env_file.write_text(env_text, encoding="utf-8")
+    namespace = {
+        "os": SimpleNamespace(environ=environ or {}),
+        "env_file": env_file,
+        "all_checks_passed": all_checks_passed,
+        "ACTIVATE": r".venv\Scripts\Activate.ps1",
+        "COMMANDS_FILE": "COMMANDS_WINDOWS.md",
+    }
+    exec(compile(section, "setup_env.py", "exec"), namespace)
+    return namespace
+
+
+def test_final_message_never_asks_for_a_key_after_all_checks_pass(tmp_path, capsys):
+    # Even an odd .env must not contradict a green setup check.
+    final_message(tmp_path, "SOMETHING=else\n", all_checks_passed=True)
+    output = capsys.readouterr().out
+    assert "every check passed" in output
+    assert "One thing to remember" in output
+    assert "Put your free Groq key" not in output
+    assert "Two things" not in output
+    assert "1. In EVERY new terminal" in output
+
+
+def test_setup_runs_the_check_and_uses_its_exit_code():
+    source = (ROOT / "setup_env.py").read_text(encoding="utf-8")
+    assert 'all_checks_passed = run([VENV_PYTHON, "check_setup.py"]) == 0' in source
+    checker = (ROOT / "check_setup.py").read_text(encoding="utf-8")
+    assert "sys.exit(0 if all(results) else 1)" in checker
+
+
+@pytest.mark.parametrize(
+    "env_text,environ",
+    [
+        ("LLM_API_KEY=gsk_real\nJUDGE_API_KEY=gsk_real2\n", None),
+        ("LLM_API_KEY=ollama\nJUDGE_API_KEY=gsk_real2  # judge\n", None),
+        ('LLM_API_KEY="gsk_real"\nJUDGE_API_KEY=\'gsk_real2\'\n', None),
+        ("LLM_API_KEY=gsk_your_key_here\nJUDGE_API_KEY=gsk_your_key_here\n",
+         {"LLM_API_KEY": "gsk_env", "JUDGE_API_KEY": "gsk_env"}),
+    ],
+    ids=["both-in-env-file", "ollama-bot-key", "quoted-values", "environment-wins"],
+)
+def test_final_message_skips_key_step_when_keys_are_set(tmp_path, capsys, env_text, environ):
+    final_message(tmp_path, env_text, environ)
+    output = capsys.readouterr().out
+    assert "your Groq key is already set" in output
+    assert "One thing to remember" in output
+    assert "Put your free Groq key" not in output
+    assert "Two things" not in output
+    assert "1. In EVERY new terminal" in output
+
+
+@pytest.mark.parametrize(
+    "env_text",
+    [
+        None,
+        "LLM_API_KEY=gsk_your_key_here\nJUDGE_API_KEY=gsk_your_key_here\n",
+        "LLM_API_KEY=gsk_real\nJUDGE_API_KEY=gsk_your_key_here\n",
+        "LLM_API_KEY=gsk_real\n# JUDGE_API_KEY=gsk_commented_out\n",
+        "LLM_API_KEY=\nJUDGE_API_KEY=\n",
+    ],
+    ids=["no-env-file", "placeholders", "judge-placeholder", "judge-commented-out", "empty"],
+)
+def test_final_message_asks_for_key_when_missing(tmp_path, capsys, env_text):
+    final_message(tmp_path, env_text)
+    output = capsys.readouterr().out
+    assert "Two things are left for YOU" in output
+    assert "1. Put your free Groq key" in output
+    assert "2. In EVERY new terminal" in output
+    assert "already set" not in output
 
 
 WINGET_COMMAND = (
