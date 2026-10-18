@@ -9,7 +9,7 @@ step 1   [ LLM ]                                   ask_simple.py, ask.py
 step 2   [ FastAPI [ LLM ] ]                       app.py         POST /chat, /docs
 step 3   [ Browser [ FastAPI [ LLM ] ] ]           index.html     fetch → /chat
 step 4   ... + Knowledge: the librarian            retrieval.py   policy pages → RAG
-step 5   ... + Tools: the crew                     agent.py       Planner → Implementer → Reviewer
+step 5   ... + Tools: the crew                     agent.py       Request Planner → Case Investigator → Policy Reviewer
 ```
 
 **Every folder:**
@@ -28,7 +28,7 @@ The answer code is already written, but commented out between `BEGIN SOLUTION` a
 
 1. Find the numbered TODO in the current step's exercise file.
 2. Select only the commented **code inside** those markers. Leave the marker lines as comments.
-3. Press **Ctrl+/** on Windows/Linux or **Cmd+/** on Mac to uncomment it. Keep its indentation.
+3. Press **Ctrl+/** on Windows/Linux or **Cmd+/** on Mac to uncomment it (or the menu **Edit → Toggle Line Comment**, which works on every keyboard layout). Keep its indentation.
 4. Save. Refresh the browser for HTML changes; Uvicorn reloads Python changes automatically.
 
 You do not need to delete the placeholders. Each solution either replaces a value set earlier or returns before the fallback below it. In step 3's display exercise, the solution replaces the raw JSON with the reply text.

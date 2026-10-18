@@ -45,6 +45,12 @@ def count_todos(path: Path, comment_markers=("# TODO ",)) -> int:
 # ---------------------------------------------------------------
 # Part 1 · BUILD: build/stepN must fit solutions/stepN and the step before it
 # ---------------------------------------------------------------
+# Given files that a step deliberately EXTENDS (so rule 3 below does not apply to them):
+EXTENDED = {
+    ("step3_ui", "app_simple.py"),        # step 3 adds GET / (serves the chat page) to step 2's API
+    ("step4_ground", "index_simple.html"),  # step 4 shows the policy sources under each answer
+}
+
 for index, step in enumerate(STEPS):
     build = ROOT / "build" / step
     solution = ROOT / "solutions" / step
@@ -69,7 +75,7 @@ for index, step in enumerate(STEPS):
             problems.append(f"{step}: {f.name} has no TODO but differs from solutions/{step}/{f.name}")
 
         # Rule 3: a given file carried over from the previous step must equal that step's solution.
-        if previous and (previous / f.name).exists() and not has_todo(f):
+        if previous and (previous / f.name).exists() and not has_todo(f) and (step, f.name) not in EXTENDED:
             if f.read_bytes() != (previous / f.name).read_bytes():
                 problems.append(f"{step}: {f.name} differs from the finished previous step "
                                 f"solutions/{STEPS[index - 1]}/{f.name}")

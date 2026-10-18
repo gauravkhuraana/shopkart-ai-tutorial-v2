@@ -1,7 +1,7 @@
 """
 STEP 3 · The full API behind the full web page          (step 2's app.py + the extra endpoints the page uses)
 
-POST /chat is exactly the step 2 endpoint: that's the one you build the page around (TODO 1 + 2 in index.html).
+POST /chat is exactly the step 2 endpoint: that's the one the page is built around (its two exercises live in index.html).
 Everything below it is extra, so the page feels like a real app. None of it changes /chat.
 
     GET  /               the web page (index.html)

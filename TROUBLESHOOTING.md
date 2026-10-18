@@ -9,7 +9,7 @@ From the project folder with `.venv` active, the setup check prints a FAQ number
 python check_setup.py
 ```
 
-Find that number below. Stuck for more than 3 minutes? Pair with a neighbour, or switch to the hosted option (#6). Every step also has a checkpoint; for example, from the project folder:
+Find that number below. Stuck for more than 3 minutes? Pair with a neighbour, or point the Part 2 tests at the hosted bot (#18). Every step also has a checkpoint; for example, from the project folder:
 
 ```bash
 python checkpoint.py step3
@@ -217,7 +217,7 @@ Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue
 
 **Mac / Linux**
 ```bash
-lsof -ti :8000 | xargs kill
+kill $(lsof -ti :8000) 2>/dev/null
 ```
 
 No output means it worked (or nothing was using the port). Now start your bot again.
@@ -256,10 +256,10 @@ uvicorn app:app --reload --port 8001
 - Small models sometimes still drift. That's a real finding, and exactly what the step 6 and 7 tests catch.
 
 ### #11 · The model doesn't call tools
-Not every model supports tool calling. Use one that does: `qwen3:4b` (default), `qwen3:8b`, `llama3.1:8b`, or the hosted option (#6).
+Not every model supports tool calling. The default Groq model (`openai/gpt-oss-20b`) does. On Ollama, use one that does: `qwen3:4b`, `qwen3:8b` or `llama3.1:8b`. Or switch back to Groq (#6).
 
 ### #12 · The agent loops, or takes very long
-- Simple version: `agent_simple.py` stops after `MAX_STEPS` model calls (TODO 3 hands over to a human). Full version: step 5, TODO 2 (`route_after_review`) must stop after `MAX_ROUNDS`, otherwise the Reviewer can send work back forever.
+- Simple version: `agent_simple.py` stops after `MAX_STEPS` model calls (TODO 3 hands over to a human). Full version: step 5, TODO 2 (`route_after_policy_review`) must stop after `MAX_ROUNDS`, otherwise the Policy Reviewer can send work back forever.
 - Each run makes 3–8 model calls, so on a slow laptop one order can take a minute. Run one order instead of `all`. For the simple agent:
 
   ```bash

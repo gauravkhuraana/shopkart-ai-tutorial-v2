@@ -183,7 +183,7 @@ if not port_free:
               "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; "
               "Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }")
     else:
-        print("       lsof -ti :8000 | xargs kill")
+        print("       kill $(lsof -ti :8000) 2>/dev/null")
 
 
 # ---------------------------------------------------------------

@@ -18,12 +18,7 @@ Everything is free and runs on your own laptop (or in your browser).
 
 ## Table of contents
 
-- [Before the tutorial: set up your laptop (about 20 minutes)](#before-the-tutorial-set-up-your-laptop-about-20-minutes)
-  - [Step 1 · Install Python and VS Code; get Git if needed](#step-1--install-python-and-vs-code-get-git-if-needed)
-  - [Step 2 · Install and test Ollama (Path A only)](#step-2--install-and-test-ollama-path-a-only)
-  - [Step 3 · Get the code and install execution libraries](#step-3--get-the-code-and-install-execution-libraries)
-  - [Step 4 · Create your settings file and get a free Groq key](#step-4--create-your-settings-file-and-get-a-free-groq-key)
-  - [Step 5 · Check that everything works](#step-5--check-that-everything-works)
+- [Before the tutorial: set up your laptop (about 20 to 30 minutes)](#before-the-tutorial-set-up-your-laptop-about-20-to-30-minutes)
 - [On the day: the terminal windows you need](#on-the-day-the-terminal-windows-you-need)
 - [Part 1 · BUILD the bot (5 steps)](#part-1--build-the-bot-5-steps)
 - [Part 2 · TEST the bot (4 steps)](#part-2--test-the-bot-4-steps)
@@ -34,149 +29,24 @@ Everything is free and runs on your own laptop (or in your browser).
 - [Want to build it again later? The 9 ideas](#want-to-build-it-again-later-the-9-ideas)
 - [Credits & licence](#credits--licence)
 
-## Before the tutorial: set up your laptop (about 20 minutes)
+## Before the tutorial: set up your laptop (about 20 to 30 minutes)
 
-Please do this **at home**, before the day. The Python libraries are about 150 MB. If you install on your own laptop (Path A), you also download a small AI model for Ollama (about 2.5 GB) so we can demo it if time allows.
+Please do this **at home**, in the week before the tutorial. **Follow [PRE_CONFERENCE.md](PRE_CONFERENCE.md)**: it is the one setup guide, step by step.
 
 > **Tip:** links open on the same page. **Ctrl+click** a link (Mac: **Cmd+click**) to open it in a new tab, so you do not lose your place.
 
-**Two ways to get ready** (full step-by-step in [PRE_CONFERENCE.md](PRE_CONFERENCE.md)):
-- **Path A · install on your laptop** (below): install Python, VS Code and Ollama, then run one setup command. Choose this if it is your own laptop, or your work laptop lets you install programs.
-- **Path B · use it in the browser** with GitHub Codespaces: nothing to install, but you must be **signed in to GitHub** (a free account) or the Codespaces option will not appear. Choose this if you are **not allowed to install programs** (for example a work laptop that asks for an administrator password), or Path A keeps failing. See [PRE_CONFERENCE.md](PRE_CONFERENCE.md).
+**Two ways to get ready:**
+- **Path A · install on your laptop** (recommended): Python 3.12, VS Code, one setup command, a free Groq key, and Ollama for an optional demo. Choose this if it is your own laptop, or your work laptop lets you install programs.
+- **Path B · use it in the browser** with GitHub Codespaces: nothing to install, but you must be **signed in to GitHub** (a free account). Choose this if you are **not allowed to install programs**, or Path A keeps failing.
 
-### Step 1 · Install Python and VS Code; get Git if needed
-
-| Program | Where to get it | Note |
-|---|---|---|
-| **Python 3.12.10** (stable 3.12.x required) | One command: `winget install --id Python.Python.3.12 --version 3.12.10 --exact --source winget` (Windows) or the [Mac steps](PRE_CONFERENCE.md#mac-two-commands) | Not the newest Python: the workshop is built on 3.12 |
-| **VS Code** | https://code.visualstudio.com/download | Install the **Python** extension published by **Microsoft** |
-| **Git** | https://git-scm.com/downloads | Or skip Git and download this project as a ZIP |
-
-**Follow [preconference step 1](PRE_CONFERENCE.md#1--install-python-one-time) to install and test Python.** Do not install "the latest Python" from python.org (it now advertises 3.14); the workshop needs 3.12. Keep any other Python versions you already have: they live side by side with 3.12.
-
-Then open a **new terminal** and test it:
-
-**Windows**
-```powershell
-py -3.12 --version
-```
-
-**Mac / Linux**
-```bash
-python3.12 --version
-```
-
-Expect **Python 3.12.x**. If it is not found, see [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) before continuing.
-
-> **What is a terminal?** A window where you type commands.
-> Windows: press Start, type **PowerShell**, press Enter. Mac: press Cmd+Space, type **Terminal**, press Enter.
-
-### Step 2 · Install and test Ollama (Path A only)
-
-Ollama is a small AI that runs on your own laptop. Install [Ollama](https://ollama.com/download), launch its app, and open a new terminal. Do this at home, for a possible demo. **Groq stays the default** for the bot and judge; installing Ollama does not change `.env`. **Using Path B (browser)? Skip this step.**
-
-**a) Check installation.** Expect an Ollama version number:
-```text
-ollama --version
-```
-
-**b) Check that Ollama is running.** Open **http://localhost:11434** in your web browser.
-- **It says "Ollama is running"?** This step is done. **Do not run `ollama serve`**: the Ollama app already started the server. Go to c).
-- **The page does not load?** Open the Ollama app (Start menu on Windows, Applications on Mac) and refresh. Still nothing? Run this in a dedicated terminal and **leave that window open** while you use the tutorial (closing it stops Ollama):
-```bash
-ollama serve
-```
-
-> Did you run it and get *"Only one usage of each socket address (protocol/network address/port) is normally permitted"* (Windows) or `address already in use` (Mac/Linux)? That is **good news**: Ollama is already running. Check that the browser page says **Ollama is running** and go on.
-
-**c) Download the model.** Use another terminal (one time only, about 2.5 GB):
-```bash
-ollama pull qwen3:4b
-```
-
-**d) Verify the download.** Expect **qwen3:4b** in the list:
-```text
-ollama list
-```
-**e) Test inference.** Expect a non-empty greeting; the wording can vary:
-```text
-ollama run qwen3:4b "Reply with one short greeting."
-```
-Ollama commands do not need the Python venv. If installation or inference fails, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md) or contact Gaurav about the fallback.
-
-### Step 3 · Get the code and install execution libraries
-
-Clone the project with the commands for your platform below, or download and unzip it from GitHub's **Code → Download ZIP** menu. After getting the code, open that project folder in VS Code with **File → Open Folder**, then choose **Terminal → New Terminal** before running the setup command. If you used a ZIP, skip the Git and directory-change commands.
-
-The setup script installs libraries from `requirements.txt`: **FastAPI**, **Uvicorn**, **OpenAI SDK**, **LangGraph**, **DeepEval**, **pytest**, and supporting libraries. It does **not** install Python or VS Code. It creates `.venv` and `.env`, and runs its initial check using the venv's Python. Missing Groq-key failures are expected until step 4. It is safe to run again.
-
-**Windows (PowerShell): get the code**
-```powershell
-git clone https://github.com/gauravkhuraana/shopkart-ai-tutorial-v2.git
-```
-
-```powershell
-cd shopkart-ai-tutorial-v2
-```
-
-**In VS Code's terminal, inside the project folder:**
-
-```powershell
-py -3.12 setup_env.py
-```
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-**Mac / Linux: get the code**
-```bash
-git clone https://github.com/gauravkhuraana/shopkart-ai-tutorial-v2.git
-```
-
-```bash
-cd shopkart-ai-tutorial-v2
-```
-
-**In VS Code's terminal, inside the project folder:**
-
-```bash
-python3.12 setup_env.py
-```
-
-```bash
-source .venv/bin/activate
-```
-
-You now see `(.venv)` at the start of the line. That means it worked.
-Run `python --version`: it must show **3.12.x**. Once activated, normal `python` commands use this environment's 3.12, regardless of your system default. Setup rejects an existing environment that uses another version; follow [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) to recreate it without deleting your settings.
-**Every time you open a new terminal for this tutorial**, go to the project folder and run the `activate` line again.
-
-> Windows says "running scripts is disabled"? See FAQ #4 in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
-> Prefer to do it by hand? Use the separate manual-setup commands in [COMMANDS_WINDOWS.md](COMMANDS_WINDOWS.md#set-up-one-time) or [COMMANDS_MAC.md](COMMANDS_MAC.md#set-up-one-time).
-
-### Step 4 · Create your settings file and get a free Groq key
-
-**a)** The setup script already created `.env`. If it is missing, duplicate `.env.example` as `.env` in VS Code's Explorer.
-
-**b)** Get a free Groq key (no credit card needed): https://console.groq.com/keys
-
-**c)** In your already-open VS Code project, click `.env` in **Explorer**. Put your key in **both** lines that say `gsk_your_key_here`: `LLM_API_KEY` (the bot) and `JUDGE_API_KEY` (the judge). Save the file.
-
-> The model name is in `.env` too: `LLM_MODEL`. Want the bot on your laptop instead? Use **Option B** (Ollama) in `.env` (see FAQ #6).
-
-### Step 5 · Check that everything works
-
-Run this from the project folder with **`(.venv)` active** (activate it again in every new terminal before Python scripts or tests). **Optional:** if VS Code asks which interpreter to use, choose `.venv`; you can ignore the prompt.
+**You are ready when** this command, run from the project folder with `(.venv)` active, prints **OK** on every line:
 
 ```bash
 python check_setup.py
 ```
 
-- Every line says **OK**? You are ready.
-- A line says **FAIL**? It shows a FAQ number. Look up that number in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
-
----
+> **What is a terminal?** A window where you type commands.
+> Windows: press Start, type **PowerShell**, press Enter. Mac: press Cmd+Space, type **Terminal**, press Enter.
 
 ## On the day: the terminal windows you need
 
@@ -186,7 +56,7 @@ python check_setup.py
 | **2 · Bot** | the current step's Uvicorn server | steps 2 to 5, and all of Part 2 |
 | **3 · Work** | Python scripts and pytest commands from the current step | always |
 
-Remember: in windows 2 and 3, run the `activate` line first (see Step 3 above).
+Remember: in windows 2 and 3, activate `.venv` first (Windows: `.venv\Scripts\Activate.ps1` · Mac/Linux: `source .venv/bin/activate`).
 
 ---
 
@@ -226,6 +96,12 @@ cd build/step5_agent
 
 ```bash
 uvicorn app:app --reload
+```
+
+**Then make sure the full crew is finished.** Part 2 tests `build/step5_agent/agent.py`. If you did not uncomment its three blocks in step 5, run this in window 3 from the project folder (your own files are kept as `.mine`):
+
+```bash
+python checkpoint.py step5
 ```
 
 Then work in window 3. Same pattern as Part 1: one folder per step, a **simple** file we walk through together, then a **full** file if you finish early. Each folder has a **README.md**.
@@ -377,7 +253,7 @@ Then open `evaluate/report.html` in your browser.
 5. **Give it a face.** A web page that calls the API. *(step 3)*
 6. **Give it the book.** Find the right rule pages and tell the AI to answer only from them. *(step 4)*
 7. **Give it tools.** The AI *asks* for an action, your code *does* it. Put hard rules in code, not in the prompt. *(step 5)*
-8. **Split the work and record every step.** Planner → Implementer → Reviewer. The record makes it testable. *(step 5)*
+8. **Split the work and record every step.** Request Planner → Case Investigator → Policy Reviewer. The record makes it testable. *(step 5)*
 9. **Test from the bottom up, and plant bugs on purpose.** Rule checks first, then an AI judge, then the agent's journey, then test the judge. *(steps 6-9)*
 
 ## Credits & licence

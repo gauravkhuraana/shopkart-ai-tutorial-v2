@@ -16,7 +16,7 @@ Pick **one** path. Not sure? Start with Path A. If it does not work, switch to P
 | **A** | **Install on my laptop** (recommended) | it is your own laptop, or your work laptop lets you install programs | 20-30 min |
 | **B** | **Use it in the browser** (GitHub Codespaces; needs a free GitHub account, signed in) | you are **not allowed to install programs** (for example a work or school laptop that asks for an administrator password or says "blocked by your administrator"), or Path A keeps failing | 10 min |
 
-**Path A:** do steps 1 to 7. **Path B:** do only the Path B section and skip step 7.
+**Path A:** do steps 1 to 7. **Path B:** do only the [Path B section](#path-b--in-the-browser-github-codespaces).
 
 Whichever path you pick, finish by running the setup check. Every line must say **OK**. Take a screenshot.
 
@@ -234,14 +234,21 @@ Nothing to install. You need a free GitHub account. **You must be signed in to G
 1. Sign in at https://github.com/login (no account yet? Create a free one at https://github.com/signup first). Ctrl+click, or Cmd+click on Mac, opens a link in a new tab.
 2. Open https://github.com/gauravkhuraana/shopkart-ai-tutorial-v2 in a new tab. Check that your profile picture is in the top-right corner: that means you are signed in. If you see **Sign in** there instead, sign in first.
 3. Click the green **Code** button → **Codespaces** tab → **Create codespace on main**. No **Codespaces** tab? You are probably not signed in, so go back to step 1.
-4. It asks for two secrets, `LLM_API_KEY` and `JUDGE_API_KEY`. Paste your free Groq key (https://console.groq.com/keys) in **both**.
+4. It asks for two secrets, `LLM_API_KEY` and `JUDGE_API_KEY`. Paste your free Groq key (https://console.groq.com/keys) in **both**. (No secrets screen? Continue anyway, and after step 5 paste the key into `.env` in **both** places that say `gsk_your_key_here`, as in Path A step 5.)
 5. **Wait a few minutes.** Do not close the page: VS Code opens in your browser and installs everything by itself, and this takes time.
-6. In its terminal (it already shows `(.venv)`):
+6. In its terminal, check that the line starts with `(.venv)`. If it does not, activate it first:
+   ```bash
+   source .venv/bin/activate
+   ```
+
+   Then run the setup check:
    ```bash
    python check_setup.py
    ```
 
    Every line **OK**? You are ready.
+
+   **Key typed wrong?** Secrets win over `.env`, so fixing `.env` does not help. Change the secret at https://github.com/settings/codespaces (**Codespaces secrets**), then stop and restart the Codespace.
 
 Using a work GitHub account and Codespaces does not open? Some companies block it. Try a free personal GitHub account, or use Path A on a personal laptop, or pair with a neighbour on the day.
 

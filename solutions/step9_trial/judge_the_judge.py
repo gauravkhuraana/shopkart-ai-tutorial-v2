@@ -7,8 +7,8 @@ trial_simple.py put one judge on trial with one answer. This file does the whole
     python judge_the_judge.py --runs 2   # fewer calls if you hit rate limits
 
 Scores the same 5 answers several times with two judges:
-  - LOCAL  = the small model your bot runs on
-  - HOSTED = the bigger judge model from .env (JUDGE_*)
+  - SMALL = the model your bot runs on (LLM_* in .env; on Groq by default, so also hosted)
+  - BIG   = the bigger judge model from .env (JUDGE_*)
 Then compares both with YOUR scores from my_scores.yaml (in this folder).
 Questions to answer: Which judge wobbles more? Which one agrees with you? Where do they disagree?
 """
@@ -67,8 +67,8 @@ def main():
     items = yaml.safe_load(scores_text)
 
     judges = {
-        "local": config.local_judge_model(),
-        "hosted": config.judge_model(),
+        "small": config.local_judge_model(),  # your bot's own model
+        "big": config.judge_model(),  # the judge from step 7
     }
 
     # Store runs as results[judge name][answer id].
@@ -96,7 +96,7 @@ def main():
             time.sleep(0.5)
 
     # The table: for each answer, every judge's runs and spread, then YOUR score.
-    print(f"\n{'':9}{'LOCAL judge':<26}{'HOSTED judge':<26}YOU")
+    print(f"\n{'':9}{'SMALL judge':<26}{'BIG judge':<26}YOU")
     print(f"{'answer':9}{'runs':<18}{'range':>5}   {'runs':<18}{'range':>5}")
     # Each gap is the distance between a judge's average and your score.
     gaps = {}

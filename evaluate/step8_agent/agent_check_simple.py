@@ -108,14 +108,18 @@ for review in reviews:
 
 checks["reviewer saw the facts"] = reviewer_saw_the_facts
 
-# TODO 1 · Check C · Uncomment the last line to check the journey.
-lookup_position = tools.index("get_order")
-refund_position = tools.index("issue_refund")
-checks["looked up before refunding"] = lookup_position < refund_position
+# TODO 1 · Check C · The journey: "get_order" must come BEFORE "issue_refund".
+#          Uncomment the last line (Ctrl+/, or Edit -> Toggle Line Comment) to add the check.
+if "issue_refund" in tools and "get_order" in tools:
+    looked_up_first = tools.index("get_order") < tools.index("issue_refund")
+else:
+    looked_up_first = "issue_refund" not in tools  # no refund proposed: nothing to look up first
+# checks["looked up before refunding"] = looked_up_first
 
-# TODO 2 · Check D · Uncomment the last line to check the money.
-amount_refunded = result["outcome"]["amount"]
-checks["no overpayment"] = amount_refunded <= PRICE_PAID
+# TODO 2 · Check D · The money: the amount that moved must be at most PRICE_PAID.
+#          Uncomment the last line to add the check.
+amount_refunded = result["outcome"].get("amount", 0)
+# checks["no overpayment"] = amount_refunded <= PRICE_PAID
 
 # Check E · The journey again, with a ready-made DeepEval agent metric: ToolCorrectnessMetric.
 # Same question as check C ("right tools, right order?"), but DeepEval gives you the score AND the reason.

@@ -87,7 +87,7 @@ The bot doesn't need to run for this step: we judge fixed answers.
 | File | What it is | You edit it? |
 |---|---|---|
 | `trial_simple.py` | one answer, scored 3 times by one judge, then C · A · P printed. We walk through it together | **yes: 1 TODO** + 2 experiments |
-| `judge_the_judge.py` | both judges (your bot's small model vs the big hosted one), five answers, a comparison table | no (stretch: the rubric) |
+| `judge_the_judge.py` | both judges (your bot's small model vs the big judge), five answers, a comparison table | no (stretch: the rubric) |
 | `my_scores.yaml` | the five answers. **You** score them first | yes |
 
 ## How `trial_simple.py` works
