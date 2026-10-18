@@ -25,23 +25,45 @@ import os
 import httpx
 from dotenv import load_dotenv
 
-load_dotenv()   # reads the .env file in the main project folder
-BOT = os.getenv("SHOPKART_URL", "http://localhost:8000")   # your step 5 bot (or the hosted one)
+load_dotenv()  # reads the .env file in the main project folder
+BOT = os.getenv(
+    "SHOPKART_URL", "http://localhost:8000"
+)  # your step 5 bot (or the hosted one)
 
 
 # 1. Ask your bot a question, over the same API the chat page uses (POST /chat)
 
 QUESTION = "Do you price-match if I find the same item cheaper somewhere else?"
-MUST_SAY_ONE_OF = []                                       # nothing it has to say here...
-MUST_NEVER_SAY = ["we price-match", "we price match", "we'll match", "refund the difference"]   # ...but it must never promise this
+MUST_SAY_ONE_OF = []  # nothing it has to say here...
+MUST_NEVER_SAY = [
+    "we price-match",
+    "we price match",
+    "we'll match",
+    "refund the difference",
+]  # ...but it must never promise this
 
 # EXPERIMENT 2 · A rule it MUST say (remove the # from these 3 lines)
 QUESTION = "Can I return shoes I bought 20 days ago? I haven't worn them."
 MUST_SAY_ONE_OF = ["30"]
 MUST_NEVER_SAY = []
 
-response = httpx.post(f"{BOT}/chat", json={"messages": [{"role": "user", "content": QUESTION}]}, timeout=180)
-answer = response.json()["reply"]
+message = {
+    "role": "user",
+    "content": QUESTION,
+}
+
+request_body = {
+    "messages": [message],
+}
+
+response = httpx.post(
+    f"{BOT}/chat",
+    json=request_body,
+    timeout=180,
+)
+
+response_data = response.json()
+answer = response_data["reply"]
 
 # EXPERIMENT 1 · The liar: pretend the bot said this (remove the # from the next line)
 # answer = "Yes, we price-match! Send us the cheaper link and we'll refund the difference."
@@ -54,15 +76,27 @@ print("--------------------------------------------")
 # 2. Check the rules (plain Python: no AI, free, instant)
 
 problems = []
-text = answer.lower()                                       # compare lower-case, so "We" and "we" both count
+text = answer.lower()  # compare lower-case, so "We" and "we" both count
 
 # Rule A · it must say at least ONE of these words (only if the list isn't empty)
-if MUST_SAY_ONE_OF and not any(word.lower() in text for word in MUST_SAY_ONE_OF):
-    problems.append(f"it should say one of {MUST_SAY_ONE_OF}, but didn't")
+if MUST_SAY_ONE_OF:
+    found_required_word = False
+
+    for word in MUST_SAY_ONE_OF:
+        word_lower = word.lower()
+
+        if word_lower in text:
+            found_required_word = True
+            break
+
+    if not found_required_word:
+        problems.append(f"it should say one of {MUST_SAY_ONE_OF}, but didn't")
 
 # Rule B · it must say NONE of these words
 for phrase in MUST_NEVER_SAY:
-    if phrase.lower() in text:
+    phrase_lower = phrase.lower()
+
+    if phrase_lower in text:
         problems.append(f"it said '{phrase}', which it must never say")
 
 

@@ -2,6 +2,15 @@
 
 Part 2: **Rules** → AI judge → Agent → Judge on trial
 
+## Table of contents
+
+- [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
+- [What's in this folder](#whats-in-this-folder)
+- [How `rules_simple.py` works](#how-rules_simplepy-works)
+- [CORE (everyone) · `rules_simple.py`](#core-everyone--rules_simplepy)
+- [STRETCH (if you finish early) · `test_rules.py`](#stretch-if-you-finish-early--test_rulespy)
+- [Stuck?](#stuck)
+
 ## ▶ Copy-paste: run this step
 **Needs:** virtual environment active · **the step 5 bot running (window 2)** · internet for the bot's model (Groq). No judge needed in this step.
 
