@@ -17,37 +17,20 @@ Part 2: Rules → AI judge → **Agent** → Judge on trial
 **Needs:** virtual environment active · **the step 5 bot running (window 2)** · internet for the bot's model. The judge is only used by `test_task_completion` (skip it with `-k "not task_completion"`).
 
 **Windows (PowerShell)**
-WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running)
-
-the folder that contains check_setup.py
+WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running). Paste this whole block at once. Change the first line to the folder that contains check_setup.py (VS Code's built-in terminal already starts there, so you can delete that line)
 
 ```powershell
 cd path\to\shopkart-ai-tutorial-v2
-```
-
-```powershell
 .venv\Scripts\Activate.ps1
-```
-
-```powershell
 cd build\step5_agent
-```
-
-```powershell
 uvicorn app:app --reload
 ```
 
-WINDOW 3: a NEW terminal, for your tests
+WINDOW 3: a NEW terminal, for your tests. Paste this whole block at once, with the same first line
 
 ```powershell
 cd path\to\shopkart-ai-tutorial-v2
-```
-
-```powershell
 .venv\Scripts\Activate.ps1
-```
-
-```powershell
 cd evaluate\step8_agent
 ```
 
@@ -96,37 +79,20 @@ python ..\..\plant_bug.py off
 ```
 
 **Mac / Linux**
-WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running)
-
-the folder that contains check_setup.py
+WINDOW 2: start the bot and LEAVE IT RUNNING (skip if it is already running). Paste this whole block at once. Change the first line to the folder that contains check_setup.py (VS Code's built-in terminal already starts there, so you can delete that line)
 
 ```bash
 cd path/to/shopkart-ai-tutorial-v2
-```
-
-```bash
 source .venv/bin/activate
-```
-
-```bash
 cd build/step5_agent
-```
-
-```bash
 uvicorn app:app --reload
 ```
 
-WINDOW 3: a NEW terminal, for your tests
+WINDOW 3: a NEW terminal, for your tests. Paste this whole block at once, with the same first line
 
 ```bash
 cd path/to/shopkart-ai-tutorial-v2
-```
-
-```bash
 source .venv/bin/activate
-```
-
-```bash
 cd evaluate/step8_agent
 ```
 

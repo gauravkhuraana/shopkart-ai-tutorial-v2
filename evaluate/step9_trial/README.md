@@ -16,17 +16,11 @@ Part 2: Rules → AI judge → Agent → **Judge on trial**
 **Needs:** virtual environment active · internet for the judge (Groq, `JUDGE_*` in `.env`) · the bot is **not** needed (we judge fixed answers).
 
 **Windows (PowerShell)**
-the folder that contains check_setup.py
+Open a terminal and paste this whole block at once. Change the first line to the folder that contains check_setup.py (VS Code's built-in terminal already starts there, so you can delete that line). **The bot is not needed here**: if it is still running from steps 6 to 8, leave it alone and open a NEW terminal for this step
 
 ```powershell
 cd path\to\shopkart-ai-tutorial-v2
-```
-
-```powershell
 .venv\Scripts\Activate.ps1
-```
-
-```powershell
 cd evaluate\step9_trial
 ```
 
@@ -43,17 +37,11 @@ python judge_the_judge.py --runs 2
 ```
 
 **Mac / Linux**
-the folder that contains check_setup.py
+Open a terminal and paste this whole block at once. Change the first line to the folder that contains check_setup.py (VS Code's built-in terminal already starts there, so you can delete that line). **The bot is not needed here**: if it is still running from steps 6 to 8, leave it alone and open a NEW terminal for this step
 
 ```bash
 cd path/to/shopkart-ai-tutorial-v2
-```
-
-```bash
 source .venv/bin/activate
-```
-
-```bash
 cd evaluate/step9_trial
 ```
 

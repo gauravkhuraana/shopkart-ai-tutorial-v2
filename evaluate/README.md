@@ -19,43 +19,23 @@ step 9   Judge on trial   the judge is AI too: put a CAP on it         trial_sim
 - [Want to break the real bot? (full files only)](#want-to-break-the-real-bot-full-files-only)
 
 ## Before you start: keep the step 5 bot running
-Steps 6, 7 and 8 test your step 5 bot over HTTP, so it must be running. **Window 2**, leave it open:
+Steps 6, 7 and 8 test your step 5 bot over HTTP, so it must be running. **Window 2**, leave it open. Paste this whole block at once, and change the first line to the folder that contains check_setup.py (VS Code's built-in terminal already starts there, so you can delete that line):
 
 **Windows (PowerShell)**
-the folder that contains check_setup.py
 
 ```powershell
 cd path\to\shopkart-ai-tutorial-v2
-```
-
-```powershell
 .venv\Scripts\Activate.ps1
-```
-
-```powershell
 cd build\step5_agent
-```
-
-```powershell
 uvicorn app:app --reload
 ```
 
 **Mac / Linux**
-the folder that contains check_setup.py
 
 ```bash
 cd path/to/shopkart-ai-tutorial-v2
-```
-
-```bash
 source .venv/bin/activate
-```
-
-```bash
 cd build/step5_agent
-```
-
-```bash
 uvicorn app:app --reload
 ```
 

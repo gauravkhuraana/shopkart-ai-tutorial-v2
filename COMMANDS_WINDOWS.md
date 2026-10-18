@@ -70,7 +70,7 @@ The browser fallback uses **Groq**, not Ollama on your laptop. Stop the Codespac
   cd ..\..
   ```
 
-- Each code block contains one command. Read the explanation beside it before copying the next command.
+- Each code block usually contains one command. Read the explanation beside it before copying the next command. The few "paste this whole block" starter blocks (for example "Before you start" in Part 2) hold several lines on purpose: paste them all at once.
 
 ---
 
@@ -757,27 +757,12 @@ uvicorn app:app --reload
 
 The tests need the **full app** running. If `uvicorn app:app --reload` is still running from step 5, leave it running and go straight to section 2 below.
 
-Otherwise, in a terminal, go to your project folder (replace the example path with your own):
+Otherwise, open a terminal and paste this whole block at once (change the first line to your own project folder; VS Code's built-in terminal already starts there, so you can delete that line):
 
 ```powershell
 cd C:\Users\YourName\Downloads\shopkart-ai-tutorial-v2
-```
-
-Activate the virtual environment:
-
-```powershell
 .venv\Scripts\Activate.ps1
-```
-
-Go to the step 5 folder:
-
-```powershell
 cd build\step5_agent
-```
-
-Start the full app:
-
-```powershell
 uvicorn app:app --reload
 ```
 
@@ -785,17 +770,10 @@ uvicorn app:app --reload
 
 ### 2 · Open a new terminal for the tests
 
-In VS Code, choose **Terminal → New Terminal**. This separate terminal is **window 3**.
-
-Go to your project folder:
+In VS Code, choose **Terminal → New Terminal**. This separate terminal is **window 3**. Paste this whole block at once, with the same first line as above. The venv must be activated **in this new terminal too**:
 
 ```powershell
 cd C:\Users\YourName\Downloads\shopkart-ai-tutorial-v2
-```
-
-Activate the virtual environment **in this new terminal too**:
-
-```powershell
 .venv\Scripts\Activate.ps1
 ```
 
@@ -852,6 +830,25 @@ cd ..\..
 
 ## Step 7 · AI tests AI: the judge
 A bigger model marks the answer with a rubric (DeepEval). Score 0 to 1, a pass mark, and the judge's reason. Needs internet for the judge.
+
+**Before you start:** the step 5 bot must be running in its own terminal (window 2). Not running anymore? Open a terminal, paste this whole block, and leave it open (change the first line to your project folder):
+
+```powershell
+cd C:\Users\YourName\Downloads\shopkart-ai-tutorial-v2
+.venv\Scripts\Activate.ps1
+cd build\step5_agent
+uvicorn app:app --reload
+```
+
+Then open a **new terminal** for this step (window 3) and paste this whole block:
+
+```powershell
+cd C:\Users\YourName\Downloads\shopkart-ai-tutorial-v2
+.venv\Scripts\Activate.ps1
+```
+
+Now run the step 7 commands in window 3:
+
 ```powershell
 cd evaluate\step7_judge
 ```
@@ -902,6 +899,25 @@ cd ..\..
 
 ## Step 8 · Test the agent
 Check the journey, not just the landing: which tools ran, in which order, and the amount. Plus DeepEval's ready-made agent metric (`ToolCorrectnessMetric`) and a menu of the others at the bottom of the file.
+
+**Before you start:** the step 5 bot must be running in its own terminal (window 2). Not running anymore? Open a terminal, paste this whole block, and leave it open (change the first line to your project folder):
+
+```powershell
+cd C:\Users\YourName\Downloads\shopkart-ai-tutorial-v2
+.venv\Scripts\Activate.ps1
+cd build\step5_agent
+uvicorn app:app --reload
+```
+
+Then open a **new terminal** for this step (window 3) and paste this whole block:
+
+```powershell
+cd C:\Users\YourName\Downloads\shopkart-ai-tutorial-v2
+.venv\Scripts\Activate.ps1
+```
+
+Now run the step 8 commands in window 3:
+
 ```powershell
 cd evaluate\step8_agent
 ```
@@ -974,6 +990,16 @@ cd ..\..
 
 ## Step 9 · Put the judge on trial
 The judge is AI too, so it can be wrong. Put a **CAP** on it: **C**onsistent? (same answer scored 3 times) · **A**grees with you? · **P**rice (time and calls). The bot is not needed.
+
+**Before you start:** open a **new terminal** (you can leave the bot running in window 2, or stop it with Ctrl+C) and paste this whole block (change the first line to your project folder):
+
+```powershell
+cd C:\Users\YourName\Downloads\shopkart-ai-tutorial-v2
+.venv\Scripts\Activate.ps1
+```
+
+Now run the step 9 commands in that terminal:
+
 ```powershell
 cd evaluate\step9_trial
 ```
