@@ -28,31 +28,32 @@ Please do this **at home**, before the day. The Python libraries are about 150 M
 
 | Program | Where to get it | Note |
 |---|---|---|
-| **Python** 3.11, 3.12 or 3.13 | https://www.python.org/downloads/ | Windows: tick **"Add python.exe to PATH"** during install |
+| **Python** 3.12.x (stable; required for the workshop) | https://www.python.org/downloads/ | Keep other versions installed; select 3.12 explicitly below |
 | **VS Code** | https://code.visualstudio.com/download | Install the **Python** extension published by **Microsoft** |
 | **Git** | https://git-scm.com/downloads | Or skip Git and download this project as a ZIP |
 
 **Test Python immediately after installing it**, before downloading the project. Open a **new terminal** so it picks up PATH changes.
+Already have another Python version? Install 3.12 alongside it; do not uninstall it or change your system-wide default. The version-specific commands below avoid PATH ambiguity.
 
 **Windows**
 ```powershell
-python --version
+py -3.12 --version
 ```
 
 ```powershell
-python -c "print('Python is working')"
+py -3.12 -c "print('Python is working')"
 ```
 
 **Mac / Linux**
 ```bash
-python3 --version
+python3.12 --version
 ```
 
 ```bash
-python3 -c "print('Python is working')"
+python3.12 -c "print('Python is working')"
 ```
 
-Expect Python **3.11, 3.12 or 3.13**, then **Python is working**. These tests run with base Python before a venv exists. If either fails, fix [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) before continuing.
+Expect **Python 3.12.x**, then **Python is working**. These tests run with base Python before a venv exists. If either fails, fix [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) before continuing.
 
 > **What is a terminal?** A window where you type commands.
 > Windows: press Start, type **PowerShell**, press Enter. Mac: press Cmd+Space, type **Terminal**, press Enter.
@@ -108,7 +109,7 @@ cd shopkart-ai-tutorial-v2
 **In VS Code's terminal, inside the project folder:**
 
 ```powershell
-python setup_env.py
+py -3.12 setup_env.py
 ```
 
 ```powershell
@@ -127,7 +128,7 @@ cd shopkart-ai-tutorial-v2
 **In VS Code's terminal, inside the project folder:**
 
 ```bash
-python3 setup_env.py
+python3.12 setup_env.py
 ```
 
 ```bash
@@ -135,6 +136,7 @@ source .venv/bin/activate
 ```
 
 You now see `(.venv)` at the start of the line. That means it worked.
+Run `python --version`: it must show **3.12.x**. Once activated, normal `python` commands use this environment's 3.12, regardless of your system default. Setup rejects an existing environment that uses another version; follow [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) to recreate it without deleting your settings.
 **Every time you open a new terminal for this tutorial**, go to the project folder and run the `activate` line again.
 
 > Windows says "running scripts is disabled"? See FAQ #4 in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
@@ -259,13 +261,13 @@ These are **independent shortcuts**, not a sequence to run top to bottom. Except
 **Initial setup, from the project folder (Windows):** creates `.venv`, installs execution libraries and creates `.env`.
 
 ```powershell
-python setup_env.py
+py -3.12 setup_env.py
 ```
 
 **Initial setup, from the project folder (Mac/Linux):**
 
 ```bash
-python3 setup_env.py
+python3.12 setup_env.py
 ```
 
 **Readiness check, from the project folder with `.venv` active:**
@@ -351,7 +353,7 @@ Then open `evaluate/report.html` in your browser.
 | `PRE_CONFERENCE.md` | how to get ready before the day (own laptop, or in the browser) |
 | `COMMANDS_WINDOWS.md` · `COMMANDS_MAC.md` | every command for steps 1 to 9, copy-paste ready |
 | `.devcontainer/` | settings for running the tutorial in GitHub Codespaces (browser) |
-| `tools/` | tools for the presenter (`PRESENTER_CHECKLIST.md` inside) |
+| `tools/` | repository checks, regression tests and a fake model for offline practice |
 
 ## Want to build it again later? The 9 ideas
 
@@ -364,28 +366,6 @@ Then open `evaluate/report.html` in your browser.
 7. **Give it tools.** The AI *asks* for an action, your code *does* it. Put hard rules in code, not in the prompt. *(step 5)*
 8. **Split the work and record every step.** Planner → Implementer → Reviewer. The record makes it testable. *(step 5)*
 9. **Test from the bottom up, and plant bugs on purpose.** Rule checks first, then an AI judge, then the agent's journey, then test the judge. *(steps 6-9)*
-
-## For the presenter
-- Sending this to attendees (what to send, when, and how to test both setup paths): [tools/PRESENTER_CHECKLIST.md](tools/PRESENTER_CHECKLIST.md).
-- After changing any code, check that the step folders still match each other and that all code compiles:
-
-  ```bash
-  python tools/check_steps.py
-  ```
-
-- Practise without a real model. From the project folder:
-
-  ```bash
-  cd tools
-  ```
-
-  Start the fake model server and leave it running:
-
-  ```bash
-  uvicorn fake_llm:app --port 9999
-  ```
-
-  In `.env`, set `LLM_BASE_URL=http://localhost:9999/v1` and `LLM_MODEL=fake`. It can play the judge too: set `JUDGE_BASE_URL=http://localhost:9999/v1` and `JUDGE_MODEL=fake` to rehearse steps 7-9 offline.
 
 ## Credits & licence
 Built for AutomationSTAR 2026 by Gaurav Khurana ([gauravkhurana.com](https://gauravkhurana.com)). ShopKart, its orders and its rules are made up.

@@ -21,7 +21,8 @@ Whichever you pick, the final setup check in step 6 must show **OK on every line
 ## Path A · My own laptop
 
 ### 1 · Install Python (one time)
-Download **Python 3.12** (3.11 and 3.13 also work): https://www.python.org/downloads/
+Install a stable **Python 3.12.x**, the required workshop version: https://www.python.org/downloads/
+Already have 3.11, 3.13, 3.14 or 3.15? **Keep it installed and add 3.12 alongside it.** You do not need to uninstall another version or change the system-wide default. The commands below explicitly select 3.12.
 - **Windows:** on the first installer screen, tick **"Add python.exe to PATH"**. No admin rights? Choose "Install for me only".
 - **Mac:** use the installer from the same page.
 
@@ -29,23 +30,23 @@ Download **Python 3.12** (3.11 and 3.13 also work): https://www.python.org/downl
 
 **Windows**
 ```powershell
-python --version
+py -3.12 --version
 ```
 
 ```powershell
-python -c "print('Python is working')"
+py -3.12 -c "print('Python is working')"
 ```
 
 **Mac**
 ```bash
-python3 --version
+python3.12 --version
 ```
 
 ```bash
-python3 -c "print('Python is working')"
+python3.12 -c "print('Python is working')"
 ```
 
-Expect Python **3.11, 3.12 or 3.13**, then **Python is working**. These installation/PATH tests use your base Python: there is no virtual environment yet. If Python is not found, opens the Microsoft Store, or shows the wrong version, fix [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) before continuing.
+Expect **Python 3.12.x**, then **Python is working**. These tests select the base interpreter before a virtual environment exists. If `py` is unavailable, install the Windows Python launcher/install manager using the official Python installation instructions. If 3.12 cannot be found, finish installing it and reopen the terminal; do not substitute an unversioned `python` command. See [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version).
 
 **Install VS Code too:** download and install [Visual Studio Code](https://code.visualstudio.com/download). Open it, choose **Extensions**, search for **Python**, and install the extension published by **Microsoft**. Python and VS Code are separate installations; step 4 does not install either of them.
 
@@ -77,15 +78,17 @@ This installs the libraries used to run the tutorial: **FastAPI** (API framework
 
 **Windows**
 ```powershell
-python setup_env.py
+py -3.12 setup_env.py
 ```
 
 **Mac**
 ```bash
-python3 setup_env.py
+python3.12 setup_env.py
 ```
 
-It creates a private Python environment (`.venv`), installs the libraries from `requirements.txt` **inside it**, and creates your settings file `.env`. It also runs the setup check using **the Python inside `.venv`**, even though this first setup command uses base Python. Groq/key checks can fail until you complete step 5; check again in step 6. If library installation stops with an error, **run the same setup command again**: it reuses the environment.
+These commands select an **already installed** Python 3.12; they do not install Python itself. Setup creates a private Python 3.12 environment (`.venv`), installs the libraries from `requirements.txt` **inside it**, and creates your settings file `.env`. It also runs the setup check using **the Python inside `.venv`**. Groq/key checks can fail until you complete step 5; check again in step 6. If library installation stops with an error, **run the same setup command again**: it reuses a compatible environment.
+
+**Already created `.venv` with another Python version?** Setup stops before installing packages and tells you which version it found. It does not convert or delete the environment. Follow [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) to rename it and create a fresh one with 3.12.
 
 ### 5 · Get your free Groq key and put it in `.env`
 1. Create a free key (no credit card): https://console.groq.com/keys
@@ -99,6 +102,10 @@ It creates a private Python environment (`.venv`), installs the libraries from `
 ```
 
 ```powershell
+python --version
+```
+
+```powershell
 python check_setup.py
 ```
 
@@ -108,8 +115,14 @@ source .venv/bin/activate
 ```
 
 ```bash
+python --version
+```
+
+```bash
 python check_setup.py
 ```
+
+The activated environment must report **Python 3.12.x**. From now on, normal `python` commands use that version, even if another version is your system default.
 
 Every line **OK**? You are ready. A line says **FAIL**? It shows a number: look it up in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 (Port 8000 saying FAIL just means something is already running there. If that is your own bot, it is fine.)

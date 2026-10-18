@@ -35,9 +35,20 @@ print("\nShopKart tutorial · setup check\n")
 # 1. Python version
 # ---------------------------------------------------------------
 v = sys.version_info
-version_ok = (3, 10) <= (v.major, v.minor) <= (3, 13)
-check(f"Python {v.major}.{v.minor}", version_ok, faq=1,
-      detail="3.11, 3.12 or 3.13 recommended")
+version_pair = (v.major, v.minor)
+version_ok = version_pair == (3, 12) and v.releaselevel == "final"
+
+check(
+    f"You have Python {v.major}.{v.minor}.{v.micro}",
+    version_ok,
+    faq=1,
+    detail="Required for this workshop: stable Python 3.12.x",
+)
+
+if not version_ok:
+    print("       Install Python 3.12 alongside your existing Python; you do not need to uninstall it.")
+    print("       Setup: Windows: py -3.12 setup_env.py | Mac/Linux: python3.12 setup_env.py")
+    print("       An existing .venv keeps its old Python. See FAQ #1 before recreating it.")
 
 
 # ---------------------------------------------------------------
@@ -59,7 +70,9 @@ missing_detail = f"missing: {', '.join(missing)}" if missing else ""
 check("Python packages installed", not missing, faq=2, detail=missing_detail)
 
 if missing:
-    print("\nInstall the packages first:  python setup_env.py   (or: pip install -r requirements.txt)\n")
+    print("\nInstall the packages first using the command for your platform:")
+    print("  Windows:   py -3.12 setup_env.py")
+    print("  Mac/Linux: python3.12 setup_env.py\n")
     sys.exit(1)
 
 

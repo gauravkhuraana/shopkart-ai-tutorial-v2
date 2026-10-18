@@ -62,29 +62,30 @@ dir check_setup.py
 ```
 
 ### Set up (one time)
-Expect Python 3.11, 3.12 or 3.13:
+Install stable **Python 3.12.x** for this workshop. Keep other Python versions installed; this command explicitly selects 3.12:
 
 ```powershell
-python --version
+py -3.12 --version
 ```
 
 Before creating the venv, confirm Python runs and PATH works. Expect **Python is working**:
 
 ```powershell
-python -c "print('Python is working')"
+py -3.12 -c "print('Python is working')"
 ```
 
 Create `.venv`, install execution libraries, create `.env`, and run the initial setup check:
 
 ```powershell
-python setup_env.py
+py -3.12 setup_env.py
 ```
 
 The setup script installs execution libraries (FastAPI, Uvicorn, OpenAI SDK, LangGraph, DeepEval and pytest) into `.venv`, not Python or VS Code. Its initial check uses the venv interpreter; finish the Groq settings before checking again.
+If an existing `.venv` uses another Python version, setup stops without changing it. Follow [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) to rename it and recreate it with 3.12. After activation, `python --version` must show **3.12.x**; ordinary tutorial commands then use that version.
 
 Prefer to do it by hand? Run these four commands individually:
 ```powershell
-python -m venv .venv
+py -3.12 -m venv .venv
 ```
 
 ```powershell

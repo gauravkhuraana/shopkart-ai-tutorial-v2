@@ -8,3 +8,6 @@ __pycache__/
 evaluate/report.html
 dist/
 wheelhouse/
+
+# Local-only speaker notes and conference preparation.
+/speaker/

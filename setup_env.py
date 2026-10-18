@@ -1,8 +1,8 @@
 """
-One-command setup for the ShopKart tutorial. Works on Windows, Mac and Linux. Needs nothing but Python.
+One-command setup for the ShopKart tutorial. Works on Windows, Mac and Linux. Needs stable Python 3.12.x.
 
-    Windows:   python setup_env.py
-    Mac:       python3 setup_env.py
+    Windows:   py -3.12 setup_env.py
+    Mac/Linux: python3.12 setup_env.py
 
 What it does (safe to run again; it skips what is already done):
     1. checks your Python version
@@ -11,7 +11,7 @@ What it does (safe to run again; it skips what is already done):
     4. creates your settings file  .env  (from .env.example) if you don't have one
     5. runs check_setup.py so you see what is still missing (usually: your Groq key)
 
-    python setup_env.py --skip-check     # don't run check_setup.py at the end
+    python3.12 setup_env.py --skip-check  # don't run check_setup.py at the end
 """
 import os
 import shutil
@@ -70,16 +70,21 @@ print("\nShopKart tutorial · setup\n")
 step(1, "Python version")
 version = sys.version_info
 version_pair = (version.major, version.minor)
-print(f"      Python {version.major}.{version.minor}.{version.micro}")
+print(f"      You have Python {version.major}.{version.minor}.{version.micro}.")
+print("      Required for this workshop: Python 3.12.x.")
 
-if version_pair < (3, 10):
-    fail("Python 3.11, 3.12 or 3.13 is needed. "
-         "Install it from https://www.python.org/downloads/ (TROUBLESHOOTING.md #1)")
+if IS_WINDOWS:
+    setup_command = "py -3.12 setup_env.py"
+else:
+    setup_command = "python3.12 setup_env.py"
 
-if version_pair < (3, 11) or version_pair > (3, 13):
-    print("      Warning: 3.11, 3.12 or 3.13 is recommended. "
-          "Carrying on; if pip fails, see TROUBLESHOOTING.md #1.")
-
+if version_pair != (3, 12) or version.releaselevel != "final":
+    fail(
+        "A stable Python 3.12.x is required for the workshop.\n"
+        "      Install it alongside your existing Python; no uninstall or default-version change is needed.\n"
+        f"      Then run: {setup_command}\n"
+        "      See TROUBLESHOOTING.md #1."
+    )
 
 # ---------------------------------------------------------------
 # Step 2: Virtual environment
@@ -87,17 +92,57 @@ if version_pair < (3, 11) or version_pair > (3, 13):
 step(2, "Virtual environment (.venv)")
 
 if VENV_PYTHON.exists():
-    print("      already there, reusing it")
+    print("      already there; checking its Python before reusing it")
 else:
     try:
         venv.EnvBuilder(with_pip=True).create(VENV)
     except Exception as error:
         fail(f"could not create .venv: {error}\n"
-             "      On Linux you may need:  sudo apt install python3-venv")
+             "      On Debian/Ubuntu you may need the matching python3.12-venv package.")
 
     if not VENV_PYTHON.exists():
         fail("the virtual environment was created, but its Python was not found")
     print("      created")
+
+# An existing environment keeps the interpreter that created it, even when setup uses 3.12.
+try:
+    environment_check = subprocess.run(
+        [
+            str(VENV_PYTHON),
+            "-c",
+            """
+import sys
+
+version = sys.version_info
+print(f"{version.major}.{version.minor}.{version.micro}")
+
+if version[:2] != (3, 12) or version.releaselevel != "final":
+    sys.exit(1)
+
+sys.exit(0)
+""",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+except (OSError, subprocess.TimeoutExpired) as error:
+    fail(f"could not check the Python inside .venv: {error}\n"
+         "      See TROUBLESHOOTING.md #1 before recreating the environment.")
+
+environment_version = environment_check.stdout.strip()
+print(f"      Python inside .venv: {environment_version or '(no version returned)'}")
+
+if environment_check.returncode != 0 or not environment_version.startswith("3.12."):
+    detail = environment_check.stderr.strip()
+    fail(
+        ".venv must use a working, stable Python 3.12.x. It has not been changed.\n"
+        f"      {detail}\n"
+        "      Stop tutorial servers and deactivate the environment if it is active.\n"
+        "      Rename .venv to an unused backup name, then open a new terminal.\n"
+        f"      From the project folder, run: {setup_command}\n"
+        "      See TROUBLESHOOTING.md #1 for the exact commands."
+    )
 
 
 # ---------------------------------------------------------------

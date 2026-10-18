@@ -20,17 +20,20 @@ Or simply open the next `build/stepN` folder: it already contains the finished c
 ---
 
 ### #1 · Wrong Python version
-Use **Python 3.11, 3.12 or 3.13**. Newer versions (3.14+) sometimes lack ready-made packages.
+Use a stable **Python 3.12.x**, the required workshop version. Other versions can work, but we standardize on 3.12 to reduce conference-day compatibility problems. Both setup scripts flag a different version.
+
+**Keep other Python versions installed.** Install 3.12 alongside them, without changing your system-wide default, and explicitly select it:
+
 - Check on **Windows**:
 
   ```powershell
-  python --version
+  py -3.12 --version
   ```
 
 - Check on **Mac/Linux**:
 
   ```bash
-  python3 --version
+  python3.12 --version
   ```
 
 - Install: https://www.python.org/downloads/ (Windows: tick "Add python.exe to PATH")
@@ -39,15 +42,43 @@ Immediately after installation, open a **new terminal** so it picks up PATH chan
 
 **Windows**
 ```powershell
-python -c "print('Python is working')"
+py -3.12 -c "print('Python is working')"
 ```
 
 **Mac / Linux**
 ```bash
-python3 -c "print('Python is working')"
+python3.12 -c "print('Python is working')"
 ```
 
-Expect **Python is working**. If the command is not found or opens the Microsoft Store, rerun the Python installer and enable PATH, then reopen the terminal. Verify the version too before continuing. After setup, run tutorial scripts and the full setup check **inside `.venv`**; the initial installation tests are the exception.
+Expect **Python 3.12.x** and **Python is working**. If `py` is missing on Windows, install the Python launcher/install manager using the official Python installation instructions. If the version-specific command cannot find 3.12, install it and reopen the terminal; do not substitute plain `python` or `python3`, which might pick another version.
+
+**Already have `.venv` from another Python?** Activating it or installing another Python does not change its interpreter. Setup prints the environment's version and stops before package installation when it is incompatible.
+
+1. Stop tutorial servers with **Ctrl+C**. If the current terminal has an active environment, run `deactivate`, then open a new terminal in the project folder.
+2. Rename the existing environment with the command for your platform below. Run the rename **only if `.venv` exists** and the backup name **does not exist**; otherwise choose an unused backup name. This preserves a backup, but a moved environment is not intended to run from its backup location.
+3. Run setup with 3.12. It creates a fresh `.venv`; it does not delete your `.env` settings or source files.
+
+**Windows**
+
+```powershell
+Rename-Item -LiteralPath .venv -NewName .venv-before-python312
+```
+
+```powershell
+py -3.12 setup_env.py
+```
+
+**Mac / Linux**
+
+```bash
+mv .venv .venv-before-python312
+```
+
+```bash
+python3.12 setup_env.py
+```
+
+Activate the new `.venv` using your platform's command in the setup guide. Then `python --version` must show **3.12.x** and normal `python` commands use it, even if your system default is another version. Run `python check_setup.py` inside that environment.
 
 VS Code is installed separately from [its official download page](https://code.visualstudio.com/download). Install Microsoft's **Python** extension, open the project folder, and select the `.venv` interpreter with **Python: Select Interpreter**. Installing the extension alone does not install Python.
 
@@ -55,13 +86,13 @@ VS Code is installed separately from [its official download page](https://code.v
 - Easiest fix on **Windows**:
 
   ```powershell
-  python setup_env.py
+  py -3.12 setup_env.py
   ```
 
 - On **Mac/Linux**:
 
   ```bash
-  python3 setup_env.py
+  python3.12 setup_env.py
   ```
 
 The setup script creates the virtual environment and installs the libraries. You can run it again after a failure.

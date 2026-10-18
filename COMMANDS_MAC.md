@@ -32,7 +32,7 @@ This browser fallback uses **Groq**, not Ollama on your own laptop. **Save your 
   ```
 
 - Each code block contains one command. Read the explanation beside it before copying the next command.
-- On Mac, creating the venv uses **`python3`**. Once `(.venv)` is active, plain `python` works.
+- On Mac/Linux, setup and creating the venv use **`python3.12`**. Once `(.venv)` is active, plain `python` uses that environment's 3.12.
 
 **Contents**
 [0 · Common commands](#0--common-commands) · [Which step needs what](#which-step-needs-what) ·
@@ -64,29 +64,30 @@ ls check_setup.py
 ```
 
 ### Set up (one time)
-Expect Python 3.11, 3.12 or 3.13:
+Install stable **Python 3.12.x** for this workshop. Keep other Python versions installed; this command explicitly selects 3.12 (including on Linux):
 
 ```bash
-python3 --version
+python3.12 --version
 ```
 
 Before creating the venv, confirm Python runs and PATH works. Expect **Python is working**:
 
 ```bash
-python3 -c "print('Python is working')"
+python3.12 -c "print('Python is working')"
 ```
 
 Create `.venv`, install execution libraries, create `.env`, and run the initial setup check:
 
 ```bash
-python3 setup_env.py
+python3.12 setup_env.py
 ```
 
 The setup script installs execution libraries (FastAPI, Uvicorn, OpenAI SDK, LangGraph, DeepEval and pytest) into `.venv`, not Python or VS Code. Its initial check uses the venv interpreter; finish the Groq settings before checking again.
+If an existing `.venv` uses another Python version, setup stops without changing it. Follow [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) to rename it and recreate it with 3.12. After activation, `python --version` must show **3.12.x**; ordinary tutorial commands then use that version.
 
 Prefer to do it by hand? Run these four commands individually:
 ```bash
-python3 -m venv .venv
+python3.12 -m venv .venv
 ```
 
 ```bash
