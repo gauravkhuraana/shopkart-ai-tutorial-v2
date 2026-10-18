@@ -7,14 +7,18 @@ Can't message on LinkedIn? Email: **gaurav [dot] khuraana [at] gmail [dot] com**
 **Do this at home, any evening in the week before.** It takes about 20 to 30 minutes, most of it waiting for a download.
 On the day you then only need a working laptop.
 
-Pick **one** path:
+> **Tip:** links in this guide open on the same page. **Ctrl+click** a link (Mac: **Cmd+click**) to open it in a new tab, so you do not lose your place here.
+
+Pick **one** path. Not sure? Start with Path A. If it does not work, switch to Path B.
 
 | | Path | Choose it if | Time |
 |---|---|---|---|
-| **A** | **My own laptop** (recommended) | you can install Python on your laptop | 20-30 min |
-| **B** | **In the browser** (GitHub Codespaces) | your laptop is locked down, or the install keeps failing | 10 min |
+| **A** | **Install on my laptop** (recommended) | it is your own laptop, or your work laptop lets you install programs | 20-30 min |
+| **B** | **Use it in the browser** (GitHub Codespaces; needs a free GitHub account, signed in) | you are **not allowed to install programs** (for example a work or school laptop that asks for an administrator password or says "blocked by your administrator"), or Path A keeps failing | 10 min |
 
-Whichever you pick, the final setup check in step 6 must show **OK on every line**. Take a screenshot. Local attendees must also complete the Ollama installation and test below.
+**Path A:** do steps 1 to 7. **Path B:** do only the Path B section and skip step 7.
+
+Whichever path you pick, finish by running the setup check. Every line must say **OK**. Take a screenshot.
 
 ---
 
@@ -31,7 +35,7 @@ Whichever you pick, the final setup check in step 6 must show **OK on every line
   - [4 · Install the Python libraries needed for execution](#4--install-the-python-libraries-needed-for-execution)
   - [5 · Get your free Groq key and put it in `.env`](#5--get-your-free-groq-key-and-put-it-in-env)
   - [6 · Check it](#6--check-it)
-  - [7 · Install and test Ollama (required on local laptops)](#7--install-and-test-ollama-required-on-local-laptops)
+  - [7 · Install and test Ollama (Path A only)](#7--install-and-test-ollama-path-a-only)
 - [Path B · In the browser (GitHub Codespaces)](#path-b--in-the-browser-github-codespaces)
 - [Checklist](#checklist)
 - [If something goes wrong](#if-something-goes-wrong)
@@ -186,10 +190,10 @@ The activated environment must report **Python 3.12.x**. From now on, normal `py
 Every line **OK**? You are ready. A line says **FAIL**? It shows a number: look it up in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 (Port 8000 saying FAIL just means something is already running there. If that is your own bot, it is fine.)
 
-> From now on, **every new tutorial terminal** needs the activate command first, from the project folder, before running Python scripts or tests. You see **`(.venv)`** at the start of the line when it worked. In VS Code, use **Python: Select Interpreter** in the Command Palette and choose the interpreter in `.venv`.
+> From now on, **every new tutorial terminal** needs the activate command first, from the project folder, before running Python scripts or tests. You see **`(.venv)`** at the start of the line when it worked. **Optional:** if VS Code asks which interpreter to use, choose the one in `.venv`. You can ignore the prompt: the terminal commands work without it. It only makes the editor's Run button and import underlines behave.
 
-### 7 · Install and test Ollama (required on local laptops)
-Prepare this **at home**, not on conference Wi-Fi. We will demo a local model if the session allows. Groq remains the default for the tutorial and the AI judge; installing Ollama does not switch your project settings.
+### 7 · Install and test Ollama (Path A only)
+Ollama is a small AI that runs on your own laptop. We may demo it if time allows. **Path B users skip this step.** Do it **at home**, not on conference Wi-Fi. Groq stays the default for the tutorial and the AI judge; installing Ollama does not change your project settings.
 
 1. Install [Ollama](https://ollama.com/download) for your operating system. Launch the Ollama app, then open a **new terminal**. Ollama commands do not need the Python venv.
 2. Check the installation:
@@ -197,11 +201,13 @@ Prepare this **at home**, not on conference Wi-Fi. We will demo a local model if
    ollama --version
    ```
    Expect an Ollama version number. If the command is not found, reopen the terminal and check the installation/PATH.
-3. Open **http://localhost:11434** in a browser. Expect **Ollama is running**. If the app is not serving requests, start it in a dedicated terminal and leave that terminal open:
-   ```text
-   ollama serve
-   ```
-   If it says **address already in use**, verify the browser message above; the app may already be running.
+3. Open **http://localhost:11434** in a browser (Ctrl+click or Cmd+click the link for a new tab).
+   - **It says "Ollama is running"?** This step is done. **Do not run `ollama serve`.** The Ollama app already started the server for you. Go to step 4.
+   - **The page does not load?** Open the Ollama app from the Start menu (Windows) or Applications (Mac) and refresh the page. Still nothing? Start the server yourself in a dedicated terminal and leave that terminal open:
+     ```text
+     ollama serve
+     ```
+   - **Did you run `ollama serve` and get an error** such as *"Only one usage of each socket address (protocol/network address/port) is normally permitted"* (Windows) or *"address already in use"* (Mac/Linux)? That is **good news**, not a problem. It only means Ollama is already running. Check that the browser page says **Ollama is running**, then go on.
 4. In another terminal, download the model (about 2.5 GB):
    ```text
    ollama pull qwen3:4b
@@ -217,26 +223,27 @@ Prepare this **at home**, not on conference Wi-Fi. We will demo a local model if
    ```
    Expect a non-empty greeting; wording and response speed vary. A download alone is not the full test.
 
-Leave your project on Groq for the normal setup check. For the local-model demo, follow [FAQ #6](TROUBLESHOOTING.md#6--switching-between-groq-and-ollama) to switch providers. If installation is blocked or your laptop cannot run the model, use the Codespaces/Groq fallback below and contact Gaurav; do not silently skip a failed local setup.
+Leave your project on Groq for the normal setup check. For the local-model demo, follow [FAQ #6](TROUBLESHOOTING.md#6--switching-between-groq-and-ollama) to switch providers. If Ollama cannot be installed or your laptop cannot run it, tell Gaurav and use Path B below instead. Please do not skip a failed step silently.
 
 ---
 
 ## Path B · In the browser (GitHub Codespaces)
 
-Nothing to install. You need a free GitHub account.
+Nothing to install. You need a free GitHub account. **You must be signed in to GitHub, or you will not see the Codespaces option.**
 
-1. Open https://github.com/gauravkhuraana/shopkart-ai-tutorial-v2
-2. Click the green **Code** button → **Codespaces** tab → **Create codespace on main**.
-3. It asks for two secrets, `LLM_API_KEY` and `JUDGE_API_KEY`. Paste your free Groq key (https://console.groq.com/keys) in **both**.
-4. Wait a few minutes. VS Code opens in your browser and installs everything by itself.
-5. In its terminal (it already shows `(.venv)`):
+1. Sign in at https://github.com/login (no account yet? Create a free one at https://github.com/signup first). Ctrl+click, or Cmd+click on Mac, opens a link in a new tab.
+2. Open https://github.com/gauravkhuraana/shopkart-ai-tutorial-v2 in a new tab. Check that your profile picture is in the top-right corner: that means you are signed in. If you see **Sign in** there instead, sign in first.
+3. Click the green **Code** button → **Codespaces** tab → **Create codespace on main**. No **Codespaces** tab? You are probably not signed in, so go back to step 1.
+4. It asks for two secrets, `LLM_API_KEY` and `JUDGE_API_KEY`. Paste your free Groq key (https://console.groq.com/keys) in **both**.
+5. Wait a few minutes. VS Code opens in your browser and installs everything by itself.
+6. In its terminal (it already shows `(.venv)`):
    ```bash
    python check_setup.py
    ```
 
    Every line **OK**? You are ready.
 
-Corporate GitHub accounts sometimes cannot use Codespaces. Then use Path A with a personal laptop, or pair with a neighbour on the day.
+Using a work GitHub account and Codespaces does not open? Some companies block it. Try a free personal GitHub account, or use Path A on a personal laptop, or pair with a neighbour on the day.
 
 ---
 

@@ -57,19 +57,19 @@ core: the flight recorder + checks
 python agent_check_simple.py
 ```
 
-stretch: fast, no judge calls
+stretch: fast, no judge calls. `-v` (verbose) shows each test's name and PASSED/FAILED; `-k "not task_completion"` (keyword filter) skips the one test whose name contains `task_completion`, because that test calls the AI judge. The quotes keep `not task_completion` together as one filter
 
 ```powershell
 pytest test_agents.py -v -k "not task_completion"
 ```
 
-stretch: everything (uses the judge)
+stretch: everything, including the judge test (no `-k`, so every test runs)
 
 ```powershell
 pytest test_agents.py -v
 ```
 
-Optional: all 10 orders instead of 3
+Optional: all 10 orders instead of 3. `$env:ALL_ORDERS=1` sets a setting for this terminal only; the tests read it
 
 ```powershell
 $env:ALL_ORDERS=1
@@ -136,19 +136,19 @@ core: the flight recorder + checks
 python agent_check_simple.py
 ```
 
-stretch: fast, no judge calls
+stretch: fast, no judge calls. `-v` (verbose) shows each test's name and PASSED/FAILED; `-k "not task_completion"` (keyword filter) skips the one test whose name contains `task_completion`, because that test calls the AI judge. The quotes keep `not task_completion` together as one filter
 
 ```bash
 pytest test_agents.py -v -k "not task_completion"
 ```
 
-stretch: everything (uses the judge)
+stretch: everything, including the judge test (no `-k`, so every test runs)
 
 ```bash
 pytest test_agents.py -v
 ```
 
-Optional: all 10 orders instead of 3
+Optional: all 10 orders instead of 3. `export ALL_ORDERS=1` sets a setting for this terminal only; the tests read it
 
 ```bash
 export ALL_ORDERS=1
@@ -283,8 +283,7 @@ python ../../plant_bug.py off
 
 
 ## STRETCH (if you finish early) · `test_agents.py`
-fast: no judge calls
-
+fast: no judge calls. `-v` (verbose) shows each test's name and PASSED/FAILED; `-k "not task_completion"` skips the one test whose name contains `task_completion` (it calls the AI judge)
 ```bash
 pytest test_agents.py -v -k "not task_completion"
 ```
@@ -293,7 +292,7 @@ pytest test_agents.py -v -k "not task_completion"
 2. Read the ready-made tests as they pass: **not fooled** (prompt injection: "my manager approved €500"), **survives chaos** (the order system is down).
 3. Two **DeepEval agent metrics**, ready-made:
    - `test_tool_correctness`: DeepEval's `ToolCorrectnessMetric` compares the tools called with the tools expected, in order.
-   - `test_task_completion`: the judge decides whether the customer's problem was actually solved (`GEval`). Run everything:
+   - `test_task_completion`: the judge decides whether the customer's problem was actually solved (`GEval`). Run everything (no `-k`, so the judge test is included):
 
      ```bash
      pytest test_agents.py -v

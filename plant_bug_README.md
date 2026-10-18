@@ -111,6 +111,12 @@ flowchart TD
 
 All commands below run from the project root. Test paths use Windows separators; on Mac/Linux, replace `\` with `/`.
 
+**Reading the test commands below:**
+
+* `python -m pytest <file>` runs the tests in that file, using your active Python.
+* `-v` (verbose) prints one line per test with its name and PASSED/FAILED.
+* `-k <words>` (keyword filter) runs only tests whose name contains those words. `-k price` picks the price question. `-k "tool_correctness and 1043"` needs both parts in the name (this test name for order 1043). Quotes keep the filter together.
+
 ```powershell
 python plant_bug.py
 python plant_bug.py off

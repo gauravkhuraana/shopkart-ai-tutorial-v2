@@ -55,7 +55,7 @@ core
 python rules_simple.py
 ```
 
-stretch: all 10 golden questions
+stretch: all 10 golden questions. `python -m pytest` runs pytest with your active Python; `-v` (verbose) prints each test's name and PASSED/FAILED instead of just dots
 
 ```powershell
 python -m pytest test_rules.py -v
@@ -102,7 +102,7 @@ core
 python rules_simple.py
 ```
 
-stretch: all 10 golden questions
+stretch: all 10 golden questions. `python -m pytest` runs pytest with your active Python; `-v` (verbose) prints each test's name and PASSED/FAILED instead of just dots
 
 ```bash
 python -m pytest test_rules.py -v
@@ -160,7 +160,7 @@ python rules_simple.py
 **Done when** experiment 1 prints **FAIL** with the forbidden phrase, and the normal run prints **PASS**.
 
 ## STRETCH (if you finish early) · `test_rules.py`
-The same two rules, on all 10 golden questions, the way a test team runs them:
+The same two rules, on all 10 golden questions, the way a test team runs them (`python -m pytest` runs pytest with your active Python; `-v` = verbose: one line per test with its name and PASSED/FAILED):
 ```bash
 python -m pytest test_rules.py -v
 ```

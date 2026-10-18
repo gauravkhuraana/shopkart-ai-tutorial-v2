@@ -36,7 +36,7 @@ core: one answer, scored 3 times (fill in MY_SCORE first!)
 python trial_simple.py
 ```
 
-stretch: both judges, five answers (fill in my_scores.yaml first!)
+stretch: both judges, five answers (fill in my_scores.yaml first!). `--runs 2` means: score every answer 2 times per judge (the default is 3), so you can see how much each judge wobbles. A smaller number means fewer calls, which helps if you hit rate limits
 
 ```powershell
 python judge_the_judge.py --runs 2
@@ -63,7 +63,7 @@ core: one answer, scored 3 times (fill in MY_SCORE first!)
 python trial_simple.py
 ```
 
-stretch: both judges, five answers (fill in my_scores.yaml first!)
+stretch: both judges, five answers (fill in my_scores.yaml first!). `--runs 2` means: score every answer 2 times per judge (the default is 3), so you can see how much each judge wobbles. A smaller number means fewer calls, which helps if you hit rate limits
 
 ```bash
 python judge_the_judge.py --runs 2
@@ -125,7 +125,7 @@ sequenceDiagram
 
 ## STRETCH (if you finish early) · `judge_the_judge.py`
 1. Open `my_scores.yaml`: five answers. **Score each one yourself** in `my_score`. Don't run anything first.
-2. Put both judges on trial:
+2. Put both judges on trial (`--runs 2` = score every answer 2 times per judge instead of the default 3, to measure the wobble with fewer calls):
    ```bash
    python judge_the_judge.py --runs 2
    ```

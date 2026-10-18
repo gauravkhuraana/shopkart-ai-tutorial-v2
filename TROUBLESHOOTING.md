@@ -99,7 +99,7 @@ python3.12 setup_env.py
 
 Activate the new `.venv` using your platform's command in the setup guide. Then `python --version` must show **3.12.x** and normal `python` commands use it, even if your system default is another version. Run `python check_setup.py` inside that environment.
 
-VS Code is installed separately from [its official download page](https://code.visualstudio.com/download). Install Microsoft's **Python** extension, open the project folder, and select the `.venv` interpreter with **Python: Select Interpreter**. Installing the extension alone does not install Python.
+VS Code is installed separately from [its official download page](https://code.visualstudio.com/download). Install Microsoft's **Python** extension and open the project folder. **Optional:** if VS Code asks which interpreter to use, choose the one in `.venv` (or use **Python: Select Interpreter**); the terminal commands work without it. Installing the extension alone does not install Python.
 
 ### #2 · Library installation fails
 - Easiest fix on **Windows**:
@@ -133,16 +133,15 @@ The setup script creates the virtual environment and installs the libraries. You
 ### #3 · Model server not reachable
 Using **Groq** (the default)? Check your internet connection, and that `LLM_API_KEY` in `.env` holds your Groq key (see #7). Company network? See #17.
 
-Using **Ollama** (`localhost:11434`)? Then Ollama isn't running.
-- Windows/Mac: start the **Ollama** app (look for the llama icon in the tray/menu bar).
-- Linux / any: open a **new terminal window** and start the server:
+Using **Ollama** (`localhost:11434`)? First open http://localhost:11434 in a browser. **"Ollama is running" means it is fine: do not run `ollama serve`.** If the page does not load:
+- Windows/Mac: start the **Ollama** app (look for the llama icon in the tray/menu bar), then refresh the page.
+- Still not loading, or on Linux: open a **new terminal window** and start the server:
 
   ```bash
   ollama serve
   ```
 
-  **Leave that window open** (closing it stops Ollama). If it says `address already in use`, verify the browser message below; the app may already be running.
-- Test: open http://localhost:11434 in a browser. It should say "Ollama is running".
+  **Leave that window open** (closing it stops Ollama). If it says *"Only one usage of each socket address (protocol/network address/port) is normally permitted"* (Windows) or `address already in use`, that is **good news**: Ollama is already running. Check the browser page.
 - Using LM Studio instead? Start its **local server** (Developer tab) and use Option C in `.env`.
 
 ### #3b · `ModuleNotFoundError: No module named 'config'`
@@ -170,7 +169,7 @@ Or use Command Prompt instead:
 
 ### #5 · No admin rights on a company laptop
 - Python: the winget command and the official installer normally install Python for your own user. If your company blocks installs or asks for an administrator password, contact Gaurav and use the [browser fallback](PRE_CONFERENCE.md#path-b--in-the-browser-github-codespaces). Do not try to bypass the restriction.
-- Ollama is required preparation for local attendees, but may need admin. If installation is blocked, contact Gaurav and use the documented Codespaces/Groq fallback in [PRE_CONFERENCE.md](PRE_CONFERENCE.md); Groq remains the default provider.
+- Ollama is for Path A (your own laptop) only, and may need admin rights. If installation is blocked, tell Gaurav and use Path B (browser) in [PRE_CONFERENCE.md](PRE_CONFERENCE.md); Groq stays the default.
 - Company firewall blocks sign-ups or downloads: pair with a neighbour for Part 1, then point your tests at the hosted bot for Part 2 (#18).
 
 ### #6 · Switching between Groq and Ollama
@@ -259,7 +258,7 @@ The judge model returned something that isn't valid JSON. Small local models do 
 
 ### #14 · Error 429 / "rate limit"
 Free tiers limit requests or tokens per minute. The project lets DeepEval retry transient failures up to 6 times by default.
-- Wait a minute and re-run only what failed:
+- Wait a minute and re-run only what failed (`--lf` = **last failed**: run just the tests that failed in the previous run):
 
   ```bash
   pytest --lf
@@ -275,7 +274,7 @@ Free tiers limit requests or tokens per minute. The project lets DeepEval retry 
   pytest test_rules.py
   ```
 
-  For a single judge question, first return to the project folder and enter the judge step:
+  For a single judge question, first return to the project folder and enter the judge step (`-k price` = **keyword filter**: run only tests whose name contains `price`):
 
   ```bash
   cd ../..
@@ -290,7 +289,7 @@ Free tiers limit requests or tokens per minute. The project lets DeepEval retry 
   ```
 
 - If your provider needs longer backoff, set `DEEPEVAL_RETRY_MAX_ATTEMPTS` and `DEEPEVAL_RETRY_CAP_SECONDS` in `.env`
-- Step 9:
+- Step 9 (`--runs 2` = score each answer 2 times per judge instead of the default 3, so there are fewer calls):
 
   ```bash
   python judge_the_judge.py --runs 2
@@ -301,10 +300,16 @@ Free tiers limit requests or tokens per minute. The project lets DeepEval retry 
 ### #15 · The tests are very slow
 The AI-judge tests make several judge calls per question. That's the "taxi meter" from the slides.
 - Only questions marked `judge: true` in `golden_questions.yaml` use the judge. Set more of them to `false` while practising.
-- Run the cheap checks first:
+- Run the cheap checks first, from the project folder. Giving pytest a folder runs every test in it, and step 6's rules use no judge at all:
 
   ```bash
-  pytest -k "not ai_judge"
+  pytest evaluate/step6_rules
+  ```
+
+  For the agent tests, `-k "not task_completion"` (keyword filter) skips the one test whose name contains `task_completion`, because that test calls the judge:
+
+  ```bash
+  pytest evaluate/step8_agent -k "not task_completion"
   ```
 
 ### #16 · Agent mode / `/agent` shows an error, or the step log is empty

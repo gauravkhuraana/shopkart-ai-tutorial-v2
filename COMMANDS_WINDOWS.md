@@ -22,7 +22,7 @@ Mac user? Use [COMMANDS_MAC.md](COMMANDS_MAC.md). Stuck? [TROUBLESHOOTING.md](TR
   - [Break the bot on purpose (Part 2), and ALWAYS fix it after](#break-the-bot-on-purpose-part-2-and-always-fix-it-after)
   - [The scoreboard and "run everything"](#the-scoreboard-and-run-everything)
   - [Run without the real model (practice, or bad internet)](#run-without-the-real-model-practice-or-bad-internet)
-  - [Ollama (required preparation on local laptops)](#ollama-required-preparation-on-local-laptops)
+  - [Ollama (only if you chose Path A)](#ollama-only-if-you-chose-path-a)
 - [Which step needs what](#which-step-needs-what)
 - [Part 1 · BUILD the bot](#part-1--build-the-bot)
   - [Step 1 · Talk to the model](#step-1--talk-to-the-model)
@@ -56,7 +56,7 @@ Mac user? Use [COMMANDS_MAC.md](COMMANDS_MAC.md). Stuck? [TROUBLESHOOTING.md](TR
 
 ### GitHub Codespaces (even when your laptop runs Windows)
 
-A Codespace runs **Linux**, not Windows. Use [the Mac/Linux command guide](COMMANDS_MAC.md#using-the-tutorial) for activation and all tutorial commands; do not paste PowerShell commands from this page into its terminal. VS Code opens in your browser and prepares the environment automatically.
+A Codespace runs **Linux**, not Windows. **First sign in to GitHub** (a free account), or the Codespaces option will not appear; see [Path B](PRE_CONFERENCE.md#path-b--in-the-browser-github-codespaces). Use [the Mac/Linux command guide](COMMANDS_MAC.md#using-the-tutorial) for activation and all tutorial commands; do not paste PowerShell commands from this page into its terminal. VS Code opens in your browser and prepares the environment automatically.
 
 When the bot starts, open forwarded port **8000** for the chat page. Do not start the scoreboard during setup; follow the [Step 6 scoreboard instructions](COMMANDS_MAC.md#view-the-scoreboard-after-your-first-pytest-run) after your first pytest run.
 
@@ -134,7 +134,7 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-In your already-open VS Code project, click `.env` in Explorer and paste your free Groq key (https://console.groq.com/keys) in **both** places that say `gsk_your_key_here` (`LLM_API_KEY` and `JUDGE_API_KEY`). Save, then use **Python: Select Interpreter** to choose `.venv`.
+In your already-open VS Code project, click `.env` in Explorer and paste your free Groq key (https://console.groq.com/keys) in **both** places that say `gsk_your_key_here` (`LLM_API_KEY` and `JUDGE_API_KEY`). Save. **Optional:** if VS Code asks which interpreter to use, choose `.venv` (or use **Python: Select Interpreter**). You can ignore it: the terminal commands work without it.
 
 ### Activate the virtual environment (EVERY new terminal)
 your project folder
@@ -244,7 +244,7 @@ python plant_bug.py off
 ```
 
 ### The scoreboard and "run everything"
-from the project folder: all of Part 2 (the bot must be running)
+from the project folder: all of Part 2 (the bot must be running). `-v` = verbose: show each test's name and PASSED/FAILED
 
 ```powershell
 pytest evaluate -v
@@ -269,16 +269,17 @@ uvicorn fake_llm:app --port 9999
 
 then, in .env:  LLM_BASE_URL=http://localhost:9999/v1   LLM_MODEL=fake   JUDGE_BASE_URL=http://localhost:9999/v1   JUDGE_MODEL=fake
 
-### Ollama (required preparation on local laptops)
-Install [Ollama](https://ollama.com/download), launch the app, and open a new PowerShell terminal. Do this before the event for a possible local-model demo; Groq remains the default. Browser-only attendees use the Codespaces fallback above.
+### Ollama (only if you chose Path A)
+Ollama is a small AI that runs on your own laptop. Install [Ollama](https://ollama.com/download), launch the app, and open a new PowerShell terminal. Do this before the event for a possible demo; Groq stays the default. Using Path B (browser)? Skip this.
 
 These commands do not require the Python venv. Expect a version number first:
 ```powershell
 ollama --version
 ```
 
-Check **http://localhost:11434** for **Ollama is running**. If the app is not serving requests, start the server in window 1 and leave it open; run the remaining commands in another terminal:
-window 1, leave it open. "address already in use" = it is already running: good
+First open **http://localhost:11434** in a browser. **It says "Ollama is running"? Then do not run the next command**: the Ollama app already started the server. Only if the page does not load, open the Ollama app and refresh, and if it still does not load, start the server yourself in window 1 and leave it open (run the remaining commands in another terminal).
+
+Ran it anyway and got "Only one usage of each socket address (protocol/network address/port) is normally permitted"? That is good news: Ollama is already running.
 
 ```powershell
 ollama serve
@@ -801,6 +802,13 @@ You should see **`(.venv)`**. Run the step 6 commands below in this test termina
 
 ## Step 6 · Rules first
 Plain Python rules: words the answer must say or must never say. No AI, free, instant.
+
+**What the pytest options mean** (you will see them from here to Step 8):
+- `pytest` (or `python -m pytest`, which runs it with your active Python) runs the tests in the file you name.
+- `-v` = **verbose**: print one line per test with its name and PASSED/FAILED, instead of just dots.
+- `-k price` = **keyword filter**: run only tests whose name contains `price`. Step 8 uses `-k "not task_completion"`: skip tests with that word in the name (that test calls the AI judge).
+- `--runs 2` (Step 9) = score each answer 2 times per judge instead of the default 3.
+
 ```powershell
 cd evaluate\step6_rules
 ```
@@ -811,7 +819,7 @@ core: one question, two rules, PASS or FAIL (EXPERIMENT 1 = the liar)
 python rules_simple.py
 ```
 
-stretch: the same rules on all 10 golden questions
+stretch: the same rules on all 10 golden questions (`-v` = show each test's name and PASSED/FAILED)
 
 ```powershell
 python -m pytest test_rules.py -v
@@ -822,6 +830,8 @@ break the REAL bot: price-match goes red
 ```powershell
 python ..\..\plant_bug.py liar
 ```
+
+same command again, now it should show the price-match test FAILED
 
 ```powershell
 python -m pytest test_rules.py -v
@@ -851,13 +861,13 @@ core: two scores and the judge's reasons (EXPERIMENT 1 = the liar, 2 = the poiso
 python judge_simple.py
 ```
 
-stretch: one question first (several judge calls)
+stretch: one question first (several judge calls). `-k price` = run only tests whose name contains `price`
 
 ```powershell
 pytest test_judge.py -v -k price
 ```
 
-stretch: all judge questions (slower)
+stretch: all judge questions (slower; no `-k`, so every test runs)
 
 ```powershell
 pytest test_judge.py -v
@@ -869,7 +879,7 @@ the scoreboard: every score with its reason
 start ..\report.html
 ```
 
-break the real bot, run the price question again
+break the real bot, run the price question again (`-k price` again, so only that question)
 
 ```powershell
 python ..\..\plant_bug.py liar
@@ -927,19 +937,19 @@ always restore the healthy crew
 python ..\..\plant_bug.py off
 ```
 
-stretch: fast, no judge calls
+stretch: fast, no judge calls. `-k "not task_completion"` skips the one test whose name contains `task_completion`, because it calls the AI judge (quotes keep the filter together)
 
 ```powershell
 pytest test_agents.py -v -k "not task_completion"
 ```
 
-stretch: everything (uses the judge)
+stretch: everything, including the judge test (no `-k`, so every test runs)
 
 ```powershell
 pytest test_agents.py -v
 ```
 
-optional: all 10 orders instead of 3
+optional: all 10 orders instead of 3 (`$env:ALL_ORDERS=1` sets a setting for this terminal only; the tests read it)
 
 ```powershell
 $env:ALL_ORDERS=1
@@ -977,7 +987,7 @@ python trial_simple.py
 
 For the stretch, FIRST score the 5 answers in my_scores.yaml yourself, then:
 
-both judges (small local vs big hosted) against YOUR scores
+both judges (small local vs big hosted) against YOUR scores. `--runs 2` = score each answer 2 times per judge (default 3): fewer calls, so fewer rate-limit problems
 
 ```powershell
 python judge_the_judge.py --runs 2
@@ -1029,7 +1039,7 @@ python tools\check_steps.py
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
-**Command 3**
+**Command 3** (`-r requirements.txt` = install every library listed in that file)
 
 ```powershell
 pip install -r requirements.txt
@@ -1041,7 +1051,7 @@ pip install -r requirements.txt
 Get-NetTCPConnection -LocalPort 8000 -State Listen | ForEach-Object { Stop-Process -Id $_.OwningProcess }
 ```
 
-**Command 5**
+**Command 5** (`--runs 1` = score each answer once per judge: the fewest calls)
 
 ```powershell
 python judge_the_judge.py --runs 1

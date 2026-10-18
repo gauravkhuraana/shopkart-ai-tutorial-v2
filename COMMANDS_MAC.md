@@ -22,7 +22,7 @@ Windows user? Use [COMMANDS_WINDOWS.md](COMMANDS_WINDOWS.md). Stuck? [TROUBLESHO
   - [Break the bot on purpose (Part 2), and ALWAYS fix it after](#break-the-bot-on-purpose-part-2-and-always-fix-it-after)
   - [The scoreboard and "run everything"](#the-scoreboard-and-run-everything)
   - [Run without the real model (practice, or bad internet)](#run-without-the-real-model-practice-or-bad-internet)
-  - [Ollama (required preparation on local laptops)](#ollama-required-preparation-on-local-laptops)
+  - [Ollama (only if you chose Path A)](#ollama-only-if-you-chose-path-a)
 - [Which step needs what](#which-step-needs-what)
 - [Part 1 · BUILD the bot](#part-1--build-the-bot)
   - [Step 1 · Talk to the model](#step-1--talk-to-the-model)
@@ -57,7 +57,7 @@ Windows user? Use [COMMANDS_WINDOWS.md](COMMANDS_WINDOWS.md). Stuck? [TROUBLESHO
 
 ### GitHub Codespaces (browser users, including Windows laptops)
 
-A Codespace runs **Linux**: use this guide's Mac/Linux commands, not PowerShell. VS Code opens in your browser; the environment is prepared automatically. Confirm the terminal shows `(.venv)`; otherwise activate it from the project folder:
+A Codespace runs **Linux**: use this guide's Mac/Linux commands, not PowerShell. **First sign in to GitHub** (a free account), or the Codespaces option will not appear; see [Path B](PRE_CONFERENCE.md#path-b--in-the-browser-github-codespaces). VS Code opens in your browser; the environment is prepared automatically. Confirm the terminal shows `(.venv)`; otherwise activate it from the project folder:
 ```bash
 source .venv/bin/activate
 ```
@@ -137,7 +137,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-In your already-open VS Code project, click `.env` in Explorer and paste your free Groq key (https://console.groq.com/keys) in **both** places that say `gsk_your_key_here` (`LLM_API_KEY` and `JUDGE_API_KEY`). Save. Use **Python: Select Interpreter** to choose `.venv`.
+In your already-open VS Code project, click `.env` in Explorer and paste your free Groq key (https://console.groq.com/keys) in **both** places that say `gsk_your_key_here` (`LLM_API_KEY` and `JUDGE_API_KEY`). Save. **Optional:** if VS Code asks which interpreter to use, choose `.venv` (or use **Python: Select Interpreter**). You can ignore it: the terminal commands work without it.
 
 ### Activate the virtual environment (EVERY new terminal)
 your project folder
@@ -256,7 +256,7 @@ From the project folder: all of Part 2 (the bot must be running)
 pytest evaluate -v
 ```
 
-Every pytest run writes `evaluate/report.html`: green/red results plus any judge scores and reasons. Use the Step 6 instructions to view it.
+Every pytest run writes `evaluate/report.html`: green/red results plus any judge scores and reasons. Use the Step 6 instructions to view it. (`-v` = verbose: show each test's name and PASSED/FAILED.)
 
 ### Run without the real model (practice, or bad internet)
 ```bash
@@ -271,16 +271,17 @@ uvicorn fake_llm:app --port 9999
 
 then, in .env:  LLM_BASE_URL=http://localhost:9999/v1   LLM_MODEL=fake   JUDGE_BASE_URL=http://localhost:9999/v1   JUDGE_MODEL=fake
 
-### Ollama (required preparation on local laptops)
-Install [Ollama](https://ollama.com/download), launch the app, and open a new terminal. Do this before the event for a possible local-model demo; Groq remains the default. Browser-only attendees use the Codespaces fallback above.
+### Ollama (only if you chose Path A)
+Ollama is a small AI that runs on your own laptop. Install [Ollama](https://ollama.com/download), launch the app, and open a new terminal. Do this before the event for a possible demo; Groq stays the default. Using Path B (browser)? Skip this.
 
 These commands do not require the Python venv. Expect a version number first:
 ```bash
 ollama --version
 ```
 
-Check **http://localhost:11434** for **Ollama is running**. If the app is not serving requests, start the server in window 1 and leave it open; run the remaining commands in another terminal:
-window 1, leave it open. "address already in use" = it is already running: good
+First open **http://localhost:11434** in a browser. **It says "Ollama is running"? Then do not run the next command**: the Ollama app already started the server. Only if the page does not load, open the Ollama app and refresh, and if it still does not load, start the server yourself in window 1 and leave it open (run the remaining commands in another terminal).
+
+Ran it anyway and got "address already in use"? That is good news: Ollama is already running.
 
 ```bash
 ollama serve
@@ -806,6 +807,13 @@ You should see **`(.venv)`**. Run the step 6 commands below in this test termina
 
 ## Step 6 · Rules first
 Plain Python rules: words the answer must say or must never say. No AI, free, instant.
+
+**What the pytest options mean** (you will see them from here to Step 8):
+- `pytest` (or `python -m pytest`, which runs it with your active Python) runs the tests in the file you name.
+- `-v` = **verbose**: print one line per test with its name and PASSED/FAILED, instead of just dots.
+- `-k price` = **keyword filter**: run only tests whose name contains `price`. Step 8 uses `-k "not task_completion"`: skip tests with that word in the name (that test calls the AI judge).
+- `--runs 2` (Step 9) = score each answer 2 times per judge instead of the default 3.
+
 ```bash
 cd evaluate/step6_rules
 ```
@@ -816,7 +824,7 @@ core: one question, two rules, PASS or FAIL (EXPERIMENT 1 = the liar)
 python rules_simple.py
 ```
 
-stretch: the same rules on all 10 golden questions
+stretch: the same rules on all 10 golden questions (`-v` = show each test's name and PASSED/FAILED)
 
 ```bash
 python -m pytest test_rules.py -v
@@ -838,7 +846,7 @@ open ../report.html
 source .venv/bin/activate
 ```
 
-Start the report server in that separate terminal:
+Start the report server in that separate terminal (`-m http.server` = Python's built-in simple web server; `8080` = the port to listen on; `--directory evaluate` = serve the files in the `evaluate` folder, where `report.html` lives):
 
 ```bash
 python -m http.server 8080 --directory evaluate
@@ -853,6 +861,8 @@ break the REAL bot: price-match goes red
 ```bash
 python ../../plant_bug.py liar
 ```
+
+same command again, now it should show the price-match test FAILED
 
 ```bash
 python -m pytest test_rules.py -v
@@ -882,13 +892,13 @@ core: two scores and the judge's reasons (EXPERIMENT 1 = the liar, 2 = the poiso
 python judge_simple.py
 ```
 
-stretch: one question first (several judge calls)
+stretch: one question first (several judge calls). `-k price` = run only tests whose name contains `price`
 
 ```bash
 pytest test_judge.py -v -k price
 ```
 
-stretch: all judge questions (slower)
+stretch: all judge questions (slower; no `-k`, so every test runs)
 
 ```bash
 pytest test_judge.py -v
@@ -902,7 +912,7 @@ open ../report.html
 
 **Codespaces:** refresh the scoreboard opened in [Step 6](#view-the-scoreboard-after-your-first-pytest-run). If its server is no longer running, follow those instructions to start it again in a separate terminal.
 
-break the real bot, run the price question again
+break the real bot, run the price question again (`-k price` again, so only that question)
 
 ```bash
 python ../../plant_bug.py liar
@@ -960,19 +970,19 @@ always restore the healthy crew
 python ../../plant_bug.py off
 ```
 
-stretch: fast, no judge calls
+stretch: fast, no judge calls. `-k "not task_completion"` skips the one test whose name contains `task_completion`, because it calls the AI judge (quotes keep the filter together)
 
 ```bash
 pytest test_agents.py -v -k "not task_completion"
 ```
 
-stretch: everything (uses the judge)
+stretch: everything, including the judge test (no `-k`, so every test runs)
 
 ```bash
 pytest test_agents.py -v
 ```
 
-optional: all 10 orders instead of 3
+optional: all 10 orders instead of 3 (`export ALL_ORDERS=1` sets a setting for this terminal only; the tests read it)
 
 ```bash
 export ALL_ORDERS=1
@@ -1010,7 +1020,7 @@ python trial_simple.py
 
 For the stretch, FIRST score the 5 answers in my_scores.yaml yourself, then:
 
-both judges (small local vs big hosted) against YOUR scores
+both judges (small local vs big hosted) against YOUR scores. `--runs 2` = score each answer 2 times per judge (default 3): fewer calls, so fewer rate-limit problems
 
 ```bash
 python judge_the_judge.py --runs 2
@@ -1057,7 +1067,7 @@ python tools/check_steps.py
 source .venv/bin/activate
 ```
 
-**Command 2**
+**Command 2** (`-r requirements.txt` = install every library listed in that file)
 
 ```bash
 pip install -r requirements.txt
@@ -1069,7 +1079,7 @@ pip install -r requirements.txt
 lsof -ti :8000 | xargs kill
 ```
 
-**Command 4**
+**Command 4** (`--runs 1` = score each answer once per judge: the fewest calls)
 
 ```bash
 python judge_the_judge.py --runs 1

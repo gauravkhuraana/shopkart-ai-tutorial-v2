@@ -20,7 +20,7 @@ Everything is free and runs on your own laptop (or in your browser).
 
 - [Before the tutorial: set up your laptop (about 20 minutes)](#before-the-tutorial-set-up-your-laptop-about-20-minutes)
   - [Step 1 · Install Python and VS Code; get Git if needed](#step-1--install-python-and-vs-code-get-git-if-needed)
-  - [Step 2 · Install and test Ollama (required on local laptops)](#step-2--install-and-test-ollama-required-on-local-laptops)
+  - [Step 2 · Install and test Ollama (Path A only)](#step-2--install-and-test-ollama-path-a-only)
   - [Step 3 · Get the code and install execution libraries](#step-3--get-the-code-and-install-execution-libraries)
   - [Step 4 · Create your settings file and get a free Groq key](#step-4--create-your-settings-file-and-get-a-free-groq-key)
   - [Step 5 · Check that everything works](#step-5--check-that-everything-works)
@@ -36,11 +36,13 @@ Everything is free and runs on your own laptop (or in your browser).
 
 ## Before the tutorial: set up your laptop (about 20 minutes)
 
-Please do this **at home**, before the day. The Python libraries are about 150 MB. Local attendees must also download the Ollama model (about 2.5 GB) so we can demo it if the session allows.
+Please do this **at home**, before the day. The Python libraries are about 150 MB. If you install on your own laptop (Path A), you also download a small AI model for Ollama (about 2.5 GB) so we can demo it if time allows.
+
+> **Tip:** links open on the same page. **Ctrl+click** a link (Mac: **Cmd+click**) to open it in a new tab, so you do not lose your place.
 
 **Two ways to get ready** (full step-by-step in [PRE_CONFERENCE.md](PRE_CONFERENCE.md)):
-- **Path A · your own laptop** (below): install and test Python, install VS Code and Ollama, then use the setup script to install the execution libraries.
-- **Path B · in the browser** with GitHub Codespaces: nothing to install, for locked-down laptops. See [PRE_CONFERENCE.md](PRE_CONFERENCE.md).
+- **Path A · install on your laptop** (below): install Python, VS Code and Ollama, then run one setup command. Choose this if it is your own laptop, or your work laptop lets you install programs.
+- **Path B · use it in the browser** with GitHub Codespaces: nothing to install, but you must be **signed in to GitHub** (a free account) or the Codespaces option will not appear. Choose this if you are **not allowed to install programs** (for example a work laptop that asks for an administrator password), or Path A keeps failing. See [PRE_CONFERENCE.md](PRE_CONFERENCE.md).
 
 ### Step 1 · Install Python and VS Code; get Git if needed
 
@@ -69,23 +71,23 @@ Expect **Python 3.12.x**. If it is not found, see [FAQ #1](TROUBLESHOOTING.md#1-
 > **What is a terminal?** A window where you type commands.
 > Windows: press Start, type **PowerShell**, press Enter. Mac: press Cmd+Space, type **Terminal**, press Enter.
 
-### Step 2 · Install and test Ollama (required on local laptops)
+### Step 2 · Install and test Ollama (Path A only)
 
-Install [Ollama](https://ollama.com/download), launch its app, and open a new terminal. Prepare it at home for a possible local-model demo. **Groq remains the default** for the bot and judge; installing Ollama does not change `.env`. Browser-only or restricted-laptop attendees can use the Codespaces/Groq fallback in [PRE_CONFERENCE.md](PRE_CONFERENCE.md).
+Ollama is a small AI that runs on your own laptop. Install [Ollama](https://ollama.com/download), launch its app, and open a new terminal. Do this at home, for a possible demo. **Groq stays the default** for the bot and judge; installing Ollama does not change `.env`. **Using Path B (browser)? Skip this step.**
 
 **a) Check installation.** Expect an Ollama version number:
 ```text
 ollama --version
 ```
 
-**b) Check that Ollama is running.** Open **http://localhost:11434** in your web browser. It should say **Ollama is running**. If the app is not serving requests, run this in a dedicated terminal:
+**b) Check that Ollama is running.** Open **http://localhost:11434** in your web browser.
+- **It says "Ollama is running"?** This step is done. **Do not run `ollama serve`**: the Ollama app already started the server. Go to c).
+- **The page does not load?** Open the Ollama app (Start menu on Windows, Applications on Mac) and refresh. Still nothing? Run this in a dedicated terminal and **leave that window open** while you use the tutorial (closing it stops Ollama):
 ```bash
 ollama serve
 ```
 
-**Leave this window open** all the time you use the tutorial. Ollama works in this window. If you close it, Ollama stops.
-
-> It says `address already in use`? Good news: Ollama is already running (the Ollama app does this by itself on Windows and Mac). Close this window and go on.
+> Did you run it and get *"Only one usage of each socket address (protocol/network address/port) is normally permitted"* (Windows) or `address already in use` (Mac/Linux)? That is **good news**: Ollama is already running. Check that the browser page says **Ollama is running** and go on.
 
 **c) Download the model.** Use another terminal (one time only, about 2.5 GB):
 ```bash
@@ -165,7 +167,7 @@ Run `python --version`: it must show **3.12.x**. Once activated, normal `python`
 
 ### Step 5 · Check that everything works
 
-Run this from the project folder with **`(.venv)` active** (activate it again in every new terminal before Python scripts or tests). In VS Code, use **Python: Select Interpreter** and select `.venv` too.
+Run this from the project folder with **`(.venv)` active** (activate it again in every new terminal before Python scripts or tests). **Optional:** if VS Code asks which interpreter to use, choose `.venv`; you can ignore the prompt.
 
 ```bash
 python check_setup.py
@@ -323,7 +325,7 @@ Always restore the healthy bot afterwards, from that same step folder:
 python ../../plant_bug.py off
 ```
 
-**Run all of Part 2**, from the project folder with the step 5 bot running:
+**Run all of Part 2**, from the project folder with the step 5 bot running (`-v` = verbose: show each test's name and PASSED/FAILED):
 
 ```bash
 pytest evaluate -v
