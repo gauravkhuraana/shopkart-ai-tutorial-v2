@@ -56,13 +56,13 @@ core: two scores + the judge's reasons
 python judge_simple.py
 ```
 
-stretch: one question first
+stretch: one question first. `-v` (verbose) shows each test's name and PASSED/FAILED; `-k price` (keyword) runs only the tests whose name contains "price", so you pay for one question's judge calls, not all of them
 
 ```powershell
 pytest test_judge.py -v -k price
 ```
 
-stretch: all judge questions (slower)
+stretch: all judge questions (slower; no `-k`, so every test runs)
 
 ```powershell
 pytest test_judge.py -v
@@ -115,13 +115,13 @@ core: two scores + the judge's reasons
 python judge_simple.py
 ```
 
-stretch: one question first
+stretch: one question first. `-v` (verbose) shows each test's name and PASSED/FAILED; `-k price` (keyword) runs only the tests whose name contains "price", so you pay for one question's judge calls, not all of them
 
 ```bash
 pytest test_judge.py -v -k price
 ```
 
-stretch: all judge questions (slower)
+stretch: all judge questions (slower; no `-k`, so every test runs)
 
 ```bash
 pytest test_judge.py -v
@@ -200,13 +200,13 @@ python judge_simple.py
 **Done when** you've seen experiment 2 give one PASS and one FAIL, and you can explain why.
 
 ## STRETCH (if you finish early) · `test_judge.py`
-one question first (5 metrics = several judge calls)
+one question first (5 metrics = several judge calls). `-v` (verbose) shows each test's name and PASSED/FAILED; `-k price` (keyword) runs only the tests whose name contains "price"
 
 ```bash
 pytest test_judge.py -v -k price
 ```
 
-all judge questions (slower)
+all judge questions (slower; no `-k`, so every test runs)
 
 ```bash
 pytest test_judge.py -v
