@@ -73,7 +73,7 @@ This browser fallback uses **Groq**, not Ollama on your own laptop. **Save your 
   ```
 
 - Each code block contains one command. Read the explanation beside it before copying the next command.
-- On Mac, setup and creating the venv use the **uv-managed CPython 3.12.13** selected below. Linux/Codespaces with Python 3.12 already provided can use `python3.12` instead. Once `(.venv)` is active, plain `python` uses that environment's 3.12.
+- On Mac/Linux, setup and creating the venv use **`python3.12`**. Once `(.venv)` is active, plain `python` uses that environment's 3.12.
 
 ---
 
@@ -99,22 +99,22 @@ ls check_setup.py
 ```
 
 ### Set up (one time)
-On Mac, first run the [Mac installation commands](PRE_CONFERENCE.md#mac-install-with-terminal) for **uv 0.11.7 and CPython 3.12.13**. Keep other Python versions installed; no Homebrew, `sudo`, or PATH changes are needed. This full-path lookup works in a fresh terminal:
+First install Python 3.12 with [the Mac installation steps](PRE_CONFERENCE.md#mac-two-commands). Keep other Python versions installed; they live side by side. In a **new** terminal, this command explicitly selects 3.12 (including on Linux):
 
 ```bash
-"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" --version
+python3.12 --version
 ```
 
-Before creating the venv, expect **Python 3.12.13** above, then **Python is working** below. If uv or the interpreter is missing, stop and finish the installation guide:
+Before creating the venv, expect **Python 3.12.x** above, then **Python is working** below. If `python3.12` is not found, finish the installation guide and open a new terminal:
 
 ```bash
-"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" -c "print('Python is working')"
+python3.12 -c "print('Python is working')"
 ```
 
 Create `.venv`, install execution libraries, create `.env`, and run the initial setup check:
 
 ```bash
-"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" setup_env.py
+python3.12 setup_env.py
 ```
 
 The setup script installs execution libraries (FastAPI, Uvicorn, OpenAI SDK, LangGraph, DeepEval and pytest) into `.venv`, not Python or VS Code. Its initial check uses the venv interpreter; finish the Groq settings before checking again.
@@ -122,7 +122,7 @@ If an existing `.venv` uses another Python version, setup stops without changing
 
 Prefer to do it by hand? Run these four commands individually:
 ```bash
-"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" -m venv .venv
+python3.12 -m venv .venv
 ```
 
 ```bash

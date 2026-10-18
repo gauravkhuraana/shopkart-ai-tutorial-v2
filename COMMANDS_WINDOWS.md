@@ -96,22 +96,22 @@ dir check_setup.py
 ```
 
 ### Set up (one time)
-First run the [Windows installation commands](PRE_CONFERENCE.md#windows-install-with-powershell) for **uv 0.11.7 and CPython 3.12.13**. Keep other Python versions installed; no PATH checkbox or Windows launcher is needed. The full-path lookup below works in a fresh PowerShell terminal:
+First install Python 3.12 with [the one-command Windows installation](PRE_CONFERENCE.md#windows-one-command). Keep other Python versions installed; they live side by side. In a **new** terminal, this command explicitly selects 3.12:
 
 ```powershell
-& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) --version
+py -3.12 --version
 ```
 
-Before creating the venv, expect **Python 3.12.13** above, then **Python is working** below. If uv or the interpreter is missing, stop and finish the installation guide:
+Before creating the venv, expect **Python 3.12.x** above, then **Python is working** below. If `py` cannot find 3.12, finish the installation guide and open a new terminal:
 
 ```powershell
-& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) -c "print('Python is working')"
+py -3.12 -c "print('Python is working')"
 ```
 
 Create `.venv`, install execution libraries, create `.env`, and run the initial setup check:
 
 ```powershell
-& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) setup_env.py
+py -3.12 setup_env.py
 ```
 
 The setup script installs execution libraries (FastAPI, Uvicorn, OpenAI SDK, LangGraph, DeepEval and pytest) into `.venv`, not Python or VS Code. Its initial check uses the venv interpreter; finish the Groq settings before checking again.
@@ -119,7 +119,7 @@ If an existing `.venv` uses another Python version, setup stops without changing
 
 Prefer to do it by hand? Run these four commands individually:
 ```powershell
-& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) -m venv .venv
+py -3.12 -m venv .venv
 ```
 
 ```powershell

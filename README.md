@@ -46,13 +46,25 @@ Please do this **at home**, before the day. The Python libraries are about 150 M
 
 | Program | Where to get it | Note |
 |---|---|---|
-| **CPython 3.12.13** (recommended installation; stable 3.12.x required) | [Exact Windows/Mac installation commands](PRE_CONFERENCE.md#1--install-python-one-time) | Uses pinned uv; no release-page choices or Python PATH changes |
+| **Python 3.12.10** (stable 3.12.x required) | One command: `winget install --id Python.Python.3.12 --version 3.12.10 --exact --source winget` (Windows) or the [Mac steps](PRE_CONFERENCE.md#mac-two-commands) | Not the newest Python: the workshop is built on 3.12 |
 | **VS Code** | https://code.visualstudio.com/download | Install the **Python** extension published by **Microsoft** |
 | **Git** | https://git-scm.com/downloads | Or skip Git and download this project as a ZIP |
 
-**First complete [preconference step 1](PRE_CONFERENCE.md#1--install-python-one-time), including its version and execution tests.** It installs **CPython 3.12.13 with uv 0.11.7** without changing your default Python. Do not choose "the latest Python" from python.org: newer 3.12 security releases are source-only, and the old Windows PATH-checkbox instructions do not apply to every installer. Keep other Python versions installed.
+**Follow [preconference step 1](PRE_CONFERENCE.md#1--install-python-one-time) to install and test Python.** Do not install "the latest Python" from python.org (it now advertises 3.14); the workshop needs 3.12. Keep any other Python versions you already have: they live side by side with 3.12.
 
-Expect **Python 3.12.13**, then **Python is working** from that guide's managed-interpreter commands. If a command fails, fix [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) before continuing. Linux/Codespaces with Python 3.12 already provided can keep using `python3.12`.
+Then open a **new terminal** and test it:
+
+**Windows**
+```powershell
+py -3.12 --version
+```
+
+**Mac / Linux**
+```bash
+python3.12 --version
+```
+
+Expect **Python 3.12.x**. If it is not found, see [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) before continuing.
 
 > **What is a terminal?** A window where you type commands.
 > Windows: press Start, type **PowerShell**, press Enter. Mac: press Cmd+Space, type **Terminal**, press Enter.
@@ -108,7 +120,7 @@ cd shopkart-ai-tutorial-v2
 **In VS Code's terminal, inside the project folder:**
 
 ```powershell
-& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) setup_env.py
+py -3.12 setup_env.py
 ```
 
 ```powershell
@@ -127,14 +139,12 @@ cd shopkart-ai-tutorial-v2
 **In VS Code's terminal, inside the project folder:**
 
 ```bash
-"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" setup_env.py
+python3.12 setup_env.py
 ```
 
 ```bash
 source .venv/bin/activate
 ```
-
-On Linux/Codespaces with Python 3.12 already provided, replace the Mac setup command with `python3.12 setup_env.py`. You do not need the desktop uv installer there.
 
 You now see `(.venv)` at the start of the line. That means it worked.
 Run `python --version`: it must show **3.12.x**. Once activated, normal `python` commands use this environment's 3.12, regardless of your system default. Setup rejects an existing environment that uses another version; follow [FAQ #1](TROUBLESHOOTING.md#1--wrong-python-version) to recreate it without deleting your settings.
@@ -262,16 +272,14 @@ These are **independent shortcuts**, not a sequence to run top to bottom. Except
 **Initial setup, from the project folder (Windows):** creates `.venv`, installs execution libraries and creates `.env`.
 
 ```powershell
-& (& "$HOME\.shopkart-tools\bin\uv.exe" python find --managed-python --no-project 3.12.13) setup_env.py
+py -3.12 setup_env.py
 ```
 
-**Initial setup, from the project folder (Mac):**
+**Initial setup, from the project folder (Mac/Linux):**
 
 ```bash
-"$("$HOME/.shopkart-tools/bin/uv" python find --managed-python --no-project 3.12.13)" setup_env.py
+python3.12 setup_env.py
 ```
-
-For Linux/Codespaces with Python 3.12 already provided, use `python3.12 setup_env.py`.
 
 **Readiness check, from the project folder with `.venv` active:**
 

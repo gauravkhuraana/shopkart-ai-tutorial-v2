@@ -3,7 +3,6 @@
 import ast
 import json
 import re
-import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -79,8 +78,9 @@ def test_checker_requires_stable_python312(
     assert namespace["results"] == [accepted]
     if not accepted:
         assert "alongside your existing Python" in output
-        assert "PRE_CONFERENCE.md step 1 (CPython 3.12.13)" in output
-        assert "step 4 setup command" in output
+        assert "winget install --id Python.Python.3.12 --version 3.12.10" in output
+        assert "py -3.12 setup_env.py" in output
+        assert "python3.12 setup_env.py" in output
         assert "existing .venv keeps its old Python" in output
 
 
@@ -94,55 +94,25 @@ def test_setup_requires_stable_python312(
     section = section.split("# Step 2: Virtual environment", 1)[0]
     namespace = {
         "sys": SimpleNamespace(
-            version_info=version_info(major, minor, micro, releaselevel),
-            executable="C:\\Workshop tools\\python.exe" if windows else "/Workshop tools/python",
+            version_info=version_info(major, minor, micro, releaselevel)
         ),
         "IS_WINDOWS": windows,
         "fail": fail,
-        "shlex": shlex,
     }
 
     if accepted:
         exec(compile(section, "setup_env.py", "exec"), namespace)
     else:
+        command = "py -3.12 setup_env.py" if windows else "python3.12 setup_env.py"
         with pytest.raises(RuntimeError) as error:
             exec(compile(section, "setup_env.py", "exec"), namespace)
-        assert "PRE_CONFERENCE.md step 1" in str(error.value)
-        assert "CPython 3.12.13" in str(error.value)
-        assert "step 4 setup command" in str(error.value)
-        assert "Do not retry with the same incompatible interpreter" in str(error.value)
+        assert command in str(error.value)
+        assert "winget install --id Python.Python.3.12 --version 3.12.10" in str(error.value)
         assert "alongside your existing Python" in str(error.value)
 
     output = capsys.readouterr().out
     assert f"You have Python {major}.{minor}.{micro}." in output
     assert "Required for this workshop: Python 3.12.x." in output
-
-
-@pytest.mark.parametrize(
-    "windows,executable,expected",
-    [
-        (True, r"C:\Workshop tools\python.exe", "& 'C:\\Workshop tools\\python.exe' setup_env.py"),
-        (True, r"C:\O'Brien\$work\python.exe", "& 'C:\\O''Brien\\$work\\python.exe' setup_env.py"),
-        (False, "/Workshop tools/python", "'/Workshop tools/python' setup_env.py"),
-        (False, "/opt/python3.12", "/opt/python3.12 setup_env.py"),
-        (False, "/O'Brien/python", shlex.quote("/O'Brien/python") + " setup_env.py"),
-    ],
-)
-def test_retry_uses_the_selected_interpreter(windows, executable, expected):
-    source = (ROOT / "setup_env.py").read_text(encoding="utf-8")
-    section = source.split('step(1, "Python version")', 1)[1]
-    section = section.split("# Step 2: Virtual environment", 1)[0]
-    namespace = {
-        "sys": SimpleNamespace(
-            version_info=version_info(3, 12, 13, "final"),
-            executable=executable,
-        ),
-        "IS_WINDOWS": windows,
-        "fail": fail,
-        "shlex": shlex,
-    }
-    exec(compile(section, "setup_env.py", "exec"), namespace)
-    assert namespace["setup_command"] == expected
 
 
 def run_environment_section(
@@ -171,7 +141,7 @@ def run_environment_section(
     namespace = {
         "VENV": environment,
         "VENV_PYTHON": interpreter,
-        "setup_command": "& 'C:\\Workshop tools\\python.exe' setup_env.py",
+        "setup_command": "py -3.12 setup_env.py",
         "fail": fail,
         "venv": SimpleNamespace(EnvBuilder=Mock(return_value=builder)),
         "subprocess": SimpleNamespace(
@@ -202,7 +172,7 @@ def test_wrong_or_invalid_environment_stops_without_deleting_it(
         run_environment_section(tmp_path, version=version, returncode=returncode)
     assert ".venv must use a working, stable Python 3.12.x" in str(error.value)
     assert "Rename .venv" in str(error.value)
-    assert "& 'C:\\Workshop tools\\python.exe' setup_env.py" in str(error.value)
+    assert "py -3.12 setup_env.py" in str(error.value)
     assert (tmp_path / ".venv" / "python").read_text() == "test interpreter placeholder"
 
 
@@ -246,44 +216,50 @@ def test_environment_probe_rejects_incompatible_interpreters(
     assert result.value.code == (0 if accepted else 1)
 
 
-def test_preconference_pins_installation_without_changing_defaults():
+WINGET_COMMAND = (
+    "winget install --id Python.Python.3.12 --version 3.12.10 --exact --source winget"
+)
+MAC_INSTALLER = "https://www.python.org/ftp/python/3.12.10/python-3.12.10-macos11.pkg"
+WINDOWS_INSTALLER = "https://www.python.org/ftp/python/3.12.10/python-3.12.10-amd64.exe"
+
+
+def test_preconference_uses_one_command_installs():
     guide = (ROOT / "PRE_CONFERENCE.md").read_text(encoding="utf-8")
-    assert "https://astral.sh/uv/0.11.7/install.ps1" in guide
-    assert "https://astral.sh/uv/0.11.7/install.sh" in guide
-    assert 'UV_NO_MODIFY_PATH = "1"' in guide
-    assert "UV_NO_MODIFY_PATH=1" in guide
-    assert "python install 3.12.13 --no-bin --no-registry" in guide
-    assert "python install 3.12.13 --no-bin" in guide
-    assert "python find --managed-python --no-project 3.12.13" in guide
-    assert "import sys, ssl, venv, ensurepip" in guide
-    assert "sys.version_info[:3] == (3, 12, 13)" in guide
-    assert "python-build-standalone" in guide
-    assert "3.12.10 was the last official" in guide
+    assert WINGET_COMMAND in guide
+    assert WINDOWS_INSTALLER in guide
+    assert MAC_INSTALLER in guide
+    assert "brew install python@3.12" in guide
+    assert "py -3.12 --version" in guide
+    assert "python3.12 --version" in guide
+    assert "Found an existing package already installed" in guide
+    assert "astral.sh" not in guide
     for line in guide.splitlines():
-        if "| Mac " in line:
-            assert "native installation/setup validation pending" in line
+        if line.startswith("| Mac"):
+            assert "not yet tested" in line
 
 
 @pytest.mark.parametrize(
     "name",
     ["PRE_CONFERENCE.md", "README.md", "COMMANDS_WINDOWS.md", "COMMANDS_MAC.md", "TROUBLESHOOTING.md"],
 )
-def test_setup_guides_use_managed_python_in_desktop_commands(name):
+def test_setup_guides_use_simple_python312_commands(name):
     guide = (ROOT / name).read_text(encoding="utf-8")
-    assert "3.12.13" in guide
     assert not re.search(r"https://www\.python\.org/downloads/(?!release/)", guide)
     assert 'tick "Add python.exe to PATH"' not in guide
+    for retired in ("uv.exe", "shopkart-tools", "--managed-python", "3.12.13)"):
+        assert retired not in guide
     for block in re.findall(r"```(?:powershell|bash)\n(.*?)```", guide, re.DOTALL):
-        assert "py -3.12" not in block
-        if "setup_env.py" in block and "python3.12 setup_env.py" not in block:
-            assert "python find --managed-python --no-project 3.12.13" in block
+        if "setup_env.py" in block:
+            assert block.strip() in ("py -3.12 setup_env.py", "python3.12 setup_env.py"), block
 
 
-def test_missing_packages_points_to_canonical_setup(capsys):
+def test_missing_packages_points_to_setup_commands(capsys):
     source = (ROOT / "check_setup.py").read_text(encoding="utf-8")
     section = source.split("if missing:", 1)[1]
     section = "if missing:" + section.split("# 3. The .env settings file", 1)[0]
     with pytest.raises(SystemExit) as result:
         exec(compile(section, "check_setup.py", "exec"), {"missing": ["httpx"], "sys": sys})
     assert result.value.code == 1
-    assert "PRE_CONFERENCE.md step 4" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "py -3.12 setup_env.py" in output
+    assert "python3.12 setup_env.py" in output
