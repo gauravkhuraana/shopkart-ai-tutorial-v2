@@ -134,18 +134,26 @@ sequenceDiagram
 The numbers match the numbered comments in the file. It is the same two rules, run once per golden question.
 
 ```mermaid
-flowchart TD
-    Y[("golden_questions.yaml<br/>10 questions + their rules")] -->|"1. load: GOLDEN, CASE_IDS"| P["pytest.mark.parametrize<br/>10 separate tests, named by case id"]
-    P --> T["3. test_rules(case)"]
-    T -->|"2. ask_bot(question)<br/>POST /chat, a fresh request each time"| Bot["your bot (step 5)"]
-    Bot -->|"the reply text, lower-cased"| T
-    T --> RA{"Rule A: must_include_any<br/>(skipped if the list is empty)<br/>is at least one word in the answer?"}
-    RA -->|no| F(["FAILED<br/>message shows the expected words + the answer"])
-    RA -->|yes| RB{"Rule B: must_not_include<br/>is any forbidden phrase in the answer?"}
-    RB -->|yes| F
-    RB -->|no| Ok([PASSED])
-    Ok --> R[("evaluate/report.html<br/>the scoreboard")]
-    F --> R
+sequenceDiagram
+    participant Key as golden_questions.yaml<br/>(the answer key)
+    participant Test as test_rules.py<br/>(pytest)
+    participant Bot as your bot (step 5)<br/>POST /chat
+    participant Board as evaluate/report.html<br/>(the scoreboard)
+
+    Key->>Test: 1. Load all 10 questions + their rules<br/>(GOLDEN, CASE_IDS)
+    Note over Test: parametrize: 10 separate tests,<br/>each named by its case id
+
+    loop once per golden question
+        Test->>Bot: 2. ask_bot(question)<br/>a fresh request every time
+        Bot-->>Test: the answer text (lower-cased)
+        Note over Test: 3. Rule A: must_include_any<br/>at least one word in the answer?<br/>(skipped if the list is empty)
+        Note over Test: Rule B: must_not_include<br/>none of the forbidden phrases in the answer?
+        alt both rules hold
+            Test->>Board: PASSED
+        else a rule breaks
+            Test->>Board: FAILED + the expected words + the answer
+        end
+    end
 ```
 
 What the full file adds over `rules_simple.py`: the questions and rules live in **one answer-key file** instead of in the script, every question is its own test with a readable name, a red test explains itself (the answer is in the `assert` message), and the results land on the scoreboard.

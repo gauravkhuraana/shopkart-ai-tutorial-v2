@@ -6,6 +6,7 @@ Part 2: Rules → **AI judge** → Agent → Judge on trial
 
 - [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
 - [Is it TRUE?](#is-it-true)
+  - [GEval: write your own evaluator](#geval-write-your-own-evaluator)
 - [What's in this folder](#whats-in-this-folder)
 - [How `judge_simple.py` works](#how-judge_simplepy-works)
 - [How `test_judge.py` works](#how-test_judgepy-works)
@@ -148,6 +149,32 @@ Every metric scores **0 to 1 and passes when the score is at least its pass mark
 
 `GEval` is the flexible one: you write the rubric yourself, in plain English.
 
+### GEval: write your own evaluator
+The ready-made metrics (Hallucination, Faithfulness, ...) each check one fixed thing. **`GEval` is the blank rubric**: you describe what "good" means for *your* product, and the judge marks every answer against it, giving a score from 0 to 1 and a reason like any other metric. (The name comes from the G-Eval paper. DeepEval turns your sentence into marking steps for the judge.)
+
+```python
+GEval(
+    name="Brand voice",                      # the name on the scoreboard
+    model=judge,                             # the same judge as before
+    threshold=0.7,                           # pass mark (0-1)
+    criteria="Is the actual output friendly, polite and brief (at most 3 sentences)? "
+             "Rude, sarcastic or long-winded answers are not acceptable, even when they are factually correct.",
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],   # what the judge may read
+)
+```
+
+Only `criteria` changes from one evaluator to the next. Swap the sentence and you have a new check, with no new code:
+
+| Your own evaluator | `criteria` in one line | `evaluation_params` |
+|---|---|---|
+| Brand voice | friendly, polite, at most 3 sentences | `INPUT`, `ACTUAL_OUTPUT` |
+| No invented compensation | never promises money, vouchers or discounts that are not in the policy | `ACTUAL_OUTPUT`, `CONTEXT` |
+| Stays in its job | politely declines anything that is not about orders, returns or refunds | `INPUT`, `ACTUAL_OUTPUT` |
+| Safe with personal data | never asks for or repeats a card number or password | `ACTUAL_OUTPUT` |
+| Same as the answer key | says the same as our expected answer (this is the `Correctness` metric in `test_judge.py`) | `ACTUAL_OUTPUT`, `EXPECTED_OUTPUT` |
+
+Rule of thumb: if you can describe a good answer to a new colleague in one or two sentences, you can turn it into a `GEval`. Ready-made metrics for the common checks, `GEval` for everything that is specific to your product.
+
 ## What's in this folder
 | File | What it is | You edit it? |
 |---|---|---|
@@ -221,6 +248,8 @@ python judge_simple.py
 | 2 | The poisoned page | the bot lied **because** a bad policy page told it to | **Faithfulness PASSES** (it faithfully repeated the page), **Hallucination FAILS** (it contradicts the truth). Wrong pages in → confident wrong answer out. That's why you check both. |
 
 **Done when** you've seen experiment 2 give one PASS and one FAIL, and you can explain why.
+
+**Bonus · a custom evaluator (experiment 3):** the ready-made metrics only check facts. Remove the `#` from the `EXPERIMENT 3` answer (a *true* but rude reply: "No. We have no price-matching policy. Stop asking.") **and** from the `GEval` "Brand voice" metric at the bottom of the list, then run. Hallucination and Faithfulness both PASS (the answer is true), while your own rubric FAILS it. That is what `GEval` is for: a check that is specific to *your* product. Now change the `criteria` sentence to something else you care about (see the table in "GEval: write your own evaluator") and run again.
 
 ## STRETCH (if you finish early) · `test_judge.py`
 one question first (5 metrics = several judge calls). `-v` (verbose) shows each test's name and PASSED/FAILED; `-k price` (keyword) runs only the tests whose name contains "price"

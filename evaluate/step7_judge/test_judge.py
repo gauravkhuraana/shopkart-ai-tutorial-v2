@@ -24,6 +24,7 @@ Search for "TODO": there is 1.  Stuck?  python ../../checkpoint.py step7
 import httpx
 import pytest
 import yaml
+#imp
 from deepeval.metrics import (
     AnswerRelevancyMetric,
     FaithfulnessMetric,
@@ -121,6 +122,7 @@ def test_judge(case, scoreboard):
             criteria="Is the actual output clear, logically consistent and free of self-contradiction? "
             "An answer that says yes and no to the same thing is incoherent.",
             evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
+            # SingleTurnParams is an enum
         ),
         GEval(
             name="Correctness",
