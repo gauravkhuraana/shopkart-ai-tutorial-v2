@@ -1,5 +1,7 @@
 # Step 1 · Talk to the model  (LAB 1 · 8 min)
 
+> **Prefer pressing ▶ instead of typing commands?** This step is also in [`workshop.ipynb`](../../workshop.ipynb), section **Step 1**. Same files, same TODOs.
+
 The 5 Bs: **Brain** → Bridge → Browser → Book → Body
 
 ## Table of contents

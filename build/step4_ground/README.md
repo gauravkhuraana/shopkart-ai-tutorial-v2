@@ -1,5 +1,7 @@
 # Step 4 · Ground it  (LAB 4 · 12 min)
 
+> **Prefer pressing ▶ instead of typing commands?** This step is also in [`workshop.ipynb`](../../workshop.ipynb), section **Step 4**. Same files, same TODOs.
+
 The 5 Bs: Brain → Bridge → Browser → **Book** → Body
 
 ## Table of contents

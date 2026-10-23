@@ -1,5 +1,7 @@
 # Step 5 · Let it act  (LAB 5 · 18 min)
 
+> **Prefer pressing ▶ instead of typing commands?** This step is also in [`workshop.ipynb`](../../workshop.ipynb), section **Step 5**. Same files, same TODOs.
+
 The 5 Bs: Brain → Bridge → Browser → Book → **Body** (hands that act)
 
 ## Table of contents

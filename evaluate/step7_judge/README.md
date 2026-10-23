@@ -1,5 +1,7 @@
 # Step 7 · AI tests AI: the judge  (13 min)
 
+> **Prefer pressing ▶ instead of typing commands?** This step is also in [`workshop.ipynb`](../../workshop.ipynb), section **Step 7**. Same files, same TODOs.
+
 Part 2: Rules → **AI judge** → Agent → Judge on trial
 
 ## Table of contents
