@@ -8,6 +8,7 @@ Part 2: Rules → AI judge → **Agent** → Judge on trial
 - [What's in this folder](#whats-in-this-folder)
 - [How `agent_check_simple.py` works](#how-agent_check_simplepy-works)
   - [DeepEval has ready-made assertions for agents too](#deepeval-has-ready-made-assertions-for-agents-too)
+- [How `test_agents.py` works](#how-test_agentspy-works)
 - [CORE (everyone) · `agent_check_simple.py`](#core-everyone--agent_check_simplepy)
 - [STRETCH (if you finish early) · `test_agents.py`](#stretch-if-you-finish-early--test_agentspy)
   - [Bonus · the five layers of agent testing (ready-made, bottom of `test_agents.py`)](#bonus--the-five-layers-of-agent-testing-ready-made-bottom-of-test_agentspy)
@@ -207,6 +208,32 @@ sequenceDiagram
 | C · journey | `get_order` before `issue_refund`? | call the right tools, in the right order |
 | D · money | Amount ≤ what the customer paid? | (a lock built into the crew, proven by a test) |
 | E · DeepEval | Same as C, with a ready-made DeepEval agent metric | `ToolCorrectnessMetric`: score + reason, no judge, no API key |
+
+## How `test_agents.py` works
+Every test sends a message to the crew's `POST /agent` and reads the **flight recorder** (`steps`) that comes back. The first diagram shows the shared plumbing, the second shows which tests check what.
+
+```mermaid
+flowchart TD
+    K[("orders.json + EXPECTED<br/>what SHOULD happen to each order")] --> S["Pick the orders:<br/>1043 refund · 1061 no refund · 2001 escalate<br/>(ALL_ORDERS=1: all 10)"]
+    S --> RO["run_order(order_id)<br/>= run_crew(demo_message)"]
+    A["attack messages and chaos switches"] --> RC["run_crew(message, chaos)"]
+    RO --> RC
+    RC -->|"POST /agent, a fresh crew run each time"| Crew["the crew (step 5)"]
+    Crew -->|"reply · outcome · steps"| T{"the tests"}
+    T --> Sc[("evaluate/report.html")]
+```
+
+```mermaid
+flowchart LR
+    Steps(["reply + outcome + steps<br/>from the crew"]) --> L1["The landing<br/>test_expected_outcome"]
+    Steps --> L2["The five checks<br/>right tool, right order (TODO 1)<br/>right amount (TODO 2)<br/>baton passed (TODO 3)<br/>high value escalates (TODO 4)"]
+    Steps --> L3["Attacks<br/>test_not_fooled: prompt injection<br/>test_survives_chaos: order system down"]
+    Steps --> L4["BONUS: five layers<br/>Reasoning: plan names the order<br/>Memory: customers isolated<br/>Orchestration: circuit breaker, exactly 3 reviews<br/>Output: reply matches outcome"]
+    Steps --> L5["DeepEval agent metrics<br/>ToolCorrectnessMetric: no judge<br/>TaskCompletionMetric: the judge"]
+    L5 -.->|"-k 'not task_completion' skips the judge"| Skip(["fast run"])
+```
+
+What the full file adds over `agent_check_simple.py`: three orders (or all ten) instead of one, every check as its own named test, ready-made attack and chaos tests, the five-layer bonus tests, `TaskCompletionMetric`, and the scoreboard.
 
 ### DeepEval has ready-made assertions for agents too
 In step 7 you used chatbot metrics (truthful, grounded, relevant). For agents, DeepEval ships metrics about the **journey**. Check E in `agent_check_simple.py` runs the first one; the rest are listed in "THE AGENT METRICS MENU" at the bottom of that file.

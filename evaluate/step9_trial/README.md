@@ -7,6 +7,7 @@ Part 2: Rules → AI judge → Agent → **Judge on trial**
 - [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
 - [What's in this folder](#whats-in-this-folder)
 - [How `trial_simple.py` works](#how-trial_simplepy-works)
+- [How `judge_the_judge.py` works](#how-judge_the_judgepy-works)
 - [CORE (everyone) · `trial_simple.py`](#core-everyone--trial_simplepy)
 - [STRETCH (if you finish early) · `judge_the_judge.py`](#stretch-if-you-finish-early--judge_the_judgepy)
 - [Boss level](#boss-level)
@@ -104,6 +105,35 @@ sequenceDiagram
     end
     Note over Test: 3. C: range of the 3 scores<br/>A: distance from YOUR score<br/>P: seconds for 3 verdicts
 ```
+
+## How `judge_the_judge.py` works
+The same trial, but for **two judges** and **five answers**, all in one run.
+
+```mermaid
+sequenceDiagram
+    participant Run as judge_the_judge.py<br/>main()
+    participant Y as my_scores.yaml<br/>(YOUR scores)
+    participant Small as SMALL judge<br/>(your bot's model, LLM_*)
+    participant Big as BIG judge<br/>(JUDGE_* from .env)
+
+    Run->>Y: load the 5 answers + my_score each
+    Note over Run: --runs N (default 3)<br/>RUBRIC = one GEval "Correctness" rubric
+
+    loop for each answer, N times
+        Run->>Small: score(judge, item)
+        Small-->>Run: score 0-1 (a failure is printed and skipped)
+    end
+    loop for each answer, N times
+        Run->>Big: score(judge, item)
+        Big-->>Run: score 0-1 (a failure is printed and skipped)
+    end
+    Note over Run: results[judge][answer] = the N scores
+
+    Note over Run: the table, per answer:<br/>runs + range (max - min) = C, the wobble<br/>and YOUR score next to them
+    Note over Run: per judge: average |average score - YOUR score|<br/>= A, how much it agrees with you<br/>(lower = agrees more)
+```
+
+What the full file adds over `trial_simple.py`: two judges side by side, five answers instead of one, `--runs` to trade accuracy against rate limits, failures that are printed instead of stopping the run, and one comparison table. It prints the wobble (C) and the agreement (A) for you to read. The rubric at the top is the thing to tweak.
 
 ## CORE (everyone) · `trial_simple.py`
 1. **TODO 1, before you run anything:** read the answer in part 1 ("…but there is a 5 EUR restocking fee") and give it **your own** score in `MY_SCORE` (0 = wrong, 1 = perfect). No peeking.

@@ -7,6 +7,7 @@ Part 2: **Rules** → AI judge → Agent → Judge on trial
 - [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
 - [What's in this folder](#whats-in-this-folder)
 - [How `rules_simple.py` works](#how-rules_simplepy-works)
+- [How `test_rules.py` works](#how-test_rulespy-works)
 - [CORE (everyone) · `rules_simple.py`](#core-everyone--rules_simplepy)
 - [STRETCH (if you finish early) · `test_rules.py`](#stretch-if-you-finish-early--test_rulespy)
 - [Stuck?](#stuck)
@@ -128,6 +129,26 @@ sequenceDiagram
     Note over Test: 2. Check the rules (plain Python)<br/>Rule A: must say one of …<br/>Rule B: must never say … (TODO 1)
     Note over Test: 3. Print PASS, or FAIL + why
 ```
+
+## How `test_rules.py` works
+The numbers match the numbered comments in the file. It is the same two rules, run once per golden question.
+
+```mermaid
+flowchart TD
+    Y[("golden_questions.yaml<br/>10 questions + their rules")] -->|"1. load: GOLDEN, CASE_IDS"| P["pytest.mark.parametrize<br/>10 separate tests, named by case id"]
+    P --> T["3. test_rules(case)"]
+    T -->|"2. ask_bot(question)<br/>POST /chat, a fresh request each time"| Bot["your bot (step 5)"]
+    Bot -->|"the reply text, lower-cased"| T
+    T --> RA{"Rule A: must_include_any<br/>(skipped if the list is empty)<br/>is at least one word in the answer?"}
+    RA -->|no| F(["FAILED<br/>message shows the expected words + the answer"])
+    RA -->|yes| RB{"Rule B: must_not_include<br/>is any forbidden phrase in the answer?"}
+    RB -->|yes| F
+    RB -->|no| Ok([PASSED])
+    Ok --> R[("evaluate/report.html<br/>the scoreboard")]
+    F --> R
+```
+
+What the full file adds over `rules_simple.py`: the questions and rules live in **one answer-key file** instead of in the script, every question is its own test with a readable name, a red test explains itself (the answer is in the `assert` message), and the results land on the scoreboard.
 
 ## CORE (everyone) · `rules_simple.py`
 ```bash

@@ -7,6 +7,7 @@ The 5 Bs: **Brain** → Bridge → Browser → Book → Body
 - [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
 - [What's in this folder](#whats-in-this-folder)
 - [How `ask_simple.py` works](#how-ask_simplepy-works)
+- [How `ask.py` works](#how-askpy-works)
 - [CORE (everyone) · `ask_simple.py`](#core-everyone--ask_simplepy)
 - [STRETCH (if you finish early) · experiments in `ask.py`](#stretch-if-you-finish-early--experiments-in-askpy)
 - [Stuck?](#stuck)
@@ -103,6 +104,28 @@ sequenceDiagram
 ```
 
 `ask.py` makes exactly the same call, but every setting (`QUESTION`, `SYSTEM_PROMPT`, `MAX_TOKENS`, `TEMPERATURE`) has its own line, so you can change one thing at a time.
+
+## How `ask.py` works
+The numbers match the numbered sections in the file. Dotted arrows show which experiment changes which part.
+
+```mermaid
+flowchart TD
+    A["1. Connect<br/>OpenAI(...) + MODEL from .env"] --> B["2. Settings<br/>QUESTION · SYSTEM_PROMPT<br/>MAX_TOKENS · TEMPERATURE"]
+    B --> C["3. Build the context<br/>messages = system + user"]
+    C --> D{{"4. Call the model<br/>chat.completions.create(...)"}}
+    D --> E["5. Read the answer<br/>content · finish_reason · tokens used"]
+    E --> F{"finish_reason?"}
+    F -->|stop| G([Print the answer])
+    F -->|length| H(["Print the answer + warning:<br/>CUT OFF, out of tokens"])
+
+    X1["EXPERIMENT 1<br/>MAX_TOKENS = 20"] -.-> B
+    X2["EXPERIMENT 2<br/>TEMPERATURE = 1"] -.-> B
+    X3["EXPERIMENT 3<br/>pirate SYSTEM_PROMPT"] -.-> B
+    X5["EXPERIMENT 5 and 6<br/>a different QUESTION"] -.-> B
+    X4["EXPERIMENT 4<br/>drop the system line"] -.-> C
+```
+
+What the full file adds over `ask_simple.py`: the settings sit in section 2 instead of inside the call, and section 5 prints the **finish reason** and the **token counts**. That is how you spot a cut-off answer (experiment 1).
 
 ## CORE (everyone) · `ask_simple.py`
 From the repo root, with your virtual environment active:

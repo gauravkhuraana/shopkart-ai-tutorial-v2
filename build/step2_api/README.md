@@ -8,6 +8,7 @@ The 5 Bs: Brain → **Bridge** → Browser → Book → Body
 - [Try POST /chat in the browser](#try-post-chat-in-the-browser)
 - [What's in this folder](#whats-in-this-folder)
 - [How `app_simple.py` works](#how-app_simplepy-works)
+- [How `app.py` works](#how-apppy-works)
 - [The 3 new tools: uvicorn, FastAPI, Pydantic](#the-3-new-tools-uvicorn-fastapi-pydantic)
   - [Pydantic: describe the shape of your data](#pydantic-describe-the-shape-of-your-data)
   - [FastAPI: turn a Python function into a web endpoint](#fastapi-turn-a-python-function-into-a-web-endpoint)
@@ -139,6 +140,32 @@ sequenceDiagram
 ```
 
 The model is a goldfish: it forgets everything between calls. So the caller sends the **whole conversation** every time, and the API passes all of it on. That's what "memory" means for a chatbot.
+
+## How `app.py` works
+The numbers match the numbered sections in the file; the HOP numbers match the `print` lines you see in the terminal.
+
+```mermaid
+sequenceDiagram
+    participant Caller as /docs, curl, Postman,<br/>your tests
+    participant API as app.py<br/>(FastAPI)
+    participant Model as the model<br/>(Groq, or Ollama)
+
+    Note over API: 1-3. Connect, settings,<br/>app = FastAPI(...)<br/>4. ChatRequest / Message (Pydantic)
+
+    Caller->>API: 5. POST /chat<br/>{"messages": [...]}
+    alt the JSON does not match ChatRequest
+        API-->>Caller: 422 error (FastAPI, before chat() runs)
+    end
+    Note over API: HOP 2: API got N message(s)<br/>system prompt + whole conversation<br/>(EXPERIMENT 2: only the last message)
+    API->>Model: HOP 3: chat.completions.create(...)<br/>model, messages, max_tokens, temperature
+    Model-->>API: HOP 4: response.choices[0].message.content
+    API-->>Caller: HOP 5: {"reply": "..."}<br/>(EXPERIMENT 5 and 6: other JSON shapes)
+
+    Caller->>API: 6. GET /
+    API-->>Caller: index.html if it exists,<br/>else "No web page yet: that's step 3"
+```
+
+What the full file adds over `app_simple.py`: a `Message` / `ChatRequest` model with an example body for the **/docs** page, the `HOP` prints and a timer, the `GET /` page (a friendly note until step 3), and the commented experiments.
 
 ## The 3 new tools: uvicorn, FastAPI, Pydantic
 Each has one job:

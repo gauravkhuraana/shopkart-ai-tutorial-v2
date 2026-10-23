@@ -34,6 +34,7 @@ BOT = os.getenv(
 # 1. Ask your bot a question, over the same API the chat page uses (POST /chat)
 
 QUESTION = "Do you price-match if I find the same item cheaper somewhere else?"
+
 MUST_SAY_ONE_OF = []  # nothing it has to say here...
 MUST_NEVER_SAY = [
     "we price-match",

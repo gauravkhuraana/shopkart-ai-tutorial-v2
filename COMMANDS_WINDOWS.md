@@ -9,6 +9,7 @@ Mac user? Use [COMMANDS_MAC.md](COMMANDS_MAC.md). Stuck? [TROUBLESHOOTING.md](TR
 
 ## Table of contents
 
+- [Read this first · 6 habits that prevent most problems](#read-this-first--6-habits-that-prevent-most-problems)
 - [Using the tutorial](#using-the-tutorial)
   - [GitHub Codespaces (even when your laptop runs Windows)](#github-codespaces-even-when-your-laptop-runs-windows)
 - [0 · Common commands](#0--common-commands)
@@ -44,6 +45,17 @@ Mac user? Use [COMMANDS_MAC.md](COMMANDS_MAC.md). Stuck? [TROUBLESHOOTING.md](TR
   - [Step 9 · Put the judge on trial](#step-9--put-the-judge-on-trial)
   - [Bonus](#bonus)
   - [Quick fixes](#quick-fixes)
+
+## Read this first · 6 habits that prevent most problems
+
+1. **Look for `(.venv)` at the start of your prompt.** The virtual environment (venv) is this project's private toolbox: its own Python and libraries, kept apart from the rest of your laptop. It switches off in every new terminal, so activate it every time, from the project folder: `.venv\Scripts\Activate.ps1`. No `(.venv)`? Expect `No module named ...`.
+2. **Be in the step's folder.** Each step runs from its own folder: `cd build\step1_model` ... `cd evaluate\step9_trial`. `File not found` or `Could not import module`? Check the folder in your prompt.
+3. **TODOs: uncomment, don't type.** Select the lines between `BEGIN SOLUTION` and `END SOLUTION` (not the marker lines themselves) and press **Ctrl+/**. VS Code picks the comment sign for you: `#` in `.py` files, `//` inside the `<script>` of `.html` files. The same keys put the `#` back after an EXPERIMENT.
+4. **Save before you run (Ctrl+S).** A server started with `--reload` restarts itself when you save. For an `.html` file, just refresh the browser.
+5. **One server at a time, in its own terminal.** `uvicorn` keeps its terminal busy until you press **Ctrl+C**. Stop it before starting the next step's server (they all use port 8000), and type other commands in a second terminal.
+6. **Part 2: the step 5 bot runs the whole time.** Window 2: `cd build\step5_agent`, then `uvicorn app:app --reload` (`app`, not `app_simple`: step 8 tests the crew). Window 3: your tests, from `evaluate\stepN`. Can't run the bot? Point `SHOPKART_URL` in `.env` at the hosted bot. Step 9 does not need the bot. Planted a bug in step 8? Always finish with `python ..\..\plant_bug.py off`.
+
+Fell behind? From the project folder, `python checkpoint.py stepN` copies in the finished files (yours are kept as `.mine`).
 
 ## Using the tutorial
 

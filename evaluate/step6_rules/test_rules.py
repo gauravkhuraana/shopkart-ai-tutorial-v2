@@ -76,7 +76,7 @@ def test_rules(case):
         found_required_word = False
 
         for word in must_have:
-            if word in answer:
+            if word in answer: #imp
                 found_required_word = True
                 break
 

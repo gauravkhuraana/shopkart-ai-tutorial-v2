@@ -8,6 +8,7 @@ The 5 Bs: Brain → Bridge → **Browser** → Book → Body
 - [What's in this folder](#whats-in-this-folder)
   - [The extra endpoints in `app.py` (open http://localhost:8000/docs to try them)](#the-extra-endpoints-in-apppy-open-httplocalhost8000docs-to-try-them)
 - [How `index_simple.html` + `app_simple.py` work](#how-index_simplehtml--app_simplepy-work)
+- [How `index.html` + `app.py` work](#how-indexhtml--apppy-work)
 - [Run it](#run-it)
 - [CORE (everyone) · your TODOs in `index_simple.html` (or `index.html`), top of the `<script>` section](#core-everyone--your-todos-in-index_simplehtml-or-indexhtml-top-of-the-script-section)
 - [Done when…](#done-when)
@@ -131,6 +132,55 @@ sequenceDiagram
 ```
 
 The model is still a goldfish, so the page keeps the whole `history` and re-sends it on every message.
+
+## How `index.html` + `app.py` work
+The chat itself is still the one `POST /chat` call from step 2. The full pair adds a second path: small endpoints that serve **data** (no model involved) and a few that call the model for something other than chatting.
+
+```mermaid
+flowchart LR
+    subgraph Page["index.html (the browser)"]
+        W["Welcome screen"]
+        Ch["Chat tab"]
+        Msg["Reply: 👍 / 👎, ⋯ menu"]
+        Or["Orders tab"]
+        Po["Policies tab"]
+        In["Insights tab"]
+        Light["Green 'API online' light"]
+    end
+
+    subgraph API["app.py (FastAPI)"]
+        Chat["POST /chat<br/>(the only one you wire up in the lab)"]
+        Sum["POST /summarize"]
+        Sug["GET /suggestions"]
+        Ord["GET /orders · /orders/{id}"]
+        Pol["GET /policies · /policies/{name}"]
+        Fb["POST /feedback"]
+        St["GET /stats"]
+        Cf["GET /config"]
+        He["GET /health"]
+        Mem[("in-memory stats<br/>chats · seconds · feedback")]
+    end
+
+    subgraph Files["shared/data"]
+        Orders[("orders.json")]
+        Pages[("policies/*.md")]
+    end
+
+    Model{{"the model"}}
+
+    Light --> He
+    W --> Sug
+    Ch --> Chat --> Model
+    Chat -->|"record_chat(seconds)"| Mem
+    Msg --> Fb --> Mem
+    Msg --> Sum --> Model
+    Or --> Ord --> Orders
+    Po --> Pol --> Pages
+    In --> St --> Mem
+    In --> Cf
+```
+
+What the full pair adds over the simple pair: the extra endpoints above, a tiny in-memory scoreboard (it resets when `uvicorn` restarts), and `GET /` that serves `index.html`. Every extra endpoint is independent: if one breaks, `POST /chat` still works, which makes them good, small things to test.
 
 ## Run it
 Simple version (start here):

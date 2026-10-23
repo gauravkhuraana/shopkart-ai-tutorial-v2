@@ -8,6 +8,7 @@ Part 2: Rules → **AI judge** → Agent → Judge on trial
 - [Is it TRUE?](#is-it-true)
 - [What's in this folder](#whats-in-this-folder)
 - [How `judge_simple.py` works](#how-judge_simplepy-works)
+- [How `test_judge.py` works](#how-test_judgepy-works)
 - [CORE (everyone) · `judge_simple.py`](#core-everyone--judge_simplepy)
 - [STRETCH (if you finish early) · `test_judge.py`](#stretch-if-you-finish-early--test_judgepy)
 - [Stuck?](#stuck)
@@ -168,6 +169,38 @@ sequenceDiagram
     Note over Test: print: score, pass mark, PASS/FAIL, reason
 ```
 Same "universal plug" as step 1: `LocalModel` talks to any OpenAI-compatible server. Only the address and the model name change.
+
+## How `test_judge.py` works
+One test per golden question marked `judge: true`. Each test asks the bot once, then the judge marks **five** rubrics.
+
+```mermaid
+sequenceDiagram
+    participant PT as pytest<br/>test_judge(case, scoreboard)
+    participant Bot as your bot (step 5)
+    participant Judge as the judge model<br/>(config.judge_model())
+    participant SB as scoreboard<br/>evaluate/report.html
+
+    Note over PT: load golden_questions.yaml<br/>keep only judge: true (JUDGE_CASES)<br/>TODO 1: TRUTHFUL_PASS, GROUNDED_PASS (skipped while None)
+
+    PT->>Bot: ask_bot(question)  POST /chat
+    Bot-->>PT: reply + context (the policy pages it read)
+    Note over PT: LLMTestCase:<br/>input = the question · actual_output = the reply<br/>expected_output = the answer key · context = the truth<br/>retrieval_context = the pages the librarian brought
+
+    loop for each of the 5 metrics
+        PT->>Judge: metric.measure(test_case)
+        Judge-->>PT: score 0-1 + reason
+    end
+    Note over PT: T Hallucination (your pass mark)<br/>R AnswerRelevancy 0.7<br/>U Faithfulness (your pass mark)<br/>E GEval Coherence 0.6<br/>+ GEval Correctness 0.6
+
+    PT->>SB: scoreboard.add(metrics)<br/>bars, pass marks, reasons
+    alt any metric below its pass mark
+        Note over PT: FAILED: the answer + one line per failing metric<br/>(name, score, pass mark, reason)
+    else all metrics pass
+        Note over PT: PASSED
+    end
+```
+
+What the full file adds over `judge_simple.py`: all five rubrics instead of one or two, a Correctness check against the answer key, pass marks you choose, a failure message that lists every failing metric with its reason, and the scoreboard.
 
 ## CORE (everyone) · `judge_simple.py`
 ```bash

@@ -8,6 +8,7 @@ The 5 Bs: Brain → Bridge → Browser → Book → **Body** (hands that act)
 - [What's in this folder](#whats-in-this-folder)
 - [The simple version: one agent, one loop](#the-simple-version-one-agent-one-loop)
 - [The full version: a crew](#the-full-version-a-crew)
+  - [How `agent.py` + `app.py` work](#how-agentpy--apppy-work)
 - [Run it](#run-it)
   - [Sample questions for demos and later debugging](#sample-questions-for-demos-and-later-debugging)
 - [CORE (everyone) · your TODOs in `agent_simple.py`](#core-everyone--your-todos-in-agent_simplepy)
@@ -192,6 +193,50 @@ flowchart LR
 ```
 What the crew adds to the single agent: a **Request Planner** that decides what to check first, and a **Policy Reviewer** that double-checks every proposal against the policy *before* anything happens (the single agent has only the 200 EUR rule in code). It is wired with **LangGraph**, a small library for boxes and arrows. Every step lands in `steps`, and Part 2 tests exactly that.
 
+### How `agent.py` + `app.py` work
+The same crew as a conversation, from the web page to the final JSON. The tool menu, role prompts and `route_after_policy_review` are all in `agent.py`.
+
+```mermaid
+sequenceDiagram
+    participant Page as index.html
+    participant API as app.py<br/>POST /agent
+    participant Crew as agent.py<br/>run_agent() · LangGraph crew
+    participant Model as the model
+    participant Tools as tools<br/>(get_order, check_policy,<br/>issue_refund, escalate_to_human)
+
+    Page->>API: {"message": "...", "chaos": null}
+    Note over API: agent.py exists next to app.py,<br/>so the door is open (else 404)
+    API->>Crew: run_agent(message, chaos)
+    Note over Crew: state = message, steps [], facts [], rounds 0<br/>(chaos is a global switch for Part 2 tests)
+
+    Crew->>Model: Request Planner: what is needed first?
+    Model-->>Crew: the plan (step: plan)
+
+    loop until approved, or MAX_ROUNDS rejections
+        Crew->>Model: Case Investigator: brief (+ the reviewer's complaint)
+        Model-->>Crew: "call get_order(...)" / "call check_policy(...)"
+        Crew->>Tools: read tools (our code runs them)
+        Tools-->>Crew: facts (step: tool_result)
+        Model-->>Crew: proposal: issue_refund(...) or escalate_to_human(...)
+        Crew->>Model: Policy Reviewer: facts + proposal, JSON verdict
+        Model-->>Crew: {"approved": true/false, "reason": "..."} (step: review)
+        Note over Crew: route_after_policy_review (TODO 2)<br/>approved: leave the loop<br/>rejected: back to the investigator
+    end
+
+    alt approved
+        Note over Crew: action_executor: the 200 EUR rule in CODE (TODO 3)
+        Crew->>Tools: issue_refund(...) or escalate_to_human(...)
+    else rejected MAX_ROUNDS times
+        Note over Crew: give_up: the circuit breaker
+        Crew->>Tools: escalate_to_human(...)
+    end
+
+    Crew-->>API: {"reply", "outcome", "steps"}
+    API-->>Page: the same JSON
+    Note over Page: shows the reply and the steps<br/>(Part 2 tests read the same steps)
+```
+
+Two safety nets sit outside the loop: `MAX_ROUNDS` (the circuit breaker above) and LangGraph's `recursion_limit` (if the crew still loops, `run_agent` returns "a human will contact you" with outcome `loop_limit`).
 ## Run it
 Run one order straight from the terminal, without the web page. Simple version first:
 ```bash

@@ -7,6 +7,7 @@ The 5 Bs: Brain → Bridge → Browser → **Book** → Body
 - [▶ Copy-paste: run this step](#-copy-paste-run-this-step)
 - [What's in this folder](#whats-in-this-folder)
 - [How `index_simple.html` + `app_simple.py` work](#how-index_simplehtml--app_simplepy-work)
+- [How `app.py` + `retrieval.py` work](#how-apppy--retrievalpy-work)
 - [Run it](#run-it)
 - [CORE (everyone) · your TODOs in `app_simple.py` (or `app.py`)](#core-everyone--your-todos-in-app_simplepy-or-apppy)
 - [Done when…](#done-when)
@@ -126,6 +127,35 @@ sequenceDiagram
 
     Note over Page: shows the reply, and "from: returns.md" under it
 ```
+
+## How `app.py` + `retrieval.py` work
+Same five hops as above. The difference: the librarian is a separate file, `retrieval.py`, with a smarter search (rarer words count more). The page and all the extra endpoints are the finished ones from step 3.
+
+```mermaid
+sequenceDiagram
+    participant Page as index.html<br/>(the browser)
+    participant API as app.py<br/>(FastAPI)
+    participant Lib as retrieval.py<br/>(the librarian)
+    participant Model as the model<br/>(Groq, or Ollama)
+
+    Note over Lib: at import time (once):<br/>load_pages() reads shared/data/policies/*.md<br/>_DOC_FREQ = how many pages contain each word
+
+    Page->>API: HOP 1 · POST /chat<br/>{"messages": [the conversation so far]}
+
+    Note over API: HOP 2 · question = the latest message
+    API->>Lib: TODO 1 · retrieve(question, top_k=TOP_K)
+    Note over Lib: _words(): lower-case, drop stopwords, trim endings<br/>score = count on page x rarity (log), per question word<br/>sort, keep the top_k pages (score > 0)
+    Lib-->>API: [{"name": "returns.md", "text": "..."}, ...]<br/>or [] if nothing matches
+
+    Note over API: planted_bugs.tamper_pages (Part 2 only)<br/>SYSTEM_PROMPT (TODO 2: grounding rules)<br/>+ "POLICY PAGES:" + the pages<br/>+ the whole conversation
+    API->>Model: HOP 3 · chat.completions.create(...)<br/>(SHOW_PROMPT=1 prints the whole prompt)
+    Model-->>API: HOP 4 · the answer text (config.clean)
+
+    API-->>Page: HOP 5 · TODO 3 · {"reply", "sources", "context"}
+    Note over Page: "Sources:" row under the answer<br/>(click one to open that policy page)
+```
+
+What the full pair adds over the simple pair: `retrieval.py` (stopwords, tiny stemming, rare-word weighting, `top_k` from `TOP_K` in `.env`), the `SHOW_PROMPT` switch, the `POST /agent` door that opens in step 5, and the extra endpoints from step 3.
 
 ## Run it
 Simple version (start here):
