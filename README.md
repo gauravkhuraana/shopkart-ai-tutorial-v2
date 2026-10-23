@@ -19,6 +19,7 @@ Everything is free and runs on your own laptop (or in your browser).
 ## Table of contents
 
 - [Before the tutorial: set up your laptop (about 20 to 30 minutes)](#before-the-tutorial-set-up-your-laptop-about-20-to-30-minutes)
+- [On the day: two ways to follow along (terminal or notebook)](#on-the-day-two-ways-to-follow-along-terminal-or-notebook)
 - [On the day: the terminal windows you need](#on-the-day-the-terminal-windows-you-need)
 - [Part 1 · BUILD the bot (5 steps)](#part-1--build-the-bot-5-steps)
 - [Part 2 · TEST the bot (4 steps)](#part-2--test-the-bot-4-steps)
@@ -47,6 +48,22 @@ python check_setup.py
 
 > **What is a terminal?** A window where you type commands.
 > Windows: press Start, type **PowerShell**, press Enter. Mac: press Cmd+Space, type **Terminal**, press Enter.
+
+## On the day: two ways to follow along (terminal or notebook)
+
+Both ways run **the same steps 1 to 9 on the same files**. Pick one, and stay with it for the day.
+
+| | **Terminal path** | **Notebook path** (press ▶) |
+|---|---|---|
+| How | type the commands from [COMMANDS_WINDOWS.md](COMMANDS_WINDOWS.md) / [COMMANDS_MAC.md](COMMANDS_MAC.md) | open **[workshop.ipynb](workshop.ipynb)** and press ▶ on each cell |
+| The bot (steps 2 to 9) | runs in terminal window 2 | runs in the background, started by a cell |
+| TODOs | uncomment them in the real files | the same: uncomment them in the real files, then press ▶ |
+| Fell behind? | `python checkpoint.py step3` | the **Short on time?** cell of that step |
+| Works in | your laptop (Path A) and GitHub Codespaces (Path B) | the same |
+
+**First time with a notebook?** Open `workshop.ipynb`, click the first grey code cell, press ▶ (or Shift+Enter). If VS Code asks for a kernel, pick **.venv**. The notebook explains the rest.
+
+> **Don't mix them:** only one bot fits on port 8000. A bot started in a terminal and a bot started by the notebook will collide.
 
 ## On the day: the terminal windows you need
 
@@ -236,6 +253,8 @@ Then open `evaluate/report.html` in your browser.
 | `shared/data/policies/` | ShopKart's 10 rule pages (refunds, returns...) |
 | `shared/data/orders.json` | 10 example orders to test with |
 | [plant_bug.py](plant_bug.py) | switch bugs on and off for Part 2; [visual guide, code locations, and demo commands](plant_bug_README.md) |
+| `workshop.ipynb` | the notebook path: the same steps 1 to 9, press ▶ instead of typing commands |
+| `tools/notebook_helpers.py` | the small functions the notebook cells call (run a step, start/stop the bot, check TODOs) |
 | `checkpoint.py` | copy in the finished code if you fall behind |
 | `check_setup.py` | checks if your laptop is ready |
 | `setup_env.py` | one-command setup: virtual environment, packages, `.env` |

@@ -1,5 +1,7 @@
 # Step 3 · Give it a face  (LAB 3 · 5 min)
 
+> **Prefer pressing ▶ instead of typing commands?** This step is also in [`workshop.ipynb`](../../workshop.ipynb), section **Step 3**. Same files, same TODOs.
+
 The 5 Bs: Brain → Bridge → **Browser** → Book → Body
 
 ## Table of contents
