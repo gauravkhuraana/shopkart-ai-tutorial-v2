@@ -1,5 +1,7 @@
 # Step 6 · Rules first  (8 min)
 
+> **Prefer pressing ▶ instead of typing commands?** This step is also in [`workshop.ipynb`](../../workshop.ipynb), section **Step 6**. Same files, same TODOs.
+
 Part 2: **Rules** → AI judge → Agent → Judge on trial
 
 ## Table of contents

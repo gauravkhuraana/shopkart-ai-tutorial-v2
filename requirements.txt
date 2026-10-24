@@ -9,3 +9,4 @@ pytest==9.1.1
 httpx==0.28.1          # tests call the bot over HTTP
 pyyaml==6.0.3
 python-dotenv==1.2.2
+ipykernel==7.4.0     # lets VS Code run workshop.ipynb (the press-play notebook) on this .venv

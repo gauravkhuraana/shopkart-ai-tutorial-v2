@@ -37,6 +37,7 @@ Whichever path you pick, finish by running the setup check. Every line must say 
   - [6 · Check it](#6--check-it)
   - [7 · Install and test Ollama (Path A only)](#7--install-and-test-ollama-path-a-only)
 - [Path B · In the browser (GitHub Codespaces)](#path-b--in-the-browser-github-codespaces)
+- [Prefer pressing ▶? The notebook](#prefer-pressing--the-notebook)
 - [Checklist](#checklist)
 - [If something goes wrong](#if-something-goes-wrong)
 
@@ -251,6 +252,21 @@ Nothing to install. You need a free GitHub account. **You must be signed in to G
    **Key typed wrong?** Secrets win over `.env`, so fixing `.env` does not help. Change the secret at https://github.com/settings/codespaces (**Codespaces secrets**), then stop and restart the Codespace.
 
 Using a work GitHub account and Codespaces does not open? Some companies block it. Try a free personal GitHub account, or use Path A on a personal laptop, or pair with a neighbour on the day.
+
+---
+
+## Prefer pressing ▶? The notebook
+
+Not comfortable typing terminal commands? On the day you can follow every step in **`workshop.ipynb`** instead: the same steps, the same files, you press ▶ on a cell instead of typing. You still need the setup above (Path A **or** Path B). The notebook only replaces typing on the day.
+
+Try it now, so you know it works:
+
+1. Open **`workshop.ipynb`** from the VS Code Explorer (Codespaces opens it for you).
+   **Path A only:** if VS Code offers to install the **Jupyter** extension, click **Install**.
+2. Click the first grey code cell (under **0 · Ready?**) and press **▶** (or Shift+Enter).
+3. If VS Code asks for a kernel: **Python Environments** → **.venv**.
+   It says `ipykernel` is missing? Your `.venv` is older than this notebook: run the step 4 install command again (`python -m pip install -r requirements.txt` with `.venv` active).
+4. Every line should say **OK** or ✅, the same as `python check_setup.py`.
 
 ---
 

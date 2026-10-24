@@ -1,5 +1,7 @@
 # Step 8 · Test the agent: the journey, not just the landing  (22 min)
 
+> **Prefer pressing ▶ instead of typing commands?** This step is also in [`workshop.ipynb`](../../workshop.ipynb), section **Step 8**. Same files, same TODOs.
+
 Part 2: Rules → AI judge → **Agent** → Judge on trial
 
 ## Table of contents

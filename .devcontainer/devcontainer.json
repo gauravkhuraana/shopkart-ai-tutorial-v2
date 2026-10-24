@@ -25,15 +25,16 @@
 
   "customizations": {
     "vscode": {
-      "extensions": ["ms-python.python"],
+      "extensions": ["ms-python.python", "ms-toolsai.jupyter"],
       "settings": {
         "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
         "python.terminal.activateEnvironment": true,
-        "terminal.integrated.defaultProfile.linux": "bash"
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "jupyter.notebookFileRoot": "${containerWorkspaceFolder}"
       }
     },
     "codespaces": {
-      "openFiles": ["PRE_CONFERENCE.md", "COMMANDS_MAC.md"]
+      "openFiles": ["PRE_CONFERENCE.md", "COMMANDS_MAC.md", "workshop.ipynb"]
     }
   }
 }

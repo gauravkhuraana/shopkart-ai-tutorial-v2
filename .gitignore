@@ -4,6 +4,8 @@ __pycache__/
 .deepeval/
 .venv/
 *.mine
+.notebook_bot.log
+.notebook_bot.pid
 .planted_bug
 evaluate/report.html
 dist/
