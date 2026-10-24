@@ -4,7 +4,13 @@ tools/notebook_helpers.py · the "remote control" behind workshop.ipynb
 The notebook is just another way to run the SAME commands as COMMANDS_WINDOWS.md / COMMANDS_MAC.md.
 Every cell calls one of these small functions, and each function runs the real repo files:
 
+    nb.set_key()                                paste your Groq key: written into BOTH places in .env
     nb.check()                                  python check_setup.py   (+ is the notebook on .venv?)
+    nb.show("build/step4_ground/app_simple.py") see the code: the TODO blocks of the REAL file, read live
+    nb.show("build/step1_model/ask_simple.py", whole=True)
+                                                see the whole file
+    nb.do_todo("build/step4_ground/app_simple.py", 1)
+                                                uncomment TODO block 1 for me (what Ctrl+/ does), show before/after
     nb.run("build/step1_model", "python ask_simple.py")
                                                 cd build/step1_model  then  python ask_simple.py
     nb.start_bot("build/step5_agent", "app:app")
@@ -28,6 +34,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import signal
 import socket
 import subprocess
@@ -79,7 +86,29 @@ def _environment():
     env["PY_COLORS"] = "1"
     # Put this Python's folder first on PATH, so tools started by the scripts use the .venv too.
     env["PATH"] = str(Path(sys.executable).parent) + os.pathsep + env.get("PATH", "")
+
+    # VS Code copies .env into the notebook's memory when the kernel STARTS. Added your key after that?
+    # Then the notebook still holds the empty placeholder, and the scripts (which never overwrite a value
+    # that is already set) would use it. So: an empty or placeholder value is replaced by the one in .env.
+    # A real key from a Codespaces secret is left alone: secrets still win, exactly like in a terminal.
+    for name, value in _read_env_file().items():
+        if value and _is_placeholder(env.get(name)):
+            env[name] = value
     return env
+
+
+def _is_placeholder(value):
+    """True for a missing value or one of the example values from .env.example."""
+    return not value or "your_key_here" in value
+
+
+def _read_env_file():
+    """The settings in .env, as a dictionary (empty if there is no .env yet)."""
+    from dotenv import dotenv_values
+    env_file = ROOT / ".env"
+    if not env_file.exists():
+        return {}
+    return {name: value for name, value in dotenv_values(env_file).items() if value is not None}
 
 
 def url(path="/"):
@@ -92,8 +121,56 @@ def url(path="/"):
 
 
 # ---------------------------------------------------------------------------
-# 0 · Is everything ready?
+# 0 · Your key, and is everything ready?
 # ---------------------------------------------------------------------------
+def set_key(key=None):
+    """
+    Put your Groq key into .env, in BOTH places (LLM_API_KEY for your bot, JUDGE_API_KEY for the judge).
+    Without an argument it asks for the key in a hidden box, so it doesn't stay visible in the notebook.
+    """
+    env_file = ROOT / ".env"
+    if not env_file.exists():
+        shutil.copy(ROOT / ".env.example", env_file)
+        _ok("Created .env from .env.example")
+
+    if key is None:
+        from getpass import getpass
+        key = getpass("Paste your Groq key (starts with gsk_) and press Enter: ")
+    key = key.strip().strip('"').strip("'")
+
+    if not key:
+        _bad("No key pasted. Run the cell again. Free key, no credit card: https://console.groq.com/keys")
+        return False
+    if not key.startswith("gsk_"):
+        _tip("Groq keys start with gsk_. Double-check you copied the whole key.")
+
+    # Replace the value of the first active LLM_API_KEY= and JUDGE_API_KEY= lines (comments are left alone).
+    lines = env_file.read_text(encoding="utf-8").splitlines()
+    done = set()
+    for index, line in enumerate(lines):
+        for name in ("LLM_API_KEY", "JUDGE_API_KEY"):
+            if name not in done and line.startswith(f"{name}="):
+                lines[index] = f"{name}={key}"
+                done.add(name)
+    for name in ("LLM_API_KEY", "JUDGE_API_KEY"):
+        if name not in done:
+            lines.append(f"{name}={key}")
+    env_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    _ok(f"Saved in .env: LLM_API_KEY and JUDGE_API_KEY = {key[:4]}…{key[-4:]}")
+
+    # Also fix the notebook's own copy (see _environment), unless a Codespaces secret holds a real key.
+    for name in ("LLM_API_KEY", "JUDGE_API_KEY"):
+        current = os.environ.get(name)
+        if _is_placeholder(current):
+            os.environ[name] = key
+        elif current != key:
+            _bad(f"{name} is also set as a Codespaces secret (or system variable), and that one wins over .env.")
+            _tip("Wrong key there? Fix it at github.com/settings/codespaces, then stop and restart the codespace.")
+
+    print()
+    return check()
+
+
 def check():
     """The notebook version of `python check_setup.py`, plus: is this notebook using the .venv?"""
     version = sys.version_info
@@ -432,7 +509,157 @@ def todos(*paths):
 
 
 # ---------------------------------------------------------------------------
-# 5 · The scoreboard (Part 2)
+# 5 · See the code, without leaving the notebook (always read live from the real file)
+# ---------------------------------------------------------------------------
+BEGIN_MARKER = re.compile(r"\s*(#|//) BEGIN SOLUTION\s*$")
+END_MARKER = re.compile(r"\s*(#|//) END SOLUTION\s*$")
+LANGUAGES = {".py": "python", ".html": "html", ".js": "javascript", ".json": "json", ".yaml": "yaml", ".md": "markdown"}
+
+
+def _solution_blocks(lines):
+    """(first line, last line) of every BEGIN SOLUTION … END SOLUTION block, 0-based, markers included."""
+    blocks = []
+    start = None
+    for number, line in enumerate(lines):
+        if BEGIN_MARKER.match(line):
+            start = number
+        elif END_MARKER.match(line) and start is not None:
+            blocks.append((start, number))
+            start = None
+    return blocks
+
+
+def _todo_start(lines, begin):
+    """Walk up from a BEGIN SOLUTION line to its 'TODO' comment, so the excerpt starts with the instructions."""
+    for number in range(begin, max(begin - 12, -1), -1):
+        if "TODO" in lines[number]:
+            return number
+    return max(begin - 2, 0)
+
+
+def _display_code(path, lines, ranges):
+    """Show line ranges of a file as highlighted code blocks with their line numbers."""
+    language = LANGUAGES.get(Path(path).suffix, "")
+    parts = []
+    for first, last in ranges:
+        excerpt = "\n".join(lines[first:last + 1])
+        parts.append(f"**`{path}`** · lines {first + 1}–{last + 1}\n\n```{language}\n{excerpt}\n```")
+    text = "\n\n".join(parts)
+    try:
+        from IPython.display import Markdown, display
+        display(Markdown(text))
+    except ImportError:
+        print(text)
+
+
+def _merge(ranges):
+    merged = []
+    for first, last in sorted(ranges):
+        if merged and first <= merged[-1][1] + 1:
+            merged[-1] = (merged[-1][0], max(last, merged[-1][1]))
+        else:
+            merged.append((first, last))
+    return merged
+
+
+def show(path, *anchors, whole=False, after=10, before=1):
+    """
+    See the code of a REAL file, read the moment you press ▶ (so you also see your own edits).
+        show("build/step4_ground/app_simple.py")                  every TODO block (BEGIN/END SOLUTION)
+        show("evaluate/step6_rules/rules_simple.py", "EXPERIMENT 1")   the lines from a marker on
+        show("build/step1_model/ask_simple.py", whole=True)       the whole file
+    """
+    file = ROOT / path
+    if not file.exists():
+        _bad(f"{path} does not exist.")
+        return
+    lines = file.read_text(encoding="utf-8").splitlines()
+
+    if whole:
+        ranges = [(0, len(lines) - 1)]
+    elif anchors:
+        ranges = []
+        for anchor in anchors:
+            found = [number for number, line in enumerate(lines) if anchor in line]
+            if not found:
+                _tip(f"'{anchor}' is not in {path} (any more).")
+                continue
+            first = max(found[0] - before, 0)
+            ranges.append((first, min(found[0] + after, len(lines) - 1)))
+    else:
+        blocks = _solution_blocks(lines)
+        if not blocks:
+            _ok(f"{path} has no TODO blocks left (this is the finished version). The whole file:")
+            ranges = [(0, len(lines) - 1)]
+        else:
+            ranges = [(_todo_start(lines, begin), min(end + 1, len(lines) - 1)) for begin, end in blocks]
+
+    if ranges:
+        _display_code(path, lines, _merge(ranges))
+
+
+def _uncomment(line):
+    """What Ctrl+/ does to one commented line: remove the first # or // (and one space after it)."""
+    match = re.match(r"(\s*?)(#|//)( ?)(.*?)(\r?\n)?$", line)
+    if not match:
+        return line                                  # already uncommented: leave it
+    return match[1] + match[4] + (match[5] or "")
+
+
+def do_todo(path, block=None):
+    """
+    Uncomment a TODO block in the real file for you, exactly like selecting it and pressing Ctrl+/.
+        do_todo("build/step4_ground/app_simple.py", 1)    only block 1
+        do_todo("build/step4_ground/app_simple.py")       all blocks of that file
+    Shows the block before and after, so you see what changed. A running bot reloads by itself.
+    """
+    file = ROOT / path
+    text = file.read_text(encoding="utf-8")
+    lines = text.splitlines(keepends=True)
+    blocks = _solution_blocks([line.rstrip("\r\n") for line in lines])
+
+    if not blocks:
+        _ok(f"{path} has no TODO blocks left (this is the finished version).")
+        return
+    if block is not None and not 1 <= block <= len(blocks):
+        _bad(f"{path} has {len(blocks)} TODO blocks: pick a number from 1 to {len(blocks)}.")
+        return
+
+    chosen = range(1, len(blocks) + 1) if block is None else [block]
+    for number in chosen:
+        begin, end = blocks[number - 1]
+        plain = [line.rstrip("\r\n") for line in lines]
+        before = (_todo_start(plain, begin), end)
+
+        code_lines = [line.strip() for line in plain[begin + 1:end] if line.strip()]
+        if any(not line.startswith(("#", "//")) for line in code_lines):
+            _ok(f"TODO block {number} is already uncommented: nothing to do.")
+            continue
+
+        print(f"TODO block {number} · BEFORE")
+        _display_code(path, plain, [before])
+
+        for index in range(begin + 1, end):
+            lines[index] = _uncomment(lines[index])
+        file.write_text("".join(lines), encoding="utf-8")
+
+        print(f"TODO block {number} · AFTER (saved)")
+        _display_code(path, [line.rstrip("\r\n") for line in lines], [before])
+
+    # Progress for the whole file (without the "how to" tips: this cell just did the work)
+    plain = [line.rstrip("\r\n") for line in lines]
+    finished = 0
+    for begin, end in _solution_blocks(plain):
+        if any(line.strip() and not line.strip().startswith(("#", "//")) for line in plain[begin + 1:end]):
+            finished += 1
+    if finished == len(blocks):
+        _ok(f"{path}: all {len(blocks)} TODO blocks done. A running bot reloads by itself; refresh the browser for HTML.")
+    else:
+        _tip(f"{path}: {finished} of {len(blocks)} TODO blocks done. Run the next 'Do it for me' cell for the rest.")
+
+
+# ---------------------------------------------------------------------------
+# 6 · The scoreboard (Part 2)
 # ---------------------------------------------------------------------------
 def report(height=600):
     """Show evaluate/report.html inside the notebook (every pytest run in Part 2 writes it)."""

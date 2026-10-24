@@ -3,8 +3,9 @@
   "image": "mcr.microsoft.com/devcontainers/python:3.12",
 
   // Same one-command setup as on a laptop: creates .venv, installs the packages, creates .env.
+  // updateContentCommand (not postCreateCommand) so a Codespaces PREBUILD already contains the installed .venv.
   // Terminals then activate .venv by themselves, so every command in COMMANDS_MAC.md works unchanged.
-  "postCreateCommand": "python3.12 setup_env.py --skip-check",
+  "updateContentCommand": "python3.12 setup_env.py --skip-check",
 
   // Ask for the Groq key when the Codespace is created (free key: https://console.groq.com/keys).
   // Use the SAME key for both. Secrets arrive as environment variables and win over the .env file.
