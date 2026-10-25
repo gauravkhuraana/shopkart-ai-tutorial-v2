@@ -37,7 +37,8 @@ def test_codespaces_uses_the_same_workshop_python():
             lines.append(line)
     config = json.loads("\n".join(lines))
     assert config["image"].endswith(":3.12")
-    assert config["postCreateCommand"] == "python3.12 setup_env.py --skip-check"
+    # updateContentCommand runs inside Codespaces prebuilds too (postCreateCommand does not).
+    assert config["updateContentCommand"] == "python3.12 setup_env.py --skip-check"
 
 
 def version_info(major, minor, micro, releaselevel):
